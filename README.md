@@ -1,6 +1,6 @@
 # Fox Edit
 
-Save and load things.. in files.. probably not your best choice.
+FoxEdit
 
 
 ## Features

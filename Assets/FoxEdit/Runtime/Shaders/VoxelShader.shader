@@ -8,8 +8,8 @@ Shader "Voxel/VoxelShader"
     {
         Tags
         {
-            "RenderType" = "Transparent"
-            "Queue" = "Transparent-1"
+            "RenderType" = "Opaque"
+            "Queue" = "Geometry"
             "RenderPipeline" = "UniversalPipeline"
         }
 
@@ -73,7 +73,6 @@ Shader "Voxel/VoxelShader"
                 float metallic;
                 float smoothness;
             };
-
 
             UNITY_INSTANCING_BUFFER_START(Props)
                 uint _InstanceStart;
