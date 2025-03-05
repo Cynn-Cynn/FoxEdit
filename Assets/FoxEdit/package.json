@@ -1,0 +1,24 @@
+{
+    "name": "com.cynthia.fox_edit",
+    "version": "0.0.1",
+    "displayName": "FoxEdit",
+    "description": "This is generic save file system",
+    "unity": "2022.3",
+    "unityRelease": "54f1",
+    "documentationUrl": "",
+    "changelogUrl": "",
+
+    "licensesUrl": "",
+    "dependencies": {
+      "com.dbrizov.naughtyattributes": "2.1.4"
+    },
+   "keywords": [
+    ],
+    "author": {
+      "name": "Cynthia",
+      "email": "cynthiabon.pro@gmail.com",
+      "url": "https://github.com/CynthiaBon"
+    },
+    "samples": [
+    ]
+}
