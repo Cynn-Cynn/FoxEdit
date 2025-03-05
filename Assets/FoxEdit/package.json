@@ -10,7 +10,7 @@
 
     "licensesUrl": "",
     "dependencies": {
-      "com.dbrizov.naughtyattributes": "2.1.4"
+      "com.dbrizov.naughtyattributes": "git+https://github.com/dbrizov/NaughtyAttributes.git"
     },
    "keywords": [
     ],
