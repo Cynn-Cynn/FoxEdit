@@ -10,7 +10,7 @@
 
     "licensesUrl": "",
     "dependencies": {
-      "com.dbrizov.naughtyattributes": "git+https://github.com/dbrizov/NaughtyAttributes.git"
+      "com.dbrizov.naughtyattributes": "https://github.com/dbrizov/NaughtyAttributes.git#upm"
     },
    "keywords": [
     ],
