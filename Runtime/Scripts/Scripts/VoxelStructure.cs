@@ -12,6 +12,8 @@ public class VoxelStructure : MonoBehaviour
 
     [SerializeField] private VoxelPlaceHolder _voxelPrefab = null;
 
+    [SerializeField] [HideInInspector] VoxelEditor _voxelEditor = null;
+
     private void Awake()
     {
         if (_grid == null)
@@ -30,24 +32,12 @@ public class VoxelStructure : MonoBehaviour
             GetAllVoxel();
     }
 
-    public VoxelMeshData[] GetMeshData(out Bounds bounds)
+    public VoxelData[] GetMeshData(out Vector3Int minBounds, out Vector3Int maxBounds)
     {
         if (_grid == null)
             GetAllVoxel();
 
-        Vector3Int min = Vector3Int.zero;
-        Vector3Int max = Vector3Int.zero;
-        GetBounds(out min, out max);
-
-        bounds = new Bounds();
-        bounds.center = (new Vector3(min.x + max.x + 1.0f, min.y + max.y + 1.0f, min.z + max.z + 1.0f) / 2.0f) * 0.1f;
-
-        Vector3Int size = max - min;
-        size.x = Mathf.Abs(size.x) + 1;
-        size.y = Mathf.Abs(size.y) + 1;
-        size.z = Mathf.Abs(size.z) + 1;
-
-        bounds.extents = new Vector3((float)size.x / 2.0f, (float)size.y / 2.0f, (float)size.z / 2.0f) * 0.1f;
+        GetBounds(out minBounds, out maxBounds);
 
         return GetFaces();
     }
@@ -85,11 +75,10 @@ public class VoxelStructure : MonoBehaviour
         if (!_grid.ContainsKey(position))
             return;
 
-        VoxelEditor voxelEditor = FindFirstObjectByType<VoxelEditor>();
-        if (voxelEditor == null)
+        if (_voxelEditor == null && !TryGetVoxelEditor())
             return;
 
-        Material material = voxelEditor.GetMaterial(colorIndex);
+        Material material = _voxelEditor.GetMaterial(colorIndex);
         _grid[position].ColorIndex = colorIndex;
         _grid[position].GetComponent<MeshRenderer>().material = material;
     }
@@ -197,36 +186,34 @@ public class VoxelStructure : MonoBehaviour
         return a > b ? a : b;
     }
 
-    private VoxelMeshData[] GetFaces()
+    private VoxelData[] GetFaces()
     {
-        List<VoxelMeshData> meshData = new List<VoxelMeshData>();
+        List<VoxelData> meshData = new List<VoxelData>();
 
         foreach(Vector3Int key in _grid.Keys)
         {
-            VoxelMeshData data = SetFaces(new VoxelMeshData(key), key);
+            VoxelData data = SetFaces(new VoxelData(key), key);
             data.ColorIndex = _grid[key].ColorIndex;
             if (data.GetFaces().Length != 0)
                 meshData.Add(data);
         }
 
-        VoxelEditor voxelEditor = FindFirstObjectByType<VoxelEditor>();
-        if (voxelEditor != null)
+        if (_voxelEditor != null || TryGetVoxelEditor())
         {
-            VoxelMeshData[] opaqueMeshData = meshData.Where(mesh => voxelEditor.GetColor(mesh.ColorIndex).Color.a >= 1.0f).ToArray();
-            VoxelMeshData[] transparentMeshData = meshData.Where(mesh => voxelEditor.GetColor(mesh.ColorIndex).Color.a < 1.0f).ToArray();
+            VoxelData[] opaqueMeshData = meshData.Where(mesh => _voxelEditor.GetColor(mesh.ColorIndex).Color.a >= 1.0f).ToArray();
+            VoxelData[] transparentMeshData = meshData.Where(mesh => _voxelEditor.GetColor(mesh.ColorIndex).Color.a < 1.0f).ToArray();
             meshData = opaqueMeshData.Concat(transparentMeshData).ToList();
         }
 
         return meshData.ToArray();
     }
 
-    private VoxelMeshData SetFaces(VoxelMeshData meshData, Vector3Int key)
+    private VoxelData SetFaces(VoxelData meshData, Vector3Int key)
     {
         bool isTransparent = false;
-        VoxelEditor voxelEditor = FindFirstObjectByType<VoxelEditor>();
-        if (voxelEditor != null)
+        if (_voxelEditor != null || TryGetVoxelEditor())
         {
-            VoxelColor voxelColor = voxelEditor.GetColor(_grid[key].ColorIndex);
+            VoxelColor voxelColor = _voxelEditor.GetColor(_grid[key].ColorIndex);
             if (voxelColor.Color.a < 1.0f)
                 isTransparent = true;
         }
@@ -252,14 +239,22 @@ public class VoxelStructure : MonoBehaviour
         if (!_grid.ContainsKey(key))
             return true;
 
-        VoxelEditor voxelEditor = FindFirstObjectByType<VoxelEditor>();
-        if (voxelEditor == null)
+        if (_voxelEditor == null && !TryGetVoxelEditor())
             return false;
 
-        VoxelColor voxelColor = voxelEditor.GetColor(_grid[key].ColorIndex);
+        VoxelColor voxelColor = _voxelEditor.GetColor(_grid[key].ColorIndex);
         if (voxelColor.Color.a < 1.0f)
             return !isTransparent;
 
         return false;
+    }
+
+    private bool TryGetVoxelEditor()
+    {
+        _voxelEditor = FindFirstObjectByType<VoxelEditor>();
+        if (_voxelEditor == null)
+            return false;
+
+        return true;
     }
 }

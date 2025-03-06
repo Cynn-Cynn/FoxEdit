@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class VoxelMeshData
+public class VoxelData
 {
     private List<int> _faces = null;
     public Vector3Int Position { get; private set; } = Vector3Int.zero;
     public int ColorIndex = 0;
 
-    public VoxelMeshData(Vector3Int position)
+    public VoxelData(Vector3Int position)
     {
         _faces = new List<int>();
         Position = position;   

@@ -22,7 +22,7 @@ public class VoxelObject
     public ColorData[] Colors = null;
     public Bounds Bounds;
 
-    public Vector3[] Positions = null;
+    public Vector3[] VoxelPositions = null;
     public int[] VoxelIndices = null;
     public int[] FaceIndices = null;
 
@@ -30,9 +30,9 @@ public class VoxelObject
 
     public int FrameCount = 0;
 
-    public int[] InstanceCounts = null;
+    public int[] InstanceStartIndices;
+    public int[] InstanceCount = null;
     public int MaxInstanceCount = 0;
-    public int[] StartIndices;
 
     public void Print()
     {
@@ -47,10 +47,10 @@ public class VoxelObject
         result += $"\nBounds: {Bounds}";
 
         result += $"\nPositions: ";
-        for (int i = 0; i < Positions.Length; i++)
+        for (int i = 0; i < VoxelPositions.Length; i++)
         {
-            result += $"{Positions[i]}";
-            if (i < Positions.Length - 1)
+            result += $"{VoxelPositions[i]}";
+            if (i < VoxelPositions.Length - 1)
                 result += " | ";
         }
 
@@ -81,10 +81,10 @@ public class VoxelObject
         result += $"\nFrames: {FrameCount}";
 
         result += $"\nIndices Start/Count: ";
-        for (int i = 0; i < InstanceCounts.Length; i++)
+        for (int i = 0; i < InstanceCount.Length; i++)
         {
-            result += $"({StartIndices[i]}; {InstanceCounts[i]})";
-            if (i < InstanceCounts.Length - 1)
+            result += $"({InstanceStartIndices[i]}; {InstanceCount[i]})";
+            if (i < InstanceCount.Length - 1)
                 result += " | ";
         }
         result += $"\nMax indices: {MaxInstanceCount}";

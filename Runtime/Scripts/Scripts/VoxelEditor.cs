@@ -21,11 +21,11 @@ public class VoxelEditor : MonoBehaviour
     [SerializeField] private int _selectedColor = 0;
     [SerializeField] private VoxelColor[] _colors = null;
     [SerializeField][HideInInspector] private List<Material> _materials = null;
-    [SerializeField] private VoxelStructure _voxelStructurePrefab;
+    [SerializeField] private VoxelStructure _voxelFramePrefab;
 
-    [SerializeField] private int _currentFrame = 0;
-    [SerializeField] private VoxelStructure _currentVoxelStructure;
-    [SerializeField] private List<VoxelStructure> _currentVoxelStructures;
+    [SerializeField] private int _currentFrameIndex = 0;
+    [SerializeField] private VoxelStructure _currentFrame;
+    [SerializeField] private List<VoxelStructure> _frameList;
     [SerializeField] private Material _materialPrefab = null;
 
     private Ray _ray;
@@ -64,37 +64,37 @@ public class VoxelEditor : MonoBehaviour
 
     private void RefreshColors()
     {
-        for (int i = 0; i < _currentVoxelStructures.Count; i++)
+        for (int i = 0; i < _frameList.Count; i++)
         {
-            _currentVoxelStructures[i].RefreshColors(_materials);
+            _frameList[i].RefreshColors(_materials);
         }
     }
 
     [Button("New Voxel Structure")]
     private void InstantiateNewVoxelStructure()
     {
-        _currentVoxelStructures.Add(Instantiate(_voxelStructurePrefab));
-        _currentFrame = _currentVoxelStructures.Count - 1;
+        _frameList.Add(Instantiate(_voxelFramePrefab));
+        _currentFrameIndex = _frameList.Count - 1;
         ChangeFrame();
     }
 
     [Button("Duplicate Current Voxel Structure")]
     private void DuplicateVoxelStructure()
     {
-        _currentVoxelStructures.Add(Instantiate(_currentVoxelStructure));
-        _currentFrame = _currentVoxelStructures.Count - 1;
+        _frameList.Add(Instantiate(_currentFrame));
+        _currentFrameIndex = _frameList.Count - 1;
         ChangeFrame();
     }
 
     [Button("Change Frame")]
     private void ChangeFrame()
     {
-        if (0 > _currentFrame || _currentFrame >= _currentVoxelStructures.Count)
+        if (0 > _currentFrameIndex || _currentFrameIndex >= _frameList.Count)
             return;
 
-        _currentVoxelStructure.gameObject.SetActive(false);
-        _currentVoxelStructure = _currentVoxelStructures[_currentFrame];
-        _currentVoxelStructure.gameObject.SetActive(true);
+        _currentFrame.gameObject.SetActive(false);
+        _currentFrame = _frameList[_currentFrameIndex];
+        _currentFrame.gameObject.SetActive(true);
     }
 
     private void Update()
@@ -108,7 +108,7 @@ public class VoxelEditor : MonoBehaviour
 
     private void Click()
     {
-        if (_voxelStructurePrefab == null)
+        if (_voxelFramePrefab == null)
             return;
 
         Camera current = Camera.current;
@@ -130,14 +130,14 @@ public class VoxelEditor : MonoBehaviour
 
         if (TryGetCubePosition(out worldPosition, out worldNormal, ray))
         {
-            Vector3Int gridPosition = _currentVoxelStructure.WorldToGridPosition(worldPosition);
-            Vector3Int direction = _currentVoxelStructure.NormalToDirection(worldNormal);
+            Vector3Int gridPosition = _currentFrame.WorldToGridPosition(worldPosition);
+            Vector3Int direction = _currentFrame.NormalToDirection(worldNormal);
             if (_action == VoxelAction.Paint)
-                _currentVoxelStructure.TryAddCubeNextTo(gridPosition, direction, _selectedColor);
+                _currentFrame.TryAddCubeNextTo(gridPosition, direction, _selectedColor);
             else if (_action == VoxelAction.Erase)
-                _currentVoxelStructure.TryRemoveCube(gridPosition);
+                _currentFrame.TryRemoveCube(gridPosition);
             else if (_action == VoxelAction.Color)
-                _currentVoxelStructure.TryColorCube(gridPosition, _selectedColor);
+                _currentFrame.TryColorCube(gridPosition, _selectedColor);
         }
     }
 
@@ -161,62 +161,180 @@ public class VoxelEditor : MonoBehaviour
     {
         VoxelObject voxelObject = new VoxelObject();
 
-        voxelObject.Colors = _colors.Select<VoxelColor, VoxelObject.ColorData>(color => {
+        Vector3Int[] minBounds = new Vector3Int[_frameList.Count];
+        Vector3Int[] maxBounds = new Vector3Int[_frameList.Count];
+
+        List<Vector4> positionsAndColorIndices = new List<Vector4>();
+
+        int[] faceIndices = new int[_frameList.Count * 6];
+        int[] frameFaceIndices = new int[6];
+
+        int[] startIndices = new int[_frameList.Count];
+        int[] instanceCounts = new int[_frameList.Count];
+
+        int[] voxelIndices = new int[0];
+
+        int startIndex = 0;
+
+        voxelObject.VoxelIndices = new int[6];
+        List<int>[] voxelIndicesByFace = CreateListArray(6);
+
+        for (int frame = 0; frame < _frameList.Count; frame++)
+        {
+            Vector3Int min;
+            Vector3Int max;
+            VoxelData[] voxelData = _frameList[frame].GetMeshData(out min, out max);
+            minBounds[frame] = min;
+            maxBounds[frame] = max;
+
+            int instanceCount = 0;
+
+            for (int voxel = 0; voxel < voxelData.Length; voxel++)
+            {
+                VoxelData data = voxelData[voxel];
+
+                int voxelIndex = StorePositonAndColorIndex(positionsAndColorIndices, data);
+                int faceCount = StoreIndicesByFace(voxelIndicesByFace, frameFaceIndices, data.GetFaces(), voxelIndex);
+
+                instanceCount += faceCount;
+            }
+
+            SortIndices(faceIndices, frameFaceIndices, ref voxelIndices, voxelIndicesByFace, frame);
+
+            startIndices[frame] = startIndex;
+            instanceCounts[frame] = instanceCount;
+            startIndex += instanceCount;
+
+            ClearVoxelIndicesByFace(voxelIndicesByFace);
+        }
+
+        voxelObject.Bounds = CreateBounds(minBounds, maxBounds);
+        voxelObject.Colors = CreateColors();
+
+        voxelObject.VoxelPositions = positionsAndColorIndices.Select(voxelData => (Vector3)voxelData).ToArray();
+        voxelObject.VoxelIndices = voxelIndices.ToArray();
+        voxelObject.FaceIndices = faceIndices.ToArray();
+        voxelObject.ColorIndices = positionsAndColorIndices.Select(voxelData => (int)voxelData.w).ToArray();
+
+        voxelObject.FrameCount = _frameList.Count;
+        voxelObject.InstanceCount = instanceCounts.ToArray();
+        voxelObject.MaxInstanceCount = instanceCounts.Max();
+        voxelObject.InstanceStartIndices = startIndices.ToArray();
+
+        return voxelObject;
+    }
+
+    private VoxelObject.ColorData[] CreateColors()
+    {
+        return _colors.Select<VoxelColor, VoxelObject.ColorData>(color =>
+        {
             return new VoxelObject.ColorData(
                 new Vector4(color.Color.r, color.Color.g, color.Color.b, color.Color.a),
                 color.EmissiveIntensity, color.Metallic, color.Smoothness
             );
         }).ToArray();
-        Bounds bounds = new Bounds();
-
-        List<Vector3> positions = new List<Vector3>();
-        List<int> colorIndices = new List<int>();
-        int[] faceIndices = new int[0];
-        List<int> voxelIndices = new List<int>();
-
-        List<int> startIndices = new List<int>();
-        List<int> instanceCounts = new List<int>();
-
-        int startIndex = 0;
-        int voxelIndex = 0;
-        for (int frame = 0; frame < _currentVoxelStructures.Count; frame++)
-        {
-            VoxelMeshData[] meshData = _currentVoxelStructures[frame].GetMeshData(out bounds);
-            startIndices.Add(startIndex);
-            int instanceCount = 0;
-            for (int voxel = 0; voxel < meshData.Length; voxel++)
-            {
-                VoxelMeshData data = meshData[voxel];
-                positions.Add(data.Position);
-                colorIndices.Add(data.ColorIndex);
-                int[] faces = data.GetFaces();
-                faceIndices = faceIndices.Concat(faces).ToArray();
-                for (int face = 0; face < faces.Length; face++)
-                {
-                    voxelIndices.Add(voxelIndex);
-                }
-                instanceCount += faces.Length;
-                voxelIndex += 1;
-            }
-            instanceCounts.Add(instanceCount);
-            startIndex += instanceCount;
-        }
-
-        voxelObject.Bounds = bounds;
-
-        voxelObject.Positions = positions.ToArray();
-        voxelObject.VoxelIndices = voxelIndices.ToArray();
-        voxelObject.FaceIndices = faceIndices.ToArray();
-        voxelObject.ColorIndices = colorIndices.ToArray();
-
-        voxelObject.FrameCount = _currentVoxelStructures.Count;
-        voxelObject.InstanceCounts = instanceCounts.ToArray();
-        voxelObject.MaxInstanceCount = instanceCounts.Max();
-        voxelObject.StartIndices = startIndices.ToArray();
-
-        return voxelObject;
     }
 
+    private Bounds CreateBounds(Vector3Int[] minBounds, Vector3Int[] maxBounds)
+    {
+        Vector3Int min = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
+        Vector3Int max = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+
+        for (int i = 0; i < minBounds.Length; i++)
+        {
+            min.x = GetMin(min.x, minBounds[i].x);
+            min.y = GetMin(min.y, minBounds[i].y);
+            min.z = GetMin(min.z, minBounds[i].z);
+
+            max.x = GetMax(max.x, maxBounds[i].x);
+            max.y = GetMax(max.y, maxBounds[i].y);
+            max.z = GetMax(max.z, maxBounds[i].z);
+        }
+
+        Bounds bounds = new Bounds();
+        bounds.center = (new Vector3(min.x + max.x + 1.0f, min.y + max.y + 1.0f, min.z + max.z + 1.0f) / 2.0f) * 0.1f;
+
+        Vector3Int size = max - min;
+        size.x = Mathf.Abs(size.x) + 1;
+        size.y = Mathf.Abs(size.y) + 1;
+        size.z = Mathf.Abs(size.z) + 1;
+
+        bounds.extents = new Vector3((float)size.x / 2.0f, (float)size.y / 2.0f, (float)size.z / 2.0f) * 0.1f;
+
+        return bounds;
+    }
+
+    private int GetMin(int a, int b)
+    {
+        return a < b ? a : b;
+    }
+
+    private int GetMax(int a, int b)
+    {
+        return a > b ? a : b;
+    }
+
+    private List<int>[] CreateListArray(int size)
+    {
+        List<int>[] listArray = new List<int>[size];
+        for (int i = 0; i < 6; i++)
+        {
+            listArray[i] = new List<int>();
+        }
+        return listArray;
+    }
+
+    private void ClearVoxelIndicesByFace(List<int>[] voxelIndicesByFace)
+    {
+        for (int i = 0; i < 6; i++)
+        {
+            voxelIndicesByFace[i].Clear();
+        }
+    }
+
+    private int StorePositonAndColorIndex(List<Vector4> voxelData, VoxelData data)
+    {
+        int index = 0;
+        Vector4 positionAndColorIndex = new Vector4(data.Position.x, data.Position.y, data.Position.z, data.ColorIndex);
+
+        if (!voxelData.Contains(positionAndColorIndex))
+        {
+            index = voxelData.Count;
+            voxelData.Add(positionAndColorIndex);
+        }
+        else
+        {
+            index = voxelData.IndexOf(positionAndColorIndex);
+        }
+
+        return index;
+    }
+
+    private int StoreIndicesByFace(List<int>[] voxelIndicesByFace, int[] frameFaceIndices, int[] faces, int voxelIndex)
+    {
+        for (int index = 0; index < faces.Length; index++)
+        {
+            voxelIndicesByFace[faces[index]].Add(voxelIndex);
+            frameFaceIndices[faces[index]] += 1;
+        }
+
+        return faces.Length;
+    }
+
+    private void SortIndices(int[] faceIndices, int[] frameFaceIndices, ref int[] voxelIndices, List<int>[] voxelIndicesByFace, int frameIndex)
+    {
+        int frameOffset = frameIndex * 6;
+
+        for (int i = 0; i < 6; i++)
+        {
+            if (i != 0)
+                frameFaceIndices[i] += faceIndices[i - 1 + frameOffset];
+            faceIndices[i + frameOffset] = frameFaceIndices[i];
+            frameFaceIndices[i] = 0;
+
+            voxelIndices = voxelIndices.Concat(voxelIndicesByFace[i]).ToArray();
+        }
+    }
 
     public VoxelColor GetColor(int index)
     {
