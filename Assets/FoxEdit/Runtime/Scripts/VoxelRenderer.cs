@@ -9,8 +9,9 @@ using UnityEngine;
 public class VoxelRenderer : MonoBehaviour
 {
     [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField][HideInInspector] private ComputeShader _computeShaderInstance = null;
+    [SerializeField] [HideInInspector] private ComputeShader _computeShaderInstance = null;
     [SerializeField] private Material _material = null;
+
     [SerializeField] private float _frameTime = 0.2f;
     [SerializeField] private VoxelEditor _voxelEditor = null;
 
@@ -71,8 +72,8 @@ public class VoxelRenderer : MonoBehaviour
         _voxelObject = _voxelEditor.ConstructVoxelObject();
 
         //Voxel
-        _voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Positions.Length, sizeof(float) * 3);
-        _voxelPositionBuffer.SetData(_voxelObject.Positions);
+        _voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelPositions.Length, sizeof(float) * 3);
+        _voxelPositionBuffer.SetData(_voxelObject.VoxelPositions);
         _computeShaderInstance.SetBuffer(_kernel, "_VoxelPositions", _voxelPositionBuffer);
 
         _faceIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.FaceIndices.Length, sizeof(int));
@@ -113,7 +114,7 @@ public class VoxelRenderer : MonoBehaviour
         _renderParams = new RenderParams(_material);
         _renderParams.worldBounds = _bounds;
         _renderParams.matProps = new MaterialPropertyBlock();
-        _renderParams.matProps.SetBuffer("_Positions", _faceVertexBuffer);
+        _renderParams.matProps.SetBuffer("_VertexPositions", _faceVertexBuffer);
         _renderParams.matProps.SetBuffer("_Colors", _colorsBuffer);
         _renderParams.matProps.SetBuffer("_TransformMatrices", _transformMatrixBuffer);
         _renderParams.matProps.SetBuffer("_ColorIndices", _colorIndicesBuffer);
@@ -166,17 +167,18 @@ public class VoxelRenderer : MonoBehaviour
 
     private void RunComputeShader()
     {
-        int startIndex = _voxelObject.StartIndices[_frameIndex];
-        int instanceCount = _voxelObject.InstanceCounts[_frameIndex];
-        _computeShaderInstance.SetMatrix("_MatrixObjectToWorld", transform.localToWorldMatrix);
-        _computeShaderInstance.SetInt("_VoxelCount", instanceCount);
-        _computeShaderInstance.SetInt("_InstanceStart", startIndex);
+        int instanceStartIndex = _voxelObject.InstanceStartIndices[_frameIndex];
+        int instanceCount = _voxelObject.InstanceCount[_frameIndex];
+        _computeShaderInstance.SetInt("_InstanceStartIndex", instanceStartIndex);
+        _computeShaderInstance.SetInt("_InstanceCount", instanceCount);
+        _computeShaderInstance.SetInt("_FrameIndex", _frameIndex);
+        _computeShaderInstance.SetMatrix("_VoxelToWorldMatrix", transform.localToWorldMatrix);
 
         _computeShaderInstance.GetKernelThreadGroupSizes(_kernel, out _threadGroupSize, out _, out _);
         int threadGroups = Mathf.CeilToInt((float)instanceCount / _threadGroupSize);
         _computeShaderInstance.Dispatch(_kernel, threadGroups, 1, 1);
 
-        _renderParams.matProps.SetInteger("_InstanceStart", startIndex);
+        _renderParams.matProps.SetInteger("_InstanceStartIndex", instanceStartIndex);
         _renderParams.matProps.SetVector("_Scale", transform.localScale);
     }
 
@@ -196,7 +198,7 @@ public class VoxelRenderer : MonoBehaviour
             transform.hasChanged = false;
         }
 
-        Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, _faceTriangleBuffer, _faceTriangleBuffer.count, instanceCount: _voxelObject.InstanceCounts[_frameIndex]);
+        Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, _faceTriangleBuffer, _faceTriangleBuffer.count, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
     }
 
     private void OnEnable()

@@ -75,11 +75,11 @@ Shader "Voxel/VoxelShader"
             };
 
             UNITY_INSTANCING_BUFFER_START(Props)
-                uint _InstanceStart;
+                uint _InstanceStartIndex;
                 float3 _Scale;
             UNITY_INSTANCING_BUFFER_END(Props)
 
-            StructuredBuffer<float3> _Positions;
+            StructuredBuffer<float3> _VertexPositions;
             StructuredBuffer<float4x4> _TransformMatrices;
             StructuredBuffer<ColorData> _Colors;
             StructuredBuffer<int> _ColorIndices;
@@ -112,11 +112,11 @@ Shader "Voxel/VoxelShader"
             {
                 UNITY_SETUP_INSTANCE_ID(v);
 
-                uint voxelID = instanceID + _InstanceStart;
+                uint voxelID = _InstanceStartIndex + instanceID;
                 float4x4 objectToVoxelMatrix = _TransformMatrices[instanceID];
                 float4x4 normalObjectToVoxelMatrix = GetNormalObjectToWorldMatrix(objectToVoxelMatrix);
 
-                float4 positionOS = float4(_Positions[vertexID], 1.0);
+                float4 positionOS = float4(_VertexPositions[vertexID], 1.0);
                 float4 normalOS = float4(0.0, 1.0, 0.0, 1.0);
                 float4 tangeantOS = float4(-1.0, 0.0, 0.0, 1.0);
 
@@ -238,7 +238,7 @@ Shader "Voxel/VoxelShader"
                     float4 positionCS : SV_Position;
                 };
 
-                StructuredBuffer<float3> _Positions;
+                StructuredBuffer<float3> _VertexPositions;
                 StructuredBuffer<float4x4> _TransformMatrices;
 
                 float3 _Scale;
@@ -286,7 +286,7 @@ Shader "Voxel/VoxelShader"
 
                     v2f o;
 
-                    float4 vertexPosition = float4(_Positions[vertexID], 1.0f);
+                    float4 vertexPosition = float4(_VertexPositions[vertexID], 1.0f);
                     float3 positionWS = mul(objectToWorldMatrix, vertexPosition).xyz;
 
                     float4x4 normalObjectToWorld = GetNormalObjectToWorldMatrix(objectToWorldMatrix);

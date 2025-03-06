@@ -6,26 +6,35 @@ StructuredBuffer<int> _VoxelIndices;
 StructuredBuffer<float4x4> _RotationMatrices;
 RWStructuredBuffer<float4x4> _TransformMatrices;
 
-uniform uint _VoxelCount;
-uniform float4x4 _MatrixObjectToWorld;
-uniform int _InstanceStart;
+uniform uint _InstanceStartIndex;
+uniform uint _InstanceCount;
+uniform uint _FrameIndex;
+uniform float4x4 _VoxelToWorldMatrix;
 
 [numthreads(64, 1, 1)]
 void VoxelGeneration(uint3 id : SV_DispatchThreadID)
 {
-    if (id.x >= _VoxelCount)
+    if (id.x >= _InstanceCount)
         return;
     
-    uint instanceID = id.x + _InstanceStart;
+    int faceIndex = 0;
+    [unroll(5)]
+    while (id.x >= _FaceIndices[faceIndex + _FrameIndex * 6])
+    {
+        faceIndex += 1;
+    }
+    
+    uint instanceID = _InstanceStartIndex + id.x;
     float3 pos = _VoxelPositions[_VoxelIndices[instanceID]] * 0.1f;
 
-    float4x4 faceTransformMatrix = float4x4
+    float4x4 objectToVoxelMatrix = float4x4
     (
         1, 0, 0, pos.x,
         0, 1, 0, pos.y + 0.05,
         0, 0, 1, pos.z,
         0, 0, 0, 1
     );
+    objectToVoxelMatrix = mul(objectToVoxelMatrix, _RotationMatrices[faceIndex]);
     
-    _TransformMatrices[id.x] = mul(_MatrixObjectToWorld, mul(faceTransformMatrix, _RotationMatrices[_FaceIndices[instanceID]]));
+    _TransformMatrices[id.x] = mul(_VoxelToWorldMatrix, objectToVoxelMatrix);
 }
