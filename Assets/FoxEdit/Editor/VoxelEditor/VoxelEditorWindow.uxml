@@ -1,0 +1,85 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/FoxEdit/Editor/VoxelEditor/VoxelEditorWindow.uss?fileID=7433441132597879392&amp;guid=0a0502fff63e0254e9744cbbd5b0c047&amp;type=3#VoxelEditorWindow" />
+    <ui:VisualElement name="tools" style="flex-direction: row; justify-content: center;">
+        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="voxel-button" tooltip="Add voxels" class="tool-button toolbar-left">
+            <ui:VisualElement class="tool-button-icon" style="background-image: url(&quot;project://database/Assets/FoxEdit/Editor/VoxelEditor/icons/tools-voxel.png?fileID=2800000&amp;guid=ec43fb3f6bac31e48a1e3d31ae1915ed&amp;type=3#tools-voxel&quot;);" />
+        </ui:Button>
+        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="brush-button" tooltip="Change voxels color" class="tool-button toolbar-middle">
+            <ui:VisualElement class="tool-button-icon" />
+        </ui:Button>
+        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="eraser-button" tooltip="Delete voxels" class="tool-button toolbar-right toolbar-button_enabled">
+            <ui:VisualElement class="tool-button-icon" style="background-image: url(&quot;project://database/Assets/FoxEdit/Editor/VoxelEditor/icons/tools-ereaserl.png?fileID=2800000&amp;guid=66ff248190ec17449b9706b5293e402c&amp;type=3#tools-ereaserl&quot;);" />
+        </ui:Button>
+    </ui:VisualElement>
+    <ui:VisualElement name="palette" class="section">
+        <ui:Label tabindex="-1" text="Palette" parse-escape-sequences="true" display-tooltip-when-elided="true" class="voxel-editor-title" />
+        <ui:ScrollView scroll-deceleration-rate="0,135" elasticity="0,1">
+            <ui:VisualElement name="palette-elements">
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element palette-element_enabled" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element" class="palette-element" />
+                <ui:VisualElement name="palette-element-add" class="palette-element">
+                    <ui:VisualElement />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+    <ui:VisualElement name="frames" class="section">
+        <ui:Label tabindex="-1" text="Frames" parse-escape-sequences="true" display-tooltip-when-elided="true" class="voxel-editor-title" />
+        <ui:ScrollView scroll-deceleration-rate="0,135" elasticity="0,1">
+            <ui:VisualElement name="frames-buttons">
+                <ui:VisualElement class="frame-button">
+                    <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                </ui:VisualElement>
+                <ui:VisualElement class="frame-button">
+                    <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                </ui:VisualElement>
+                <ui:VisualElement class="frame-button">
+                    <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                </ui:VisualElement>
+                <ui:VisualElement class="frame-button">
+                    <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                </ui:VisualElement>
+                <ui:VisualElement class="frame-button">
+                    <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                </ui:VisualElement>
+                <ui:VisualElement class="frame-button frame-button_enabled">
+                    <ui:Label tabindex="-1" text="1" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                </ui:VisualElement>
+                <ui:VisualElement name="frame-button-add" class="frame-button">
+                    <ui:VisualElement />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+    <ui:VisualElement picking-mode="Ignore" style="position: absolute; right: -13px; bottom: -8px; background-image: url(&quot;project://database/Assets/FoxEdit/Editor/VoxelEditor/icons/fox.png?fileID=2800000&amp;guid=51781fed6bffb194fa22d855f27ed6bd&amp;type=3#fox&quot;); width: 50px; height: 50px; scale: -1 1; -unity-background-image-tint-color: rgba(255, 255, 255, 0.57);" />
+</ui:UXML>

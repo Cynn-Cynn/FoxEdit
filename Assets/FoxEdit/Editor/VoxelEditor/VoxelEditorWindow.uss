@@ -1,0 +1,163 @@
+.custom-label {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(68, 138, 255);
+}
+
+#tools {
+    margin-top: 5px;
+}
+
+.tool-button-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/VoxelEditor/icons/tools-brush.png?fileID=2800000&guid=353899a044cc2984b8a66197ca62f55e&type=3#tools-brush");
+    flex-grow: 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.tool-button {
+    width: 40px;
+    height: 40px;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+}
+
+.toolbar-left {
+    border-right-width: 1px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.toolbar-middle {
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.toolbar-right {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.toolbar-button_enabled {
+    background-color: var(--unity-colors-highlight-background);
+}
+
+.palette-element {
+    width: 30px;
+    height: 30px;
+    background-color: rgb(255, 0, 0);
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: var(--unity-colors-default-border);
+    border-right-color: var(--unity-colors-default-border);
+    border-bottom-color: var(--unity-colors-default-border);
+    border-left-color: var(--unity-colors-default-border);
+}
+
+#palette {
+    flex-direction: column;
+    -unity-text-align: upper-left;
+    max-height: 200px;
+}
+
+#palette-elements {
+    flex-direction: row;
+    margin-top: 3px;
+    flex-wrap: wrap;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.palette-element_enabled {
+    border-top-color: rgb(0, 255, 21);
+    border-right-color: rgb(0, 255, 21);
+    border-bottom-color: rgb(0, 255, 21);
+    border-left-color: rgb(0, 255, 21);
+    border-top-width: 4px;
+    border-right-width: 4px;
+    border-bottom-width: 4px;
+    border-left-width: 4px;
+}
+
+#palette-element-add {
+    background-color: var(--unity-colors-default-background);
+}
+
+#palette-element-add > VisualElement {
+    flex-grow: 1;
+    background-image: url("project://database/Packages/com.unity.render-pipelines.core/Editor/LookDev/Icons/d_Add.png?fileID=2800000&guid=160b197aba549514286b94426ceae589&type=3#d_Add");
+}
+
+.voxel-editor-title {
+    -unity-font-style: bold;
+    font-size: 15px;
+    color: var(--unity-colors-default-text);
+}
+
+.section {
+    margin-top: 10px;
+    padding-top: 5px;
+    padding-right: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+}
+
+#frames {
+    max-height: 150px;
+}
+
+#frames-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-top: 5px;
+    padding-right: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+}
+
+.frame-button {
+    width: 50px;
+    height: 50px;
+    -unity-text-align: middle-center;
+    font-size: 25px;
+    -unity-font-style: bold;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: var(--unity-colors-default-border);
+    border-right-color: var(--unity-colors-default-border);
+    border-bottom-color: var(--unity-colors-default-border);
+    border-left-color: var(--unity-colors-default-border);
+    align-items: center;
+    justify-content: center;
+}
+
+.frame-button_enabled {
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-color: var(--unity-colors-highlight-background);
+    border-right-color: var(--unity-colors-highlight-background);
+    border-bottom-color: var(--unity-colors-highlight-background);
+    border-left-color: var(--unity-colors-highlight-background);
+}
+
+#frame-button-add {
+}
+
+#frame-button-add > VisualElement {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+    background-image: url("project://database/Packages/com.unity.render-pipelines.core/Editor/LookDev/Icons/d_Add@2x.png?fileID=2800000&guid=daa49a1f06460a04b9827dd6f0bace08&type=3#d_Add@2x");
+    background-color: var(--unity-colors-default-background);
+}
