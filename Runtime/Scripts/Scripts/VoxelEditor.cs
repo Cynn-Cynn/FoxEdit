@@ -176,7 +176,6 @@ public class VoxelEditor : MonoBehaviour
             else if (_action == VoxelAction.Color)
                 _currentFrame.TryColorCube(gridPosition, _selectedColor);
         }
-
         _canClick = false;
     }
 
