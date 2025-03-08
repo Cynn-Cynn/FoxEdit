@@ -46,6 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _meshName: Mesh
   _saveDirectory: 
+  _voxelObject: {fileID: 0}
   _action: 2
   _selectedPalette: 0
   _selectedColor: 0
@@ -62,6 +63,7 @@ MonoBehaviour:
   _currentFrame: {fileID: 0}
   _frameList: []
   _materialPrefab: {fileID: 2100000, guid: 3ba88c2707cea7843b37c87a3a206258, type: 2}
+  _computeStaticMesh: {fileID: 7200000, guid: 2cb62f122b08a144ba5d96639b73bd19, type: 3}
   _palette: {fileID: 11400000, guid: 2018349bc5077014daddb8178c4c004f, type: 2}
   _sharedData: {fileID: 0}
   _canClick: 1

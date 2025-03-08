@@ -28,6 +28,7 @@ public class VoxelObject : ScriptableObject
     public int MaxInstanceCount = 0;
 
     public EditorFrameVoxels[] EditorVoxelPositions = null;
+    public Mesh StaticMesh = null;
 
     public void Print()
     {

@@ -3,8 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 #if UNITY_EDITOR
+using Autodesk.Fbx;
 using UnityEditor;
 using NaughtyAttributes;
+using UnityEngine.Rendering;
+using UnityEngine.UIElements;
+
+
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #else
@@ -40,6 +45,7 @@ public class VoxelEditor : MonoBehaviour
     [SerializeField] private VoxelStructure _currentFrame;
     [SerializeField] private List<VoxelStructure> _frameList;
     [SerializeField] private Material _materialPrefab = null;
+    [SerializeField] private ComputeShader _computeStaticMesh = null;
 
     [SerializeField][HideInInspector] private VoxelPalette _palette = null;
 
@@ -306,10 +312,219 @@ public class VoxelEditor : MonoBehaviour
         _voxelObject.InstanceStartIndices = startIndices;
         _voxelObject.EditorVoxelPositions = editorVoxelPositions;
 
+        string fbxPath = null;
+        if (_saveDirectory == null || _saveDirectory == "")
+            fbxPath = $"Assets/{_meshName}.asset";
+        else
+            fbxPath = $"Assets/{_saveDirectory}/{_meshName}.fbx";
+
+
+        CreateFBX(fbxPath);
         EditorUtility.SetDirty(_voxelObject);
         AssetDatabase.SaveAssets();
         EditorUtility.FocusProjectWindow();
         Selection.activeObject = _voxelObject;
+        AssetDatabase.Refresh();
+
+        GameObject go = AssetDatabase.LoadAssetAtPath(fbxPath, typeof(GameObject)) as GameObject;
+        _voxelObject.StaticMesh = go.GetComponent<MeshFilter>().sharedMesh;
+    }
+
+    private void CreateFBX(string fbxPath)
+    {
+        using (var fbxManager = FbxManager.Create())
+        {
+            FbxIOSettings fbxIOSettings = FbxIOSettings.Create(fbxManager, Globals.IOSROOT);
+
+            fbxManager.SetIOSettings(fbxIOSettings);
+            FbxExporter fbxExporter = FbxExporter.Create(fbxManager, "Exporter");
+            int fileFormat = fbxManager.GetIOPluginRegistry().FindWriterIDByDescription("FBX ascii (*.fbx)");
+            bool status = fbxExporter.Initialize(fbxPath, fileFormat, fbxIOSettings);
+
+            if (!status)
+            {
+                Debug.LogError(string.Format("failed to initialize exporter, reason: {0}", fbxExporter.GetStatus().GetErrorString()));
+                return;
+            }
+
+            FbxScene fbxScene = FbxScene.Create(fbxManager, "Scene");
+            FbxDocumentInfo fbxSceneInfo = FbxDocumentInfo.Create(fbxManager, "SceneInfo");
+            fbxSceneInfo.mTitle = $"{_meshName}";
+            fbxSceneInfo.mAuthor = "FoxEdit";
+            fbxScene.SetSceneInfo(fbxSceneInfo);
+
+            FbxNode mesh = CreateFbxNode(fbxManager, _voxelObject);
+            fbxScene.GetRootNode().AddChild(mesh);
+
+            fbxExporter.Export(fbxScene);
+
+            fbxScene.Destroy();
+            fbxExporter.Destroy();
+        }
+    }
+
+    private Matrix4x4[] GetRotationMatrices()
+    {
+        float halfPi = Mathf.PI / 2.0f;
+
+        Matrix4x4[] rotationMatrices = new Matrix4x4[6];
+        rotationMatrices[0] = GetRotationMatrixX(0);
+        rotationMatrices[1] = GetRotationMatrixX(halfPi);
+        rotationMatrices[2] = GetRotationMatrixX(halfPi * 2);
+        rotationMatrices[3] = GetRotationMatrixX(-halfPi);
+        rotationMatrices[4] = GetRotationMatrixZ(halfPi);
+        rotationMatrices[5] = GetRotationMatrixZ(-halfPi);
+
+        return rotationMatrices;
+    }
+
+    private Matrix4x4 GetRotationMatrixX(float angle)
+    {
+        float c = Mathf.Cos(angle);
+        float s = Mathf.Sin(angle);
+
+        return new Matrix4x4
+        (
+            new Vector4(1, 0, 0, 0),
+            new Vector4(0, c, -s, 0),
+            new Vector4(0, s, c, 0),
+            new Vector4(0, 0, 0, 1)
+        );
+    }
+
+    private Matrix4x4 GetRotationMatrixZ(float angle)
+    {
+        float c = Mathf.Cos(angle);
+        float s = Mathf.Sin(angle);
+
+        return new Matrix4x4
+        (
+            new Vector4(c, -s, 0, 0),
+            new Vector4(s, c, 0, 0),
+            new Vector4(0, 0, 1, 0),
+            new Vector4(0, 0, 0, 1)
+        );
+    }
+
+    private FbxNode CreateFbxNode(FbxManager fbxManager, VoxelObject voxelObject)
+    {
+        int kernel = _computeStaticMesh.FindKernel("VoxelGeneration");
+
+        //Voxel
+        GraphicsBuffer voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelObject.VoxelPositions.Length, sizeof(float) * 3);
+        voxelPositionBuffer.SetData(voxelObject.VoxelPositions);
+        _computeStaticMesh.SetBuffer(kernel, "_VoxelPositions", voxelPositionBuffer);
+
+        GraphicsBuffer faceIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelObject.FaceIndices.Length, sizeof(int));
+        faceIndicesBuffer.SetData(voxelObject.FaceIndices);
+        _computeStaticMesh.SetBuffer(kernel, "_FaceIndices", faceIndicesBuffer);
+
+        GraphicsBuffer voxelIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelObject.VoxelIndices.Length, sizeof(int));
+        voxelIndicesBuffer.SetData(voxelObject.VoxelIndices);
+        _computeStaticMesh.SetBuffer(kernel, "_VoxelIndices", voxelIndicesBuffer);
+
+        Matrix4x4[] rotationMatrices = GetRotationMatrices();
+        GraphicsBuffer rotationMatricesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 6, sizeof(float) * 16);
+        rotationMatricesBuffer.SetData(rotationMatrices);
+        _computeStaticMesh.SetBuffer(kernel, "_RotationMatrices", rotationMatricesBuffer);
+
+        GraphicsBuffer positionsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelObject.InstanceCount[0] * 4, sizeof(float) * 3);
+        _computeStaticMesh.SetBuffer(kernel, "_VertexPosition", positionsBuffer);
+
+        GraphicsBuffer normalsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, voxelObject.InstanceCount[0], sizeof(float) * 3);
+        _computeStaticMesh.SetBuffer(kernel, "_VertexNormals", normalsBuffer);
+
+        int instanceCount = voxelObject.InstanceCount[0];
+        _computeStaticMesh.SetInt("_InstanceCount", instanceCount);
+
+        uint threadGroupSize = 0;
+        _computeStaticMesh.GetKernelThreadGroupSizes(kernel, out threadGroupSize, out _, out _);
+        int threadGroups = Mathf.CeilToInt((float)instanceCount / threadGroupSize);
+        _computeStaticMesh.Dispatch(kernel, threadGroups, 1, 1);
+
+        Vector3[] positions = new Vector3[voxelObject.InstanceCount[0] * 4];
+        Vector3[] normals = new Vector3[voxelObject.InstanceCount[0]];
+
+        positionsBuffer.GetData(positions);
+        normalsBuffer.GetData(normals);
+
+        FbxMesh fbxMesh = ConvertUnityMeshToFbxMesh(fbxManager, positions, normals);
+
+        FbxNode meshNode = FbxNode.Create(fbxManager, $"{fbxMesh.GetName()}");
+        meshNode.LclTranslation.Set(new FbxDouble3(0.0, 0.0, 0.0));
+        meshNode.LclRotation.Set(new FbxDouble3(0.0, 0.0, 0.0));
+        meshNode.LclScaling.Set(new FbxDouble3(1.0, 1.0, 1.0));
+        meshNode.SetNodeAttribute(fbxMesh);
+
+        voxelPositionBuffer.Dispose();
+        voxelIndicesBuffer.Dispose();
+        faceIndicesBuffer.Dispose();
+        rotationMatricesBuffer.Dispose();
+        positionsBuffer.Dispose();
+        normalsBuffer.Dispose();
+
+        return meshNode;
+    }
+
+    private FbxMesh ConvertUnityMeshToFbxMesh(FbxManager fbxManager, Vector3[] vertices, Vector3[] normals)
+    {
+        FbxMesh fbxMesh = FbxMesh.Create(fbxManager, $"SM_{_meshName}");
+
+        fbxMesh.InitControlPoints(vertices.Length);
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            fbxMesh.SetControlPointAt(new FbxVector4(vertices[i].x, vertices[i].y, vertices[i].z, 1), i);
+        }
+
+        for (int i = 0; i < vertices.Length / 4; i++)
+        {
+            fbxMesh.BeginPolygon();
+            fbxMesh.AddPolygon(0 + i * 4);
+            fbxMesh.AddPolygon(1 + i * 4);
+            fbxMesh.AddPolygon(2 + i * 4);
+            fbxMesh.EndPolygon();
+
+            fbxMesh.BeginPolygon();
+            fbxMesh.AddPolygon(0 + i * 4);
+            fbxMesh.AddPolygon(2 + i * 4);
+            fbxMesh.AddPolygon(3 + i * 4);
+            fbxMesh.EndPolygon();
+        }
+
+        var normalElement = FbxLayerElementNormal.Create(fbxMesh, "Normals");
+        normalElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
+        normalElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
+
+        var normalArray = normalElement.GetDirectArray();
+        for (int i = 0; i < normals.Length; i++)
+        {
+            FbxVector4 fbxNormal = new FbxVector4(normals[i].x, normals[i].y, normals[i].z, 0);
+            normalArray.Add(fbxNormal);
+            normalArray.Add(fbxNormal);
+            normalArray.Add(fbxNormal);
+            normalArray.Add(fbxNormal);
+        }
+
+        fbxMesh.GetLayer(0).SetNormals(normalElement);
+
+        var uvElement = FbxLayerElementUV.Create(fbxMesh, "UVs");
+        uvElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
+        uvElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
+
+        var uvArray = uvElement.GetDirectArray();
+        for (int i = 0; i < vertices.Length / 4; i++)
+        {
+            int voxelIndex = _voxelObject.VoxelIndices[i];
+            int colorIndex = _voxelObject.ColorIndices[voxelIndex];
+            uvArray.Add(new FbxVector2(colorIndex, 0));
+            uvArray.Add(new FbxVector2(colorIndex, 0));
+            uvArray.Add(new FbxVector2(colorIndex, 0));
+            uvArray.Add(new FbxVector2(colorIndex, 0));
+        }
+
+        fbxMesh.GetLayer(0).SetUVs(uvElement);
+
+        return fbxMesh;
     }
 
     private Bounds CreateBounds(Vector3Int[] minBounds, Vector3Int[] maxBounds)

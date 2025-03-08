@@ -1,0 +1,51 @@
+#pragma kernel VoxelGeneration
+
+StructuredBuffer<float3> _VoxelPositions;
+StructuredBuffer<int> _FaceIndices;
+StructuredBuffer<int> _VoxelIndices;
+StructuredBuffer<float4x4> _RotationMatrices;
+RWStructuredBuffer<float3> _VertexPosition;
+RWStructuredBuffer<float3> _VertexNormals;
+
+uniform uint _InstanceCount;
+
+[numthreads(64, 1, 1)]
+void VoxelGeneration(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _InstanceCount)
+        return;
+    
+    int faceIndex = 0;
+    [unroll(5)]
+    while (id.x >= _FaceIndices[faceIndex])
+    {
+        faceIndex += 1;
+    }
+    
+    float3 pos = _VoxelPositions[_VoxelIndices[id.x]] * 10.0f;
+
+    float4x4 objectToWorldMatrix = float4x4
+    (
+        1, 0, 0, -pos.x,
+        0, 1, 0, pos.y + 5.0f,
+        0, 0, 1, pos.z,
+        0, 0, 0, 1
+    );
+    objectToWorldMatrix = mul(objectToWorldMatrix, _RotationMatrices[faceIndex]);
+    
+    float4x4 vertices =
+    {
+        5.0f, 5.0f, 5.0f, 1.0f,
+        5.0f, 5.0f, -5.0f, 1.0f,
+        -5.0f, 5.0f, -5.0f, 1.0f,
+        -5.0f, 5.0f, 5.0f, 1.0f
+    };
+
+    float4 normal = { 0.0f, 1.0f, 0.0, 1.0f };
+    
+    _VertexPosition[id.x * 4 ] = mul(objectToWorldMatrix, vertices[0]).xyz;
+    _VertexPosition[id.x * 4 + 1] = mul(objectToWorldMatrix, vertices[1]).xyz;
+    _VertexPosition[id.x * 4 + 2] = mul(objectToWorldMatrix, vertices[2]).xyz;
+    _VertexPosition[id.x * 4 + 3] = mul(objectToWorldMatrix, vertices[3]).xyz;
+    _VertexNormals[id.x] = mul(_RotationMatrices[faceIndex], normal).xyz;
+}

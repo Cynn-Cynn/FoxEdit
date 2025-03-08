@@ -45,3 +45,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _voxelPrefab: {fileID: 2652769913794444823, guid: b372f3a77bc32ba418920cfa5cab2b28, type: 3}
+  _voxelEditor: {fileID: 0}
