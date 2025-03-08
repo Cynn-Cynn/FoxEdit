@@ -220,7 +220,7 @@ public class VoxelSharedData : MonoBehaviour
 
     public GraphicsBuffer GetColorBuffer(int index)
     {
-        if (index >= _colorsBuffers.Count)
+        if (_colorsBuffers == null || index >= _colorsBuffers.Count)
             return null;
         return _colorsBuffers[index];
     }

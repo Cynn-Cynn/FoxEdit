@@ -8,14 +8,14 @@ using UnityEngine;
 [ExecuteAlways]
 public class VoxelRenderer : MonoBehaviour
 {
+    [SerializeField] VoxelObject _voxelObject = null;
+
     [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField][HideInInspector] private ComputeShader _computeShaderInstance = null;
+    [SerializeField] [HideInInspector] private ComputeShader _computeShaderInstance = null;
     [SerializeField] private Material _material = null;
 
     [SerializeField] private float _frameTime = 0.2f;
-    [SerializeField] private VoxelEditor _voxelEditor = null;
 
-    VoxelObject _voxelObject = null;
 
     private GraphicsBuffer _voxelPositionBuffer = null;
 
@@ -46,9 +46,7 @@ public class VoxelRenderer : MonoBehaviour
 
     private void OnEnable()
     {
-#if UNITY_EDITOR
-        Refresh();
-#else
+#if !UNITY_EDITOR
         SetBuffers();
 #endif
     }
@@ -84,9 +82,11 @@ public class VoxelRenderer : MonoBehaviour
 
     private void SetBuffers()
     {
+        if (_voxelObject == null)
+            return;
+
         _computeShaderInstance = Instantiate(_computeShader);
         _kernel = _computeShaderInstance.FindKernel("VoxelGeneration");
-        _voxelObject = _voxelEditor.ConstructVoxelObject();
 
         //Voxel
         _voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelPositions.Length, sizeof(float) * 3);
@@ -192,6 +192,9 @@ public class VoxelRenderer : MonoBehaviour
 
     void Update()
     {
+        if (_voxelObject == null)
+            return;
+
         _timer += Time.deltaTime;
         if (_timer >= _frameTime)
         {
