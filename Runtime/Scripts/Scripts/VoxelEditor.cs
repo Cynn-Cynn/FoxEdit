@@ -193,10 +193,8 @@ public class VoxelEditor : MonoBehaviour
 
         int[] faceIndices = new int[_frameList.Count * 6];
         int[] frameFaceIndices = new int[6];
-
         int[] startIndices = new int[_frameList.Count];
         int[] instanceCounts = new int[_frameList.Count];
-
         int[] voxelIndices = new int[0];
 
         int startIndex = 0;
