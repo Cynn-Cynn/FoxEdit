@@ -146,8 +146,6 @@ public class VoxelEditor : MonoBehaviour
 #else
         mouseInput = Event.current.mousePosition;
 #endif
-
-
         Ray ray = HandleUtility.GUIPointToWorldRay(mouseInput);
 
         Vector3 worldPosition = Vector3.zero;
