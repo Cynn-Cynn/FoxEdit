@@ -145,7 +145,6 @@ public class VoxelEditor : MonoBehaviour
             scenePosition = sceneWindow.position.position;
 
         Vector2 mouseInput = Vector2.zero;
-
 #if ENABLE_INPUT_SYSTEM
         mouseInput = Mouse.current.position.ReadValue();
         mouseInput = mouseInput - scenePosition - new Vector2(0.0f, 45.0f);
