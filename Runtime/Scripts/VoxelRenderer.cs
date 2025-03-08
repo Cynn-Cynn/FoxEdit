@@ -37,7 +37,6 @@ public class VoxelRenderer : MonoBehaviour
 
 #if UNITY_EDITOR
     [SerializeField][HideInInspector] VoxelSharedData _sharedData = null;
-    [SerializeField][HideInInspector] private bool _buffersSet = false;
 #endif
 
     void Start()
@@ -76,7 +75,7 @@ public class VoxelRenderer : MonoBehaviour
     [Button("Refresh")]
     public void Refresh()
     {
-        if (!Application.isPlaying && _buffersSet)
+        if (!Application.isPlaying)
             DisposeBuffers();
 
         SetBuffers();
@@ -143,10 +142,6 @@ public class VoxelRenderer : MonoBehaviour
 #endif
 
         RunComputeShader();
-
-#if UNITY_EDITOR
-        _buffersSet = true;
-#endif
     }
 
     public void SetPalette(int index)
@@ -241,8 +236,5 @@ public class VoxelRenderer : MonoBehaviour
 
         _faceIndicesBuffer?.Dispose();
         _colorIndicesBuffer?.Dispose();
-#if UNITY_EDITOR
-        _buffersSet = false;
-#endif
     }
 }

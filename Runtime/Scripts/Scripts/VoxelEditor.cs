@@ -35,6 +35,8 @@ public class VoxelEditor : MonoBehaviour
 
     [SerializeField][HideInInspector] VoxelSharedData _sharedData = null;
 
+    [SerializeField][HideInInspector] bool _canClick = true;
+
     private void OnEnable()
     {
         if (Application.isPlaying)
@@ -42,12 +44,16 @@ public class VoxelEditor : MonoBehaviour
 
         if (_materials == null)
             CreateMaterials();
+
+        SceneView.duringSceneGui += OnSceneGUI;
     }
 
     private void OnDisable()
     {
         if (Application.isPlaying)
             return;
+
+        SceneView.duringSceneGui -= OnSceneGUI;
     }
 
     [Button("Refresh Colors")]
@@ -117,15 +123,20 @@ public class VoxelEditor : MonoBehaviour
         _currentFrame.gameObject.SetActive(true);
     }
 
-    private void Update()
+    private void OnSceneGUI(SceneView sceneView)
     {
         if (Application.isPlaying)
             return;
 
 #if ENABLE_INPUT_SYSTEM
-        if (Mouse.current.rightButton.IsPressed())
+        if (!_canClick && !Mouse.current.rightButton.IsPressed())
+            _canClick = true;
+
+        if (Mouse.current.rightButton.IsPressed() && _canClick)
 #else
-        if (Input.GetMouseButtonDown(1))
+        if (!_canClick && !Event.current.IsRightMouseButton())
+            _canClick = true;
+        if (Event.current.IsRightMouseButton() && _canClick)
 #endif
             Click();
     }
@@ -147,7 +158,6 @@ public class VoxelEditor : MonoBehaviour
         Vector2 mouseInput = Vector2.zero;
 #if ENABLE_INPUT_SYSTEM
         mouseInput = Mouse.current.position.ReadValue();
-        mouseInput = mouseInput - scenePosition - new Vector2(0.0f, 45.0f);
 #else
         mouseInput = Event.current.mousePosition;
 #endif
@@ -167,6 +177,8 @@ public class VoxelEditor : MonoBehaviour
             else if (_action == VoxelAction.Color)
                 _currentFrame.TryColorCube(gridPosition, _selectedColor);
         }
+
+        _canClick = false;
     }
 
     private bool TryGetCubePosition(out Vector3 cubePosition, out Vector3 worldNormal, Ray ray)
