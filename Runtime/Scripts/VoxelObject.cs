@@ -3,25 +3,9 @@ using UnityEngine;
 
 public class VoxelObject
 {
-    public struct ColorData
-    {
-        Vector4 Color;
-        float Emissive;
-        float Metallic;
-        float Smoothness;
-
-        public ColorData(Vector4 color, float emissive, float metallic, float smoothness)
-        {
-            Color = color;
-            Emissive = emissive;
-            Metallic = metallic;
-            Smoothness = smoothness;
-        }
-    }
-
-    public ColorData[] Colors = null;
     public Bounds Bounds;
 
+    public int PaletteIndex = 0;
     public Vector3[] VoxelPositions = null;
     public int[] VoxelIndices = null;
     public int[] FaceIndices = null;
@@ -37,12 +21,6 @@ public class VoxelObject
     public void Print()
     {
         string result = $"Colors: ";
-        for (int i = 0; i < Colors.Length; i++)
-        {
-            result += $"{Colors[i]}";
-            if (i < Colors.Length - 1)
-                result += " | " ;
-        }
 
         result += $"\nBounds: {Bounds}";
 
