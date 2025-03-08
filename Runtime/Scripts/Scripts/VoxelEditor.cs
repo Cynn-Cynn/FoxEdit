@@ -6,6 +6,8 @@ using UnityEditor;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+#else
+using Unity.VisualScripting;
 #endif
 
 [ExecuteAlways]
