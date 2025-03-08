@@ -32,6 +32,21 @@ public class VoxelStructure : MonoBehaviour
             GetAllVoxel();
     }
 
+    public void LoadFromMesh(Vector3Int[] voxelPositions, int[] colorIndices)
+    {
+        DestroyImmediate(_grid[Vector3Int.zero]);
+        _grid.Clear();
+
+        for (int i = 0; i < voxelPositions.Length; i++)
+        {
+            Vector3 localPosition = GridToLocalPosition(voxelPositions[i]);
+            VoxelPlaceHolder voxel = Instantiate(_voxelPrefab, transform);
+            voxel.transform.localPosition = localPosition;
+            _grid[voxelPositions[i]] = voxel;
+            SetColor(voxelPositions[i], colorIndices[i]);
+        }
+    }
+
     public VoxelData[] GetMeshData(out Vector3Int minBounds, out Vector3Int maxBounds)
     {
         if (_grid == null)
@@ -40,6 +55,22 @@ public class VoxelStructure : MonoBehaviour
         GetBounds(out minBounds, out maxBounds);
 
         return GetFaces();
+    }
+
+    public Vector3Int[] GetEditorVoxelPositions()
+    {
+        if (_grid == null)
+            GetAllVoxel();
+
+        return _grid.Keys.ToArray();
+    }
+
+    public int[] GetEditorVoxelColorIndices()
+    {
+        if (_grid == null)
+            GetAllVoxel();
+
+        return _grid.Values.Select(voxel => voxel.ColorIndex).ToArray();
     }
 
     private void GetAllVoxel()
@@ -72,6 +103,9 @@ public class VoxelStructure : MonoBehaviour
 
     private void SetColor(Vector3Int position, int colorIndex)
     {
+        if (_grid == null)
+            GetAllVoxel();
+
         if (!_grid.ContainsKey(position))
             return;
 
@@ -94,6 +128,9 @@ public class VoxelStructure : MonoBehaviour
 
     public bool TryRemoveCube(Vector3Int position)
     {
+        if (_grid == null)
+            GetAllVoxel();
+
         if (!_grid.ContainsKey(position) || _grid.Count == 1)
             return false;
 
@@ -104,6 +141,9 @@ public class VoxelStructure : MonoBehaviour
 
     public bool TryColorCube(Vector3Int position, int colorIndex)
     {
+        if (_grid == null)
+            GetAllVoxel();
+
         if (!_grid.ContainsKey(position) || _grid.Count == 1)
             return false;
 

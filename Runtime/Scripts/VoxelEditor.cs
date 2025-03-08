@@ -1,9 +1,10 @@
-using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+using NaughtyAttributes;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #else
@@ -11,14 +12,21 @@ using Unity.VisualScripting;
 #endif
 
 [ExecuteAlways]
+#endif
 public class VoxelEditor : MonoBehaviour
 {
+#if UNITY_EDITOR
+
     private enum VoxelAction
     {
         Paint,
         Erase,
         Color
     }
+
+    [SerializeField] private string _meshName = "";
+    [SerializeField] private string _saveDirectory = "";
+    [SerializeField] private VoxelObject _voxelObject = null;
 
     [SerializeField] private VoxelAction _action = VoxelAction.Paint;
 
@@ -56,6 +64,30 @@ public class VoxelEditor : MonoBehaviour
             return;
 
         SceneView.duringSceneGui -= OnSceneGUI;
+    }
+
+    [Button("Load Mesh")]
+    private void LoadMesh()
+    {
+        if (_voxelObject == null)
+            return;
+
+        for (int i = 0; i < _frameList.Count; i++)
+        {
+            DestroyImmediate(_frameList[i].gameObject);
+        }
+        _frameList.Clear();
+
+        for (int i = 0; i < _voxelObject.EditorVoxelPositions.Length; i++)
+        {
+            VoxelStructure frame = Instantiate(_voxelFramePrefab, transform);
+            frame.LoadFromMesh(_voxelObject.EditorVoxelPositions[i].VoxelPositions, _voxelObject.EditorVoxelPositions[i].ColorIndices);
+            if (i != 0)
+                frame.gameObject.SetActive(false);
+            _frameList.Add(frame);
+        }
+
+        _currentFrame = _frameList[0];
     }
 
     [Button("Refresh Colors")]
@@ -101,15 +133,16 @@ public class VoxelEditor : MonoBehaviour
     [Button("New Voxel Structure")]
     private void InstantiateNewVoxelStructure()
     {
-        _frameList.Add(Instantiate(_voxelFramePrefab));
-        _currentFrameIndex = _frameList.Count - 1;
+        _frameList.Add(Instantiate(_voxelFramePrefab, transform));
+        if (_frameList.Count != 0)
+            _currentFrameIndex = _frameList.Count - 1;
         ChangeFrame();
     }
 
     [Button("Duplicate Current Voxel Structure")]
     private void DuplicateVoxelStructure()
     {
-        _frameList.Add(Instantiate(_currentFrame));
+        _frameList.Add(Instantiate(_currentFrame, transform));
         _currentFrameIndex = _frameList.Count - 1;
         ChangeFrame();
     }
@@ -196,9 +229,20 @@ public class VoxelEditor : MonoBehaviour
         return false;
     }
 
-    public VoxelObject ConstructVoxelObject()
+    [Button("Create/Update Mesh")]
+    private void ConstructVoxelObject()
     {
-        VoxelObject voxelObject = new VoxelObject();
+        string assetPath = null;
+        if (_saveDirectory == null || _saveDirectory == "")
+            assetPath = $"Assets/{_meshName}.asset";
+        else
+            assetPath = $"Assets/{_saveDirectory}/{_meshName}.asset";
+
+        if (_voxelObject == null)
+        {
+            _voxelObject = ScriptableObject.CreateInstance<VoxelObject>();
+            AssetDatabase.CreateAsset(_voxelObject, assetPath);
+        }
 
         Vector3Int[] minBounds = new Vector3Int[_frameList.Count];
         Vector3Int[] maxBounds = new Vector3Int[_frameList.Count];
@@ -210,10 +254,11 @@ public class VoxelEditor : MonoBehaviour
         int[] startIndices = new int[_frameList.Count];
         int[] instanceCounts = new int[_frameList.Count];
         int[] voxelIndices = new int[0];
+        VoxelObject.EditorFrameVoxels[] editorVoxelPositions = new VoxelObject.EditorFrameVoxels[_frameList.Count];
 
         int startIndex = 0;
 
-        voxelObject.VoxelIndices = new int[6];
+        _voxelObject.VoxelIndices = new int[6];
         List<int>[] voxelIndicesByFace = CreateListArray(6);
 
         for (int frame = 0; frame < _frameList.Count; frame++)
@@ -221,6 +266,8 @@ public class VoxelEditor : MonoBehaviour
             Vector3Int min;
             Vector3Int max;
             VoxelData[] voxelData = _frameList[frame].GetMeshData(out min, out max);
+            editorVoxelPositions[frame].VoxelPositions = _frameList[frame].GetEditorVoxelPositions();
+            editorVoxelPositions[frame].ColorIndices = _frameList[frame].GetEditorVoxelColorIndices();
             minBounds[frame] = min;
             maxBounds[frame] = max;
 
@@ -245,20 +292,24 @@ public class VoxelEditor : MonoBehaviour
             ClearVoxelIndicesByFace(voxelIndicesByFace);
         }
 
-        voxelObject.Bounds = CreateBounds(minBounds, maxBounds);
-        voxelObject.PaletteIndex = _selectedPalette;
+        _voxelObject.Bounds = CreateBounds(minBounds, maxBounds);
+        _voxelObject.PaletteIndex = _selectedPalette;
 
-        voxelObject.VoxelPositions = positionsAndColorIndices.Select(voxelData => (Vector3)voxelData).ToArray();
-        voxelObject.VoxelIndices = voxelIndices;
-        voxelObject.FaceIndices = faceIndices;
-        voxelObject.ColorIndices = positionsAndColorIndices.Select(voxelData => (int)voxelData.w).ToArray();
+        _voxelObject.VoxelPositions = positionsAndColorIndices.Select(voxelData => (Vector3)voxelData).ToArray();
+        _voxelObject.VoxelIndices = voxelIndices;
+        _voxelObject.FaceIndices = faceIndices;
+        _voxelObject.ColorIndices = positionsAndColorIndices.Select(voxelData => (int)voxelData.w).ToArray();
 
-        voxelObject.FrameCount = _frameList.Count;
-        voxelObject.InstanceCount = instanceCounts;
-        voxelObject.MaxInstanceCount = instanceCounts.Max();
-        voxelObject.InstanceStartIndices = startIndices;
+        _voxelObject.FrameCount = _frameList.Count;
+        _voxelObject.InstanceCount = instanceCounts;
+        _voxelObject.MaxInstanceCount = instanceCounts.Max();
+        _voxelObject.InstanceStartIndices = startIndices;
+        _voxelObject.EditorVoxelPositions = editorVoxelPositions;
 
-        return voxelObject;
+        EditorUtility.SetDirty(_voxelObject);
+        AssetDatabase.SaveAssets();
+        EditorUtility.FocusProjectWindow();
+        Selection.activeObject = _voxelObject;
     }
 
     private Bounds CreateBounds(Vector3Int[] minBounds, Vector3Int[] maxBounds)
@@ -371,4 +422,6 @@ public class VoxelEditor : MonoBehaviour
     {
         return _materials[index];
     }
+
+#endif
 }
