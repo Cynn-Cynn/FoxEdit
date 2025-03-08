@@ -129,7 +129,6 @@ public class VoxelEditor : MonoBehaviour
     {
         if (Application.isPlaying)
             return;
-
 #if ENABLE_INPUT_SYSTEM
         if (!_canClick && !Mouse.current.rightButton.IsPressed())
             _canClick = true;
