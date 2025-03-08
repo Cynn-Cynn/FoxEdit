@@ -18,8 +18,9 @@ public class VoxelEditor : MonoBehaviour
 
     [SerializeField] private VoxelAction _action = VoxelAction.Paint;
 
+    [SerializeField] private int _selectedPalette = 0;
     [SerializeField] private int _selectedColor = 0;
-    [SerializeField] private VoxelColor[] _colors = null;
+
     [SerializeField][HideInInspector] private List<Material> _materials = null;
     [SerializeField] private VoxelStructure _voxelFramePrefab;
 
@@ -28,7 +29,9 @@ public class VoxelEditor : MonoBehaviour
     [SerializeField] private List<VoxelStructure> _frameList;
     [SerializeField] private Material _materialPrefab = null;
 
-    private Ray _ray;
+    [SerializeField][HideInInspector] private VoxelPalette _palette = null;
+
+    [SerializeField][HideInInspector] VoxelSharedData _sharedData = null;
 
     private void OnEnable()
     {
@@ -51,15 +54,30 @@ public class VoxelEditor : MonoBehaviour
         _materials.Clear();
         _materials = new List<Material>();
 
-        for (int i = 0; i < _colors.Length; i++)
+        if (_sharedData != null || TryGetSharedData())
+        {
+            VoxelPalette newPalette = _sharedData.GetPalette(_selectedPalette);
+            if (newPalette != null)
+                _palette = newPalette;
+        }
+
+        for (int i = 0; i < _palette.Colors.Length; i++)
         {
             _materials.Add(new Material(_materialPrefab));
-            _materials[i].color = _colors[i].Color + _colors[i].Color * _colors[i].EmissiveIntensity;
-            _materials[i].SetFloat("_Smoothness", _colors[i].Smoothness);
-            _materials[i].SetFloat("_Metallic", _colors[i].Metallic);
+            _materials[i].color = _palette.Colors[i].Color + _palette.Colors[i].Color * _palette.Colors[i].EmissiveIntensity;
+            _materials[i].SetFloat("_Smoothness", _palette.Colors[i].Smoothness);
+            _materials[i].SetFloat("_Metallic", _palette.Colors[i].Metallic);
         }
 
         RefreshColors();
+    }
+
+    private bool TryGetSharedData()
+    {
+        _sharedData = FindObjectOfType<VoxelSharedData>();
+        if (_sharedData == null)
+            return false;
+        return true;
     }
 
     private void RefreshColors()
@@ -120,10 +138,17 @@ public class VoxelEditor : MonoBehaviour
         if (sceneWindow != null)
             scenePosition = sceneWindow.position.position;
 
-        Vector2 mouseInput = Mouse.current.position.ReadValue();
-        Vector2 guiPosition = mouseInput - scenePosition - new Vector2(0.0f, 45.0f);
+        Vector2 mouseInput = Vector2.zero;
 
-        Ray ray = HandleUtility.GUIPointToWorldRay(guiPosition);
+#if ENABLE_INPUT_SYSTEM
+        mouseInput = Mouse.current.position.ReadValue();
+        mouseInput = mouseInput - scenePosition - new Vector2(0.0f, 45.0f);
+#else
+        mouseInput = Event.current.mousePosition;
+#endif
+
+
+        Ray ray = HandleUtility.GUIPointToWorldRay(mouseInput);
 
         Vector3 worldPosition = Vector3.zero;
         Vector3 worldNormal = Vector3.zero;
@@ -209,30 +234,19 @@ public class VoxelEditor : MonoBehaviour
         }
 
         voxelObject.Bounds = CreateBounds(minBounds, maxBounds);
-        voxelObject.Colors = CreateColors();
+        voxelObject.PaletteIndex = _selectedPalette;
 
         voxelObject.VoxelPositions = positionsAndColorIndices.Select(voxelData => (Vector3)voxelData).ToArray();
-        voxelObject.VoxelIndices = voxelIndices.ToArray();
-        voxelObject.FaceIndices = faceIndices.ToArray();
+        voxelObject.VoxelIndices = voxelIndices;
+        voxelObject.FaceIndices = faceIndices;
         voxelObject.ColorIndices = positionsAndColorIndices.Select(voxelData => (int)voxelData.w).ToArray();
 
         voxelObject.FrameCount = _frameList.Count;
-        voxelObject.InstanceCount = instanceCounts.ToArray();
+        voxelObject.InstanceCount = instanceCounts;
         voxelObject.MaxInstanceCount = instanceCounts.Max();
-        voxelObject.InstanceStartIndices = startIndices.ToArray();
+        voxelObject.InstanceStartIndices = startIndices;
 
         return voxelObject;
-    }
-
-    private VoxelObject.ColorData[] CreateColors()
-    {
-        return _colors.Select<VoxelColor, VoxelObject.ColorData>(color =>
-        {
-            return new VoxelObject.ColorData(
-                new Vector4(color.Color.r, color.Color.g, color.Color.b, color.Color.a),
-                color.EmissiveIntensity, color.Metallic, color.Smoothness
-            );
-        }).ToArray();
     }
 
     private Bounds CreateBounds(Vector3Int[] minBounds, Vector3Int[] maxBounds)
@@ -338,7 +352,7 @@ public class VoxelEditor : MonoBehaviour
 
     public VoxelColor GetColor(int index)
     {
-        return _colors[index];
+        return _palette.Colors[index];
     }
 
     public Material GetMaterial(int index)
