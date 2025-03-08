@@ -47,4 +47,3 @@ MonoBehaviour:
   _palettes:
   - {fileID: 11400000, guid: 2018349bc5077014daddb8178c4c004f, type: 2}
   - {fileID: 11400000, guid: 413abcab50e67f84e815dd0e271eef34, type: 2}
-  _buffersSet: 1

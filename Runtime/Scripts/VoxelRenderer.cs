@@ -3,16 +3,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 [ExecuteAlways]
+[UnityEngine.RequireComponent(typeof(MeshFilter))]
+[UnityEngine.RequireComponent(typeof(MeshRenderer))]
 public class VoxelRenderer : MonoBehaviour
 {
     [SerializeField] VoxelObject _voxelObject = null;
 
     [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField] [HideInInspector] private ComputeShader _computeShaderInstance = null;
     [SerializeField] private Material _material = null;
+    [SerializeField] private Material _staticMaterial = null;
+
+    [SerializeField] [HideInInspector] private bool _staticRender = false;
+    [SerializeField] [HideInInspector] private ComputeShader _computeShaderInstance = null;
+    [SerializeField] [HideInInspector] private MeshRenderer _meshRenderer = null;
+    [SerializeField] [HideInInspector] private Material _instantiatedMaterial = null;
 
     [SerializeField] private float _frameTime = 0.2f;
 
@@ -48,7 +56,23 @@ public class VoxelRenderer : MonoBehaviour
     {
 #if !UNITY_EDITOR
         SetBuffers();
+#else
+        if (_meshRenderer == null)
+        {
+            EditorUtility.SetDirty(gameObject);
+
+            MeshFilter meshFilter = GetComponent<MeshFilter>();
+            meshFilter.mesh = _voxelObject.StaticMesh;
+
+            _meshRenderer = GetComponent<MeshRenderer>();
+            _instantiatedMaterial = Instantiate(_staticMaterial);
+            _meshRenderer.material = _instantiatedMaterial;
+
+        }
 #endif
+
+        if (!_staticRender)
+            _meshRenderer.enabled = false;
     }
 
     private void OnDisable()
@@ -63,6 +87,14 @@ public class VoxelRenderer : MonoBehaviour
             SetPalette(1);
         else
             SetPalette(0);
+    }
+
+    [Button]
+    private void RenderSwap()
+    {
+        _staticRender = !_staticRender;
+        _meshRenderer.enabled = _staticRender;
+        _timer = 0.0f;
     }
 
 
@@ -195,6 +227,14 @@ public class VoxelRenderer : MonoBehaviour
         if (_voxelObject == null)
             return;
 
+        if (_staticRender)
+            StaticRender();
+        else
+            AnimationRender();
+    }
+
+    private void AnimationRender()
+    {
         _timer += Time.deltaTime;
         if (_timer >= _frameTime)
         {
@@ -218,6 +258,19 @@ public class VoxelRenderer : MonoBehaviour
         else
 #endif
             Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.Instance.FaceTriangleBuffer, VoxelSharedData.Instance.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
+    }
+
+    private void StaticRender()
+    {
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            if (_sharedData != null || TryGetSharedData())
+                _instantiatedMaterial.SetBuffer("_Colors", _sharedData.GetColorBuffer(_voxelObject.PaletteIndex));
+        }
+        else
+#endif
+            _instantiatedMaterial.SetBuffer("_Colors", VoxelSharedData.Instance.GetColorBuffer(_voxelObject.PaletteIndex));
     }
 
 #if UNITY_EDITOR

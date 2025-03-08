@@ -32,6 +32,12 @@ public class VoxelStructure : MonoBehaviour
             GetAllVoxel();
     }
 
+    private void OnDisable()
+    {
+        _grid.Clear();
+        _grid = null;
+    }
+
     public void LoadFromMesh(Vector3Int[] voxelPositions, int[] colorIndices)
     {
         DestroyImmediate(_grid[Vector3Int.zero]);
@@ -41,7 +47,7 @@ public class VoxelStructure : MonoBehaviour
         {
             Vector3 localPosition = GridToLocalPosition(voxelPositions[i]);
             VoxelPlaceHolder voxel = Instantiate(_voxelPrefab, transform);
-            voxel.transform.localPosition = localPosition;
+            voxel.transform.position = localPosition;
             _grid[voxelPositions[i]] = voxel;
             SetColor(voxelPositions[i], colorIndices[i]);
         }
