@@ -17,10 +17,6 @@ public class VoxelSharedData : MonoBehaviour
     private List<GraphicsBuffer> _colorsBuffers = null;
     private int _faceTriangleCount = 0;
 
-#if UNITY_EDITOR
-    [SerializeField][HideInInspector] private bool _buffersSet = false;
-#endif
-
     public GraphicsBuffer FaceVertexBuffer { get { return _faceVertexBuffer; } }
     public GraphicsBuffer FaceTriangleBuffer { get { return _faceTriangleBuffer; } }
     public GraphicsBuffer RotationMatricesBuffer { get { return _rotationMatricesBuffer; } }
@@ -81,6 +77,7 @@ public class VoxelSharedData : MonoBehaviour
     }
 
 #if UNITY_EDITOR
+    [Button("Refresh")]
     private void Refresh()
     {
         CreateBuffers();
@@ -95,15 +92,11 @@ public class VoxelSharedData : MonoBehaviour
     private void CreateBuffers()
     {
 #if UNITY_EDITOR
-        if (!Application.isPlaying && _buffersSet)
+        if (!Application.isPlaying)
             DisposeBuffers();
 #endif
         CreateFacesBuffers();
         CreateColorsBuffers();
-
-#if UNITY_EDITOR
-        _buffersSet = true;
-#endif
     }
 
     #region Faces
@@ -175,12 +168,15 @@ public class VoxelSharedData : MonoBehaviour
     [Button("Refresh Palettes")]
     private void RefreshColorPalettes()
     {
-        for (int i = 0; i < _colorsBuffers.Count; i++)
+        if (_colorsBuffers != null)
         {
-            if (_colorsBuffers[i] != null)
-                _colorsBuffers[i].Dispose();
+            for (int i = 0; i < _colorsBuffers.Count; i++)
+            {
+                if (_colorsBuffers[i] != null)
+                    _colorsBuffers[i].Dispose();
+            }
+            _colorsBuffers.Clear();
         }
-        _colorsBuffers.Clear();
 
         CreateColorsBuffers();
 
@@ -238,13 +234,13 @@ public class VoxelSharedData : MonoBehaviour
 
         _rotationMatricesBuffer?.Dispose();
 
-        for (int i = 0; i < _colorsBuffers.Count; i++)
+        if (_colorsBuffers != null)
         {
-            if (_colorsBuffers[i] != null)
-                _colorsBuffers[i]?.Dispose();
+            for (int i = 0; i < _colorsBuffers.Count; i++)
+            {
+                if (_colorsBuffers[i] != null)
+                    _colorsBuffers[i]?.Dispose();
+            }
         }
-#if UNITY_EDITOR
-        _buffersSet = false;
-#endif
     }
 }
