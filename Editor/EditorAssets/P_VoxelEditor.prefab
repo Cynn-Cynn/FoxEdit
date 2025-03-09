@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 650967051566258461}
   - component: {fileID: 478899170638575751}
   m_Layer: 0
-  m_Name: VoxelEditor
+  m_Name: P_VoxelEditor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47,9 +47,11 @@ MonoBehaviour:
   _meshName: Mesh
   _saveDirectory: 
   _voxelObject: {fileID: 0}
-  _action: 2
+  _action: 0
   _selectedPalette: 0
   _selectedColor: 0
+  _seletectFrame: 0
+  _debug: 0
   _materials:
   - {fileID: 0}
   - {fileID: 0}
@@ -59,7 +61,6 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   _voxelFramePrefab: {fileID: 6657198482705285772, guid: 9838c5c1efb562c4ab6018d5b890c7fb, type: 3}
-  _currentFrameIndex: 0
   _currentFrame: {fileID: 0}
   _frameList: []
   _materialPrefab: {fileID: 2100000, guid: 3ba88c2707cea7843b37c87a3a206258, type: 2}
