@@ -5,7 +5,7 @@ using UnityEngine;
 [ExecuteAlways]
 public class VoxelPlaceHolder : MonoBehaviour
 {
-    [SerializeField] public int ColorIndex = 0;
+    [SerializeField] [HideInInspector] public int ColorIndex = 0;
 
     private void OnDestroy()
     {

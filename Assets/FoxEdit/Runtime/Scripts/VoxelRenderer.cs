@@ -50,13 +50,12 @@ public class VoxelRenderer : MonoBehaviour
     void Start()
     {
         transform.hasChanged = false;
+        if (Application.isPlaying)
+            SetBuffers();
     }
 
     private void OnEnable()
     {
-#if !UNITY_EDITOR
-        SetBuffers();
-#else
         if (_meshRenderer == null)
         {
             EditorUtility.SetDirty(gameObject);
@@ -69,8 +68,6 @@ public class VoxelRenderer : MonoBehaviour
             _meshRenderer.material = _instantiatedMaterial;
 
         }
-#endif
-
         if (!_staticRender)
             _meshRenderer.enabled = false;
     }
@@ -164,7 +161,7 @@ public class VoxelRenderer : MonoBehaviour
                 _computeShaderInstance.SetBuffer(_kernel, "_RotationMatrices", _sharedData.RotationMatricesBuffer);
             }
         }
-        else
+        else if (VoxelSharedData.Instance != null)
         {
 #endif
             _renderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.Instance.FaceVertexBuffer);
@@ -191,7 +188,7 @@ public class VoxelRenderer : MonoBehaviour
                 }
             }
         }
-        else
+        else if (VoxelSharedData.Instance != null)
         {
 #endif
             GraphicsBuffer colorsBuffer = VoxelSharedData.Instance.GetColorBuffer(index);
@@ -255,7 +252,7 @@ public class VoxelRenderer : MonoBehaviour
             if (_sharedData != null || TryGetSharedData())
                 Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, _sharedData.FaceTriangleBuffer, _sharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
         }
-        else
+        else if (VoxelSharedData.Instance != null)
 #endif
             Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.Instance.FaceTriangleBuffer, VoxelSharedData.Instance.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
     }
@@ -268,7 +265,7 @@ public class VoxelRenderer : MonoBehaviour
             if (_sharedData != null || TryGetSharedData())
                 _instantiatedMaterial.SetBuffer("_Colors", _sharedData.GetColorBuffer(_voxelObject.PaletteIndex));
         }
-        else
+        else if (VoxelSharedData.Instance != null)
 #endif
             _instantiatedMaterial.SetBuffer("_Colors", VoxelSharedData.Instance.GetColorBuffer(_voxelObject.PaletteIndex));
     }

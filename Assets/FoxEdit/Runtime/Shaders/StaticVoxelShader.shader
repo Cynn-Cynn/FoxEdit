@@ -124,12 +124,10 @@ Shader "Voxel/StaticVoxelShader"
                 float3 normalSample = UnpackNormal(float4(1, 0.5, 0.5, 0.5));
                 surfaceData.normalTS = normalSample;
 
-#if USE_EMISSION_ON
                 float3 emission = float3(0.0, 0.0, 0.0);
                 if (color.emissive > 0.0)
                      emission = color.color.rbg * color.emissive;
                 surfaceData.emission = emission;
-#endif
 
                 surfaceData.occlusion = 1.0;
 
