@@ -166,7 +166,7 @@ Shader "Voxel/VoxelShader"
 
                 float3 emission = float3(0.0, 0.0, 0.0);
                 if (color.emissive > 0.0)
-                     emission = color.color.rbg * color.emissive;
+                     emission = color.color.rgb * color.emissive;
                 surfaceData.emission = emission;
 
                 surfaceData.occlusion = 1.0;

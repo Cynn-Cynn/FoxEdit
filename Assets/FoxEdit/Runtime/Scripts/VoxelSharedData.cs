@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using NaughtyAttributes;
+using UnityEditor;
+using System;
 
 [ExecuteAlways]
 public class VoxelSharedData : MonoBehaviour
@@ -10,6 +12,16 @@ public class VoxelSharedData : MonoBehaviour
     public static VoxelSharedData Instance { get; private set; } = null;
 
     [SerializeField] VoxelPalette[] _palettes;
+
+#if UNITY_EDITOR
+    [Serializable]
+    private struct PaletteMaterials
+    {
+        public Material[] Materials;
+    }
+
+    [HideInInspector] [SerializeField] private PaletteMaterials[] _materials = null;
+#endif
 
     private GraphicsBuffer _faceVertexBuffer = null;
     private GraphicsBuffer _faceTriangleBuffer = null;
@@ -187,11 +199,49 @@ public class VoxelSharedData : MonoBehaviour
         }
     }
 
+    void CreateMaterials()
+    {
+        string materialPath = AssetDatabase.GUIDToAssetPath("3ba88c2707cea7843b37c87a3a206258");
+        Material materialPrefab = AssetDatabase.LoadAssetAtPath(materialPath, typeof(Material)) as Material;
+        _materials = new PaletteMaterials[_palettes.Length];
+
+        for (int paletteIndex = 0; paletteIndex < _palettes.Length; paletteIndex++)
+        {
+            VoxelPalette palette = _palettes[paletteIndex];
+            int colorCount = palette.Colors.Length;
+            _materials[paletteIndex].Materials = new Material[colorCount];
+
+            for (int colorIndex = 0; colorIndex < colorCount; colorIndex++)
+            {
+                VoxelColor color = palette.Colors[colorIndex];
+                Material newMaterial = new Material(materialPrefab);
+                newMaterial.color = color.Color + color.Color * color.EmissiveIntensity;
+                newMaterial.SetFloat("_Smoothness", color.Smoothness);
+                newMaterial.SetFloat("_Metallic", color.Metallic);
+                _materials[paletteIndex].Materials[colorIndex] = newMaterial;
+            }
+        }
+    }
+
     public VoxelPalette GetPalette(int index)
     {
         if (index >= _palettes.Length)
             return null;
         return _palettes[index];
+    }
+
+    public Material GetMaterial(int paletteIndex, int colorIndex)
+    {
+        if (_materials == null || _materials.Length == 0)
+            CreateMaterials();
+
+        if (paletteIndex > _materials.Length)
+            return null;
+
+        if (colorIndex > _materials[paletteIndex].Materials.Length)
+            return null;
+
+        return _materials[paletteIndex].Materials[colorIndex];
     }
 #endif
 
@@ -242,5 +292,10 @@ public class VoxelSharedData : MonoBehaviour
                     _colorsBuffers[i]?.Dispose();
             }
         }
+    }
+
+    public string[] GetPaletteNames()
+    {
+        return _palettes.Select(palette => palette.name).ToArray();
     }
 }
