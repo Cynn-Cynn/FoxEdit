@@ -8,8 +8,8 @@ Shader "Voxel/StaticVoxelShader"
     {
         Tags
         {
-            "RenderType" = "Opaque"
-            "Queue" = "Geometry"
+            "RenderType" = "Transparent"
+            "Queue" = "Transparent-1"
             "RenderPipeline" = "UniversalPipeline"
         }
 
