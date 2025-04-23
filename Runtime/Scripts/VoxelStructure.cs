@@ -9,9 +9,10 @@ using System.Linq;
 public class VoxelStructure : MonoBehaviour
 {
     [SerializeField] private VoxelPlaceHolder _voxelPrefab = null;
-    [SerializeField][HideInInspector] VoxelEditor _voxelEditor = null;
 
     private Dictionary<Vector3Int, VoxelPlaceHolder> _grid = null;
+
+    private VoxelSharedData _sharedData = null;
 
     #region Initialization
 
@@ -30,24 +31,46 @@ public class VoxelStructure : MonoBehaviour
         _grid = null;
     }
 
-    public void Initialize()
+    public void Initialize(int paletteIndex)
     {
+        TryGetSharedData();
+
         if (_grid == null)
             GetAllVoxel();
 
         if (_grid.Count == 0)
-            TryAddCubeNextTo(Vector3Int.zero, Vector3Int.zero, 0);
+            TryAddCubeNextTo(Vector3Int.zero, Vector3Int.zero, paletteIndex, 0);
     }
 
-    public void LoadFromMesh(Vector3Int[] voxelPositions, int[] colorIndices)
+    private bool TryGetSharedData()
     {
+        _sharedData = FindObjectOfType<VoxelSharedData>();
+        if (_sharedData == null)
+            return false;
+        return true;
+    }
+
+    public void Show()
+    {
+        gameObject.SetActive(true);
+    }
+
+    public void Hide()
+    {
+        gameObject.SetActive(false);
+    }
+
+    public void LoadFromMesh(Vector3Int[] voxelPositions, int paletteIndex, int[] colorIndices)
+    {
+        TryGetSharedData();
+        _grid = new Dictionary<Vector3Int, VoxelPlaceHolder>();
         for (int i = 0; i < voxelPositions.Length; i++)
         {
             Vector3 localPosition = GridToLocalPosition(voxelPositions[i]);
             VoxelPlaceHolder voxel = Instantiate(_voxelPrefab, transform);
-            voxel.transform.position = localPosition;
+            voxel.transform.localPosition = localPosition;
             _grid[voxelPositions[i]] = voxel;
-            SetColor(voxelPositions[i], colorIndices[i]);
+            SetColor(voxelPositions[i], paletteIndex, colorIndices[i]);
         }
     }
 
@@ -62,27 +85,18 @@ public class VoxelStructure : MonoBehaviour
         }
     }
 
-    private bool TryGetVoxelEditor()
-    {
-        _voxelEditor = FindFirstObjectByType<VoxelEditor>();
-        if (_voxelEditor == null)
-            return false;
-
-        return true;
-    }
-
     #endregion Initialization
 
     #region Getters
 
-    public VoxelData[] GetMeshData(out Vector3Int minBounds, out Vector3Int maxBounds)
+    public VoxelData[] GetMeshData(out Vector3Int minBounds, out Vector3Int maxBounds, bool[] isColorTansparent)
     {
         if (_grid == null)
             GetAllVoxel();
 
         GetBounds(out minBounds, out maxBounds);
 
-        return GetFaces();
+        return GetFaces(isColorTansparent);
     }
 
     public Vector3Int[] GetEditorVoxelPositions()
@@ -128,64 +142,51 @@ public class VoxelStructure : MonoBehaviour
         return a > b ? a : b;
     }
 
-    private VoxelData[] GetFaces()
+    private VoxelData[] GetFaces(bool[] isColorTransparent)
     {
         List<VoxelData> meshData = new List<VoxelData>();
 
         foreach (Vector3Int key in _grid.Keys)
         {
-            VoxelData data = GetVisibleFaces(new VoxelData(key), key);
+            VoxelData data = GetVisibleFaces(new VoxelData(key), key, isColorTransparent);
             data.ColorIndex = _grid[key].ColorIndex;
             if (data.GetFaces().Length != 0)
                 meshData.Add(data);
         }
 
-        if (_voxelEditor != null || TryGetVoxelEditor())
-        {
-            VoxelData[] opaqueMeshData = meshData.Where(mesh => _voxelEditor.GetColor(mesh.ColorIndex).Color.a >= 1.0f).ToArray();
-            VoxelData[] transparentMeshData = meshData.Where(mesh => _voxelEditor.GetColor(mesh.ColorIndex).Color.a < 1.0f).ToArray();
-            meshData = opaqueMeshData.Concat(transparentMeshData).ToList();
-        }
+        VoxelData[] opaqueMeshData = meshData.Where(mesh => !isColorTransparent[mesh.ColorIndex]).ToArray();
+        VoxelData[] transparentMeshData = meshData.Where(mesh => isColorTransparent[mesh.ColorIndex]).ToArray();
+        meshData = opaqueMeshData.Concat(transparentMeshData).ToList();
 
         return meshData.ToArray();
     }
 
-    private VoxelData GetVisibleFaces(VoxelData meshData, Vector3Int key)
+    private VoxelData GetVisibleFaces(VoxelData meshData, Vector3Int key, bool[] isColorTransparent)
     {
-        bool isTransparent = false;
-        if (_voxelEditor != null || TryGetVoxelEditor())
-        {
-            VoxelColor voxelColor = _voxelEditor.GetColor(_grid[key].ColorIndex);
-            if (voxelColor.Color.a < 1.0f)
-                isTransparent = true;
-        }
+        bool isTransparent = isColorTransparent[_grid[key].ColorIndex];
 
-        if (IsFaceVisible(key + new Vector3Int(0, 1, 0), isTransparent))
+        if (IsFaceVisible(key + new Vector3Int(0, 1, 0), isTransparent, isColorTransparent))
             meshData.AddFace(0);
-        if (IsFaceVisible(key + new Vector3Int(0, 0, -1), isTransparent))
+        if (IsFaceVisible(key + new Vector3Int(0, 0, -1), isTransparent, isColorTransparent))
             meshData.AddFace(1);
-        if (IsFaceVisible(key + new Vector3Int(0, -1, 0), isTransparent))
+        if (IsFaceVisible(key + new Vector3Int(0, -1, 0), isTransparent, isColorTransparent))
             meshData.AddFace(2);
-        if (IsFaceVisible(key + new Vector3Int(0, 0, 1), isTransparent))
+        if (IsFaceVisible(key + new Vector3Int(0, 0, 1), isTransparent, isColorTransparent))
             meshData.AddFace(3);
-        if (IsFaceVisible(key + new Vector3Int(-1, 0, 0), isTransparent))
+        if (IsFaceVisible(key + new Vector3Int(-1, 0, 0), isTransparent, isColorTransparent))
             meshData.AddFace(4);
-        if (IsFaceVisible(key + new Vector3Int(1, 0, 0), isTransparent))
+        if (IsFaceVisible(key + new Vector3Int(1, 0, 0), isTransparent, isColorTransparent))
             meshData.AddFace(5);
 
         return meshData;
     }
 
-    private bool IsFaceVisible(Vector3Int key, bool isTransparent)
+    private bool IsFaceVisible(Vector3Int key, bool isTransparent, bool[] isColorTransparent)
     {
         if (!_grid.ContainsKey(key))
             return true;
 
-        if (_voxelEditor == null && !TryGetVoxelEditor())
-            return false;
-
-        VoxelColor voxelColor = _voxelEditor.GetColor(_grid[key].ColorIndex);
-        if (voxelColor.Color.a < 1.0f)
+        if (isColorTransparent[_grid[key].ColorIndex])
             return !isTransparent;
 
         return false;
@@ -195,7 +196,7 @@ public class VoxelStructure : MonoBehaviour
 
     #region Editing
 
-    public bool TryAddCubeNextTo(Vector3Int position, Vector3Int direction, int colorIndex)
+    public bool TryAddCubeNextTo(Vector3Int position, Vector3Int direction, int paletteIndex, int colorIndex)
     {
         if (_grid == null)
             GetAllVoxel();
@@ -210,12 +211,12 @@ public class VoxelStructure : MonoBehaviour
 
         _grid[newPosition] = Instantiate(_voxelPrefab, transform);
         _grid[newPosition].transform.localPosition = GridToLocalPosition(newPosition);
-        SetColor(newPosition, colorIndex);
+        SetColor(newPosition, paletteIndex, colorIndex);
 
         return true;
     }
 
-    private void SetColor(Vector3Int position, int colorIndex)
+    private void SetColor(Vector3Int position, int paletteIndex, int colorIndex)
     {
         if (_grid == null)
             GetAllVoxel();
@@ -223,12 +224,12 @@ public class VoxelStructure : MonoBehaviour
         if (!_grid.ContainsKey(position))
             return;
 
-        if (_voxelEditor == null && !TryGetVoxelEditor())
-            return;
-
-        Material material = _voxelEditor.GetMaterial(colorIndex);
         _grid[position].ColorIndex = colorIndex;
-        _grid[position].GetComponent<MeshRenderer>().material = material;
+        if (_sharedData != null || TryGetSharedData())
+        {
+            Material material = _sharedData.GetMaterial(paletteIndex, colorIndex);
+            _grid[position].GetComponent<MeshRenderer>().material = material;
+        }
     }
 
     public void RefreshColors(List<Material> materials)
@@ -256,7 +257,7 @@ public class VoxelStructure : MonoBehaviour
         return true;
     }
 
-    public bool TryColorCube(Vector3Int position, int colorIndex)
+    public bool TryColorCube(Vector3Int position, int paletteIndex, int colorIndex)
     {
         if (_grid == null)
             GetAllVoxel();
@@ -264,7 +265,7 @@ public class VoxelStructure : MonoBehaviour
         if (!_grid.ContainsKey(position) || _grid.Count == 1)
             return false;
 
-        SetColor(position, colorIndex);
+        SetColor(position, paletteIndex, colorIndex);
         return true;
     }
 
