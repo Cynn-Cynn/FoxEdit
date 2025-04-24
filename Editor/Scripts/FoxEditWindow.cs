@@ -257,7 +257,12 @@ namespace FoxEdit
             {
                 _voxelRenderer = voxelRenderer;
                 if (_voxelRenderer != null)
-                    LoadObject();
+                {
+                    if (_voxelRenderer.VoxelObject != null)
+                        LoadObject();
+                    else
+                        CreateNewObject();
+                }
             }
         }
 
@@ -265,9 +270,12 @@ namespace FoxEdit
         {
             _meshName = _voxelRenderer.VoxelObject.name;
             _saveDirectory = ExtractDirectoryFromPath(AssetDatabase.GetAssetPath(_voxelRenderer.VoxelObject));
-            CreateFrameIndices(_voxelRenderer.VoxelObject.FrameCount);
-            _selectedPalette = _voxelRenderer.VoxelObject.PaletteIndex;
-            LoadColors();
+            EnableEditing();
+        }
+
+        private void CreateNewObject()
+        {
+            _meshName = "NewVoxelObject";
             EnableEditing();
         }
 
@@ -280,7 +288,10 @@ namespace FoxEdit
                 _selectedFrame = 0;
 
             VoxelObject voxelObject = _voxelRenderer.VoxelObject;
-            _selectedPalette = voxelObject.PaletteIndex;
+            if (voxelObject != null)
+                _selectedPalette = voxelObject.PaletteIndex;
+            else
+                _selectedPalette = 0;
             LoadColors();
 
             if (_voxelParent != null)
@@ -293,16 +304,24 @@ namespace FoxEdit
             _voxelParent.parent = _voxelRenderer.transform;
             _voxelParent.localPosition = Vector3.zero;
 
-            for (int i = 0; i < voxelObject.EditorVoxelPositions.Length; i++)
+            if (voxelObject != null)
             {
-                VoxelFrame frame = Instantiate(_voxelFramePrefab, _voxelParent);
-                frame.LoadFromMesh(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
-                if (i != _selectedFrame)
-                    frame.gameObject.SetActive(false);
-                _frameList.Add(frame);
+                for (int i = 0; i < voxelObject.EditorVoxelPositions.Length; i++)
+                {
+                    VoxelFrame frame = Instantiate(_voxelFramePrefab, _voxelParent);
+                    frame.LoadFromMesh(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
+                    if (i != _selectedFrame)
+                        frame.gameObject.SetActive(false);
+                    _frameList.Add(frame);
+                }
+            }
+            else
+            {
+                NewFrame();
             }
 
             CreateFrameIndices(_frameList.Count);
+
             _voxelRenderer.enabled = false;
             _edit = true;
             SceneView.duringSceneGui += OnSceneGUI;
@@ -394,9 +413,9 @@ namespace FoxEdit
         private void NewFrame()
         {
             _frameList.Add(Instantiate(_voxelFramePrefab, _voxelParent));
+            _frameList[_selectedFrame].Initialize(_selectedPalette);
             if (_frameList.Count != 0)
                 ChangeFrame(_frameList.Count - 1);
-            _frameList[_selectedFrame].Initialize(_selectedPalette);
             CreateFrameIndices(_frameList.Count);
             _needToSave = true;
         }
@@ -404,8 +423,8 @@ namespace FoxEdit
         private void DuplicateFrame()
         {
             _frameList.Add(Instantiate(_frameList[_selectedFrame], _voxelParent));
-            ChangeFrame(_frameList.Count - 1);
             _frameList[_selectedFrame].Initialize(_selectedPalette);
+            ChangeFrame(_frameList.Count - 1);
             CreateFrameIndices(_frameList.Count);
             _needToSave = true;
         }

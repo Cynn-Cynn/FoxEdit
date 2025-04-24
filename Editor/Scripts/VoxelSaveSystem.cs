@@ -17,7 +17,8 @@ namespace FoxEdit
             string fbxPath = GetAssetPath(meshName, saveDirectory, "fbx");
             voxelObject.StaticMesh = GetStaticMesh(voxelObject, fbxPath, meshName, computeStaticMesh);
 
-
+            voxelRenderer.VoxelObject = voxelObject;
+            EditorUtility.SetDirty(voxelRenderer);
             EditorUtility.SetDirty(voxelObject);
             AssetDatabase.SaveAssets();
             EditorUtility.FocusProjectWindow();
@@ -45,8 +46,9 @@ namespace FoxEdit
             {
                 voxelObject = ScriptableObject.CreateInstance<VoxelObject>();
                 AssetDatabase.CreateAsset(voxelObject, assetPath);
-                voxelRenderer.VoxelObject = voxelObject;
                 EditorUtility.SetDirty(voxelRenderer);
+                AssetDatabase.SaveAssets();
+                voxelRenderer.VoxelObject = voxelObject;
             }
 
             return voxelObject;
