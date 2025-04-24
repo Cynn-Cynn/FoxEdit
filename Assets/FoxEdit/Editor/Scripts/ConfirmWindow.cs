@@ -3,26 +3,29 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class ConfirmWindow : EditorWindow
+namespace FoxEdit
 {
-    private void OnGUI()
+    internal class ConfirmWindow : EditorWindow
     {
-        EditorGUILayout.LabelField("Save before exiting ?", EditorStyles.boldLabel);
-        EditorGUILayout.BeginHorizontal();
-
-        GUI.backgroundColor = Color.green;
-        if (GUILayout.Button("Yes"))
+        private void OnGUI()
         {
-            GetWindow<FoxEditWindow>().Save();
-            Close();
-        }
+            EditorGUILayout.LabelField("Save before exiting ?", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
 
-        GUI.backgroundColor = Color.red;
-        if (GUILayout.Button("No"))
-        {
-            Close();
-        }
+            GUI.backgroundColor = Color.green;
+            if (GUILayout.Button("Yes"))
+            {
+                GetWindow<FoxEditWindow>().Save();
+                Close();
+            }
 
-        EditorGUILayout.EndHorizontal();
+            GUI.backgroundColor = Color.red;
+            if (GUILayout.Button("No"))
+            {
+                Close();
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
     }
 }

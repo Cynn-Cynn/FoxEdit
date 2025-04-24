@@ -6,7 +6,7 @@ using UnityEngine;
 using System.Linq;
 
 [ExecuteInEditMode]
-public class VoxelStructure : MonoBehaviour
+public class VoxelFrame : MonoBehaviour
 {
     [SerializeField] private VoxelPlaceHolder _voxelPrefab = null;
 
