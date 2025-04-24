@@ -17,14 +17,15 @@ public class VoxelRenderer : MonoBehaviour
     [SerializeField] private Material _material = null;
     [SerializeField] private Material _staticMaterial = null;
 
-    [SerializeField] [HideInInspector] private bool _staticRender = false;
-    [SerializeField] [HideInInspector] private ComputeShader _computeShaderInstance = null;
-    [SerializeField] [HideInInspector] private MeshRenderer _meshRenderer = null;
-    [SerializeField] [HideInInspector] private Material _instantiatedMaterial = null;
+    [SerializeField][HideInInspector] private bool _staticRender = false;
+    [SerializeField][HideInInspector] private ComputeShader _computeShaderInstance = null;
+    [SerializeField][HideInInspector] private MeshFilter _meshFilter = null;
+    [SerializeField][HideInInspector] private MeshRenderer _meshRenderer = null;
+    [SerializeField][HideInInspector] private Material _instantiatedMaterial = null;
 
     [SerializeField] private float _frameTime = 0.2f;
 
-    public VoxelObject VoxelObject { get { return _voxelObject; } set { _voxelObject = value; Refresh(); } }
+    public VoxelObject VoxelObject { get { return _voxelObject; } set { SetVoxelObject(value); } }
 
     private GraphicsBuffer _voxelPositionBuffer = null;
 
@@ -61,13 +62,15 @@ public class VoxelRenderer : MonoBehaviour
         {
             EditorUtility.SetDirty(gameObject);
 
-            MeshFilter meshFilter = GetComponent<MeshFilter>();
-            meshFilter.mesh = _voxelObject.StaticMesh;
+            _meshFilter = GetComponent<MeshFilter>();
+            if (_voxelObject != null)
+                _meshFilter.mesh = _voxelObject.StaticMesh;
 
             _meshRenderer = GetComponent<MeshRenderer>();
             _instantiatedMaterial = Instantiate(_staticMaterial);
             _meshRenderer.material = _instantiatedMaterial;
 
+            AssetDatabase.SaveAssets();
         }
         if (!_staticRender)
             _meshRenderer.enabled = false;
@@ -93,6 +96,24 @@ public class VoxelRenderer : MonoBehaviour
         _staticRender = !_staticRender;
         _meshRenderer.enabled = _staticRender;
         _timer = 0.0f;
+    }
+
+    private void SetVoxelObject(VoxelObject voxelObject)
+    {
+        _voxelObject = voxelObject;
+        if (_voxelObject.StaticMesh != null)
+        {
+            _meshFilter.mesh = voxelObject.StaticMesh;
+            Refresh();
+        }
+
+#if UNITY_EDITOR
+        if (!Application.isPlaying)
+        {
+            EditorUtility.SetDirty(gameObject);
+            AssetDatabase.SaveAssets();
+        }
+#endif
     }
 
 
