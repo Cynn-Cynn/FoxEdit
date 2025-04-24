@@ -24,7 +24,7 @@ public class VoxelRenderer : MonoBehaviour
 
     [SerializeField] private float _frameTime = 0.2f;
 
-    public VoxelObject VoxelObject { get { return _voxelObject; } }
+    public VoxelObject VoxelObject { get { return _voxelObject; } set { _voxelObject = value; Refresh(); } }
 
     private GraphicsBuffer _voxelPositionBuffer = null;
 

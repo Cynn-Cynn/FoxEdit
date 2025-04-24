@@ -9,6 +9,6 @@ public class VoxelPlaceHolder : MonoBehaviour
 
     private void OnDestroy()
     {
-        GetComponentInParent<VoxelStructure>()?.OnCubeDeletion(transform.position);
+        GetComponentInParent<VoxelFrame>()?.OnCubeDeletion(transform.position);
     }
 }
