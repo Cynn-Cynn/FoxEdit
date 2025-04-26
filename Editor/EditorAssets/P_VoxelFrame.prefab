@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4130118496697820450}
   - component: {fileID: 6657198482705285772}
   m_Layer: 0
-  m_Name: P_VoxelStructure
+  m_Name: P_VoxelFrame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

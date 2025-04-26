@@ -2,13 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteAlways]
-public class VoxelPlaceHolder : MonoBehaviour
+namespace FoxEdit
 {
-    [SerializeField] [HideInInspector] public int ColorIndex = 0;
-
-    private void OnDestroy()
+    [ExecuteAlways]
+    public class VoxelPlaceHolder : MonoBehaviour
     {
-        GetComponentInParent<VoxelFrame>()?.OnCubeDeletion(transform.position);
+        [SerializeField][HideInInspector] public int ColorIndex = 0;
+
+        private void OnDestroy()
+        {
+            GetComponentInParent<VoxelFrame>()?.OnCubeDeletion(transform.position);
+        }
     }
 }
