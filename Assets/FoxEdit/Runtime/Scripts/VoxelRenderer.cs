@@ -2,314 +2,328 @@ using NaughtyAttributes;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
-[ExecuteAlways]
-[UnityEngine.RequireComponent(typeof(MeshFilter))]
-[UnityEngine.RequireComponent(typeof(MeshRenderer))]
-public class VoxelRenderer : MonoBehaviour
+namespace FoxEdit
 {
-    [SerializeField] VoxelObject _voxelObject = null;
+    [ExecuteAlways]
+    [RequireComponent(typeof(MeshFilter))]
+    [RequireComponent(typeof(MeshRenderer))]
+    public class VoxelRenderer : MonoBehaviour
+    {
+        //User editable
+        [SerializeField] private VoxelObject _voxelObject = null;
+        [SerializeField] private int _paletteIndexOverride = 0;
+        [SerializeField] private bool _staticRender = false;
+        [SerializeField] private float _frameDuration = 0.2f;
 
-    [SerializeField] private ComputeShader _computeShader = null;
-    [SerializeField] private Material _material = null;
-    [SerializeField] private Material _staticMaterial = null;
+        //Setup
+        [SerializeField] private bool _isSetup = false;
+        [SerializeField] private MeshFilter _meshFilter = null;
+        [SerializeField] private MeshRenderer _meshRenderer = null;
+        [SerializeField] private ComputeShader _computeShader = null;
+        [SerializeField] private Material _material = null;
+        [SerializeField] private Material _staticMaterial = null;
 
-    [SerializeField][HideInInspector] private bool _staticRender = false;
-    [SerializeField][HideInInspector] private ComputeShader _computeShaderInstance = null;
-    [SerializeField][HideInInspector] private MeshFilter _meshFilter = null;
-    [SerializeField][HideInInspector] private MeshRenderer _meshRenderer = null;
-    [SerializeField][HideInInspector] private Material _instantiatedMaterial = null;
 
-    [SerializeField] private float _frameTime = 0.2f;
+        public VoxelObject VoxelObject { get { return _voxelObject; } set { SetVoxelObject(value); } }
 
-    public VoxelObject VoxelObject { get { return _voxelObject; } set { SetVoxelObject(value); } }
+        private GraphicsBuffer _voxelPositionBuffer = null;
+        private GraphicsBuffer _faceIndicesBuffer = null;
+        private GraphicsBuffer _transformMatrixBuffer = null;
+        private GraphicsBuffer _voxelIndicesBuffer = null;
+        private GraphicsBuffer _colorIndicesBuffer = null;
 
-    private GraphicsBuffer _voxelPositionBuffer = null;
+        private Bounds _bounds;
 
-    private GraphicsBuffer _faceIndicesBuffer = null;
-    private GraphicsBuffer _transformMatrixBuffer = null;
-    private GraphicsBuffer _voxelIndicesBuffer = null;
+        private int _kernel = 0;
+        private uint _threadGroupSize = 0;
 
-    private GraphicsBuffer _colorIndicesBuffer = null;
+        private float _timer = 0.0f;
+        private int _frameIndex = 0;
 
-    private Bounds _bounds;
-
-    private int _kernel = 0;
-    private uint _threadGroupSize = 0;
-
-    private float _timer = 0.0f;
-    private int _frameIndex = 0;
-
-    RenderParams _renderParams;
+        RenderParams _renderParams;
 
 #if UNITY_EDITOR
-    [SerializeField][HideInInspector] VoxelSharedData _sharedData = null;
+        [SerializeField] private VoxelSharedData _sharedData = null;
 #endif
 
-    void Start()
-    {
-        transform.hasChanged = false;
-        if (Application.isPlaying)
-            SetBuffers();
-    }
-
-    private void OnEnable()
-    {
-        if (_meshRenderer == null)
+        private void Awake()
         {
-            EditorUtility.SetDirty(gameObject);
-
-            _meshFilter = GetComponent<MeshFilter>();
-            if (_voxelObject != null)
-                _meshFilter.mesh = _voxelObject.StaticMesh;
-
-            _meshRenderer = GetComponent<MeshRenderer>();
-            _instantiatedMaterial = Instantiate(_staticMaterial);
-            _meshRenderer.material = _instantiatedMaterial;
-
-            AssetDatabase.SaveAssets();
-        }
-        if (!_staticRender)
-            _meshRenderer.enabled = false;
-    }
-
-    private void OnDisable()
-    {
-        DisposeBuffers();
-    }
-
-    [Button]
-    private void PaletteSwap()
-    {
-        if (_voxelObject.PaletteIndex == 0)
-            SetPalette(1);
-        else
-            SetPalette(0);
-    }
-
-    [Button]
-    private void RenderSwap()
-    {
-        _staticRender = !_staticRender;
-        _meshRenderer.enabled = _staticRender;
-        _timer = 0.0f;
-    }
-
-    private void SetVoxelObject(VoxelObject voxelObject)
-    {
-        _voxelObject = voxelObject;
-        if (_voxelObject.StaticMesh != null)
-        {
-            _meshFilter.mesh = voxelObject.StaticMesh;
-            Refresh();
+            _isSetup = !_isSetup;
+            _isSetup = !_isSetup;
         }
 
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
+        void Start()
         {
-            EditorUtility.SetDirty(gameObject);
-            AssetDatabase.SaveAssets();
-        }
-#endif
-    }
-
-
-#if UNITY_EDITOR
-    /// <summary>
-    /// /!\ Do not call /!\
-    /// </summary>
-    [Button("Refresh")]
-    public void Refresh()
-    {
-        if (!Application.isPlaying)
-            DisposeBuffers();
-
-        SetBuffers();
-    }
-#endif
-
-    private void SetBuffers()
-    {
-        if (_voxelObject == null)
-            return;
-
-        _computeShaderInstance = Instantiate(_computeShader);
-        _kernel = _computeShaderInstance.FindKernel("VoxelGeneration");
-
-        //Voxel
-        _voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelPositions.Length, sizeof(float) * 3);
-        _voxelPositionBuffer.SetData(_voxelObject.VoxelPositions);
-        _computeShaderInstance.SetBuffer(_kernel, "_VoxelPositions", _voxelPositionBuffer);
-
-        _faceIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.FaceIndices.Length, sizeof(int));
-        _faceIndicesBuffer.SetData(_voxelObject.FaceIndices);
-        _computeShaderInstance.SetBuffer(_kernel, "_FaceIndices", _faceIndicesBuffer);
-
-        _voxelIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelIndices.Length, sizeof(int));
-        _voxelIndicesBuffer.SetData(_voxelObject.VoxelIndices);
-        _computeShaderInstance.SetBuffer(_kernel, "_VoxelIndices", _voxelIndicesBuffer);
-
-        //Transformation matrix
-        _transformMatrixBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxInstanceCount, sizeof(float) * 16);
-        _computeShaderInstance.SetBuffer(_kernel, "_TransformMatrices", _transformMatrixBuffer);
-
-        //Color
-        _colorIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.ColorIndices.Length, sizeof(int));
-        _colorIndicesBuffer.SetData(_voxelObject.ColorIndices);
-
-        _bounds = _voxelObject.Bounds;
-        _bounds.center += transform.position;
-
-        _renderParams = new RenderParams(_material);
-        _renderParams.worldBounds = _bounds;
-        _renderParams.matProps = new MaterialPropertyBlock();
-
-        _renderParams.matProps.SetBuffer("_TransformMatrices", _transformMatrixBuffer);
-        _renderParams.matProps.SetBuffer("_ColorIndices", _colorIndicesBuffer);
-        _renderParams.matProps.SetBuffer("_VoxelIndices", _voxelIndicesBuffer);
-        _renderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-
-        SetPalette(_voxelObject.PaletteIndex);
-
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
-            if (_sharedData != null || TryGetSharedData())
-            {
-                _renderParams.matProps.SetBuffer("_VertexPositions", _sharedData.FaceVertexBuffer);
-                _computeShaderInstance.SetBuffer(_kernel, "_RotationMatrices", _sharedData.RotationMatricesBuffer);
-            }
-        }
-        else if (VoxelSharedData.Instance != null)
-        {
-#endif
-            _renderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.Instance.FaceVertexBuffer);
-            _computeShaderInstance.SetBuffer(_kernel, "_RotationMatrices", VoxelSharedData.Instance.RotationMatricesBuffer);
-#if UNITY_EDITOR
-        }
-#endif
-
-        RunComputeShader();
-    }
-
-    public void SetPalette(int index)
-    {
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
-            if (_sharedData != null || TryGetSharedData())
-            {
-                GraphicsBuffer colorsBuffer = _sharedData.GetColorBuffer(index);
-                if (colorsBuffer != null)
-                {
-                    _renderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-                    _voxelObject.PaletteIndex = index;
-                }
-            }
-        }
-        else if (VoxelSharedData.Instance != null)
-        {
-#endif
-            GraphicsBuffer colorsBuffer = VoxelSharedData.Instance.GetColorBuffer(index);
-            if (colorsBuffer != null)
-            {
-                _renderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-                _voxelObject.PaletteIndex = index;
-            }
-#if UNITY_EDITOR
-        }
-#endif
-    }
-
-    private void RunComputeShader()
-    {
-        int instanceStartIndex = _voxelObject.InstanceStartIndices[_frameIndex];
-        int instanceCount = _voxelObject.InstanceCount[_frameIndex];
-        _computeShaderInstance.SetInt("_InstanceStartIndex", instanceStartIndex);
-        _computeShaderInstance.SetInt("_InstanceCount", instanceCount);
-        _computeShaderInstance.SetInt("_FrameIndex", _frameIndex);
-        _computeShaderInstance.SetMatrix("_VoxelToWorldMatrix", transform.localToWorldMatrix);
-
-        _computeShaderInstance.GetKernelThreadGroupSizes(_kernel, out _threadGroupSize, out _, out _);
-        int threadGroups = Mathf.CeilToInt((float)instanceCount / _threadGroupSize);
-        _computeShaderInstance.Dispatch(_kernel, threadGroups, 1, 1);
-
-        _renderParams.matProps.SetInteger("_InstanceStartIndex", instanceStartIndex);
-        _renderParams.matProps.SetVector("_Scale", transform.localScale);
-    }
-
-    void Update()
-    {
-        if (_voxelObject == null)
-            return;
-
-        if (_staticRender)
-            StaticRender();
-        else
-            AnimationRender();
-    }
-
-    private void AnimationRender()
-    {
-        _timer += Time.deltaTime;
-        if (_timer >= _frameTime)
-        {
-            _frameIndex = (_frameIndex + 1) % _voxelObject.FrameCount;
-            _timer -= _frameTime;
-            RunComputeShader();
-        }
-
-        if (transform.hasChanged)
-        {
-            RunComputeShader();
             transform.hasChanged = false;
         }
 
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
+        #region UserEditable
+
+        private void SetVoxelObject(VoxelObject voxelObject)
         {
-            if (_sharedData != null || TryGetSharedData())
-                Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, _sharedData.FaceTriangleBuffer, _sharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
-        }
-        else if (VoxelSharedData.Instance != null)
-#endif
-            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.Instance.FaceTriangleBuffer, VoxelSharedData.Instance.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
-    }
+            if (voxelObject == _voxelObject)
+                return;
 
-    private void StaticRender()
-    {
+            _voxelObject = voxelObject;
+            _frameIndex = 0;
+
+            if (_voxelObject.StaticMesh != null)
+            {
+                _meshFilter.mesh = voxelObject.StaticMesh;
+                Refresh();
+            }
 #if UNITY_EDITOR
-        if (!Application.isPlaying)
+            if (!Application.isPlaying)
+            {
+                EditorUtility.SetDirty(gameObject);
+                AssetDatabase.SaveAssets();
+            }
+#endif
+        }
+
+        public void RenderSwap()
         {
-            if (_sharedData != null || TryGetSharedData())
-                _instantiatedMaterial.SetBuffer("_Colors", _sharedData.GetColorBuffer(_voxelObject.PaletteIndex));
+            _staticRender = !_staticRender;
+            _meshRenderer.enabled = _staticRender;
+            _timer = 0.0f;
         }
-        else if (VoxelSharedData.Instance != null)
-#endif
-            _instantiatedMaterial.SetBuffer("_Colors", VoxelSharedData.Instance.GetColorBuffer(_voxelObject.PaletteIndex));
-    }
+
+        public void SetPalette(int index)
+        {
+            VoxelSharedData sharedData = GetSharedData();
+            if (sharedData == null)
+                return;
+
+            GraphicsBuffer colorsBuffer = sharedData.GetColorBuffer(index);
+            if (colorsBuffer != null)
+            {
+                _renderParams.matProps.SetBuffer("_Colors", colorsBuffer);
+                _paletteIndexOverride = index;
+            }
 
 #if UNITY_EDITOR
-    private bool TryGetSharedData()
-    {
-        _sharedData = FindObjectOfType<VoxelSharedData>();
-        if (_sharedData == null)
-            return false;
-        return true;
-    }
+            if (!Application.isPlaying)
+            {
+                EditorUtility.SetDirty(gameObject);
+                AssetDatabase.SaveAssets();
+            }
 #endif
+        }
 
-    private void DisposeBuffers()
-    {
-        _voxelPositionBuffer?.Dispose();
-        _voxelIndicesBuffer?.Dispose();
+        #endregion UserEditable
 
-        _transformMatrixBuffer?.Dispose();
+        #region Buffers
 
-        _faceIndicesBuffer?.Dispose();
-        _colorIndicesBuffer?.Dispose();
+        private void OnEnable()
+        {
+            SetBuffers();
+        }
+
+        private void OnDisable()
+        {
+            DisposeBuffers();
+        }
+
+        /// <summary>
+        /// /!\ Do not call /!\
+        /// </summary>
+        public void Refresh()
+        {
+            SetBuffers();
+            _meshFilter.mesh = _voxelObject?.StaticMesh;
+        }
+
+        private void SetBuffers()
+        {
+            if (_voxelObject == null)
+                return;
+
+            _kernel = _computeShader.FindKernel("VoxelGeneration");
+
+            SetVoxelBuffers();
+            SetColorBuffer();
+            SetMatrixBuffer();
+            SetRenderParams();
+
+            _bounds = _voxelObject.Bounds;
+            _bounds.center += transform.position;
+
+            RunComputeShader();
+        }
+
+        private void SetVoxelBuffers()
+        {
+            if (_voxelPositionBuffer != null && _voxelPositionBuffer.count != _voxelObject.VoxelPositions.Length)
+            {
+                _voxelPositionBuffer.Dispose();
+                _voxelPositionBuffer = null;
+            }
+            if (_voxelPositionBuffer == null)
+                _voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelPositions.Length, sizeof(float) * 3);
+            _voxelPositionBuffer.SetData(_voxelObject.VoxelPositions);
+            _computeShader.SetBuffer(_kernel, "_VoxelPositions", _voxelPositionBuffer);
+
+            if (_faceIndicesBuffer != null && _faceIndicesBuffer.count != _voxelObject.FaceIndices.Length)
+            {
+                _faceIndicesBuffer.Dispose();
+                _faceIndicesBuffer = null;
+            }
+            if (_faceIndicesBuffer == null)
+                _faceIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.FaceIndices.Length, sizeof(int));
+            _faceIndicesBuffer.SetData(_voxelObject.FaceIndices);
+            _computeShader.SetBuffer(_kernel, "_FaceIndices", _faceIndicesBuffer);
+
+            if (_voxelIndicesBuffer != null && _voxelIndicesBuffer.count != _voxelObject.VoxelIndices.Length)
+            {
+                _voxelIndicesBuffer.Dispose();
+                _voxelIndicesBuffer = null;
+            }
+            if (_voxelIndicesBuffer == null)
+                _voxelIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelIndices.Length, sizeof(int));
+            _voxelIndicesBuffer.SetData(_voxelObject.VoxelIndices);
+            _computeShader.SetBuffer(_kernel, "_VoxelIndices", _voxelIndicesBuffer);
+        }
+
+        private void SetMatrixBuffer()
+        {
+            if (_transformMatrixBuffer != null && _transformMatrixBuffer.count != _voxelObject.MaxInstanceCount)
+            {
+                _transformMatrixBuffer.Dispose();
+                _transformMatrixBuffer = null;
+            }
+            if (_transformMatrixBuffer == null)
+                _transformMatrixBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxInstanceCount, sizeof(float) * 16);
+            _computeShader.SetBuffer(_kernel, "_TransformMatrices", _transformMatrixBuffer);
+        }
+
+        private void SetColorBuffer()
+        {
+            if (_colorIndicesBuffer != null && _colorIndicesBuffer.count != _voxelObject.ColorIndices.Length)
+            {
+                _colorIndicesBuffer.Dispose();
+                _colorIndicesBuffer = null;
+            }
+            if (_colorIndicesBuffer == null)
+                _colorIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.ColorIndices.Length, sizeof(int));
+            _colorIndicesBuffer.SetData(_voxelObject.ColorIndices);
+        }
+
+        private void SetRenderParams()
+        {
+            _renderParams = new RenderParams(_material);
+            _renderParams.worldBounds = _bounds;
+            _renderParams.matProps = new MaterialPropertyBlock();
+
+            _renderParams.matProps.SetBuffer("_TransformMatrices", _transformMatrixBuffer);
+            _renderParams.matProps.SetBuffer("_ColorIndices", _colorIndicesBuffer);
+            _renderParams.matProps.SetBuffer("_VoxelIndices", _voxelIndicesBuffer);
+            _renderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+
+            VoxelSharedData sharedData = GetSharedData();
+            if (sharedData != null && sharedData.RotationMatricesBuffer != null)
+            {
+                _renderParams.matProps.SetBuffer("_VertexPositions", sharedData.FaceVertexBuffer);
+                _computeShader.SetBuffer(_kernel, "_RotationMatrices", sharedData.RotationMatricesBuffer);
+            }
+
+            SetPalette(_voxelObject.PaletteIndex);
+        }
+
+        private void DisposeBuffers()
+        {
+            _voxelPositionBuffer?.Dispose();
+            _voxelPositionBuffer = null;
+            _voxelIndicesBuffer?.Dispose();
+            _voxelIndicesBuffer = null;
+            _faceIndicesBuffer?.Dispose();
+            _faceIndicesBuffer = null;
+
+            _transformMatrixBuffer?.Dispose();
+            _transformMatrixBuffer = null;
+
+            _colorIndicesBuffer?.Dispose();
+            _colorIndicesBuffer = null;
+        }
+
+        #endregion Buffers
+
+        void Update()
+        {
+            if (_voxelObject == null)
+                return;
+
+            if (_staticRender)
+                StaticRender();
+            else
+                AnimationRender();
+        }
+
+        private void StaticRender()
+        {
+            VoxelSharedData sharedData = GetSharedData();
+            if (sharedData != null)
+                _staticMaterial.SetBuffer("_Colors", sharedData.GetColorBuffer(_voxelObject.PaletteIndex));
+        }
+
+        private void AnimationRender()
+        {
+            _timer += Time.deltaTime;
+            if (_timer >= _frameDuration)
+            {
+                _frameIndex = (_frameIndex + 1) % _voxelObject.FrameCount;
+                _timer -= _frameDuration;
+                RunComputeShader();
+            }
+
+            if (transform.hasChanged)
+            {
+                transform.hasChanged = false;
+                RunComputeShader();
+            }
+
+            VoxelSharedData sharedData = GetSharedData();
+            if (sharedData != null)
+                Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, sharedData.FaceTriangleBuffer, sharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
+        }
+
+        private void RunComputeShader()
+        {
+            int instanceStartIndex = _voxelObject.InstanceStartIndices[_frameIndex];
+            int instanceCount = _voxelObject.InstanceCount[_frameIndex];
+            _computeShader.SetInt("_InstanceStartIndex", instanceStartIndex);
+            _computeShader.SetInt("_InstanceCount", instanceCount);
+            _computeShader.SetInt("_FrameIndex", _frameIndex);
+            _computeShader.SetMatrix("_VoxelToWorldMatrix", transform.localToWorldMatrix);
+
+            _computeShader.GetKernelThreadGroupSizes(_kernel, out _threadGroupSize, out _, out _);
+            int threadGroups = Mathf.CeilToInt((float)instanceCount / _threadGroupSize);
+            _computeShader.Dispatch(_kernel, threadGroups, 1, 1);
+
+            _renderParams.matProps.SetInteger("_InstanceStartIndex", instanceStartIndex);
+            _renderParams.matProps.SetVector("_Scale", transform.localScale);
+        }
+
+        private VoxelSharedData GetSharedData()
+        {
+            VoxelSharedData sharedData = VoxelSharedData.Instance;
+#if UNITY_EDITOR
+            if (!Application.isPlaying && (_sharedData != null || TryGetSharedData()))
+                sharedData = _sharedData;
+#endif
+            return sharedData;
+        }
+
+#if UNITY_EDITOR
+        private bool TryGetSharedData()
+        {
+            _sharedData = FindObjectOfType<VoxelSharedData>();
+            if (_sharedData == null)
+                return false;
+            return true;
+        }
+#endif
     }
 }
