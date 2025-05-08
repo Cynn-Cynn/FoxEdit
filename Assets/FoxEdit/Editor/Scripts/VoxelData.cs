@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FoxEdit
 {
-    public class VoxelData
+    internal class VoxelData
     {
         private List<int> _faces = null;
         public Vector3Int Position { get; private set; } = Vector3Int.zero;
