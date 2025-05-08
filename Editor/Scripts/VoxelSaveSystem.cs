@@ -8,7 +8,7 @@ namespace FoxEdit
 {
     internal class VoxelSaveSystem
     {
-        public static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelFrame> frameList, ComputeShader computeStaticMesh)
+        internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorFrame> frameList, ComputeShader computeStaticMesh)
         {
             string assetPath = GetAssetPath(meshName, saveDirectory, "asset");
             VoxelObject voxelObject = GetVoxelObject(voxelRenderer, assetPath);
@@ -58,7 +58,7 @@ namespace FoxEdit
 
         #region SaveObject
 
-        private static void FillObject(VoxelObject voxelObject, List<VoxelFrame> frameList, VoxelPalette palette, int paletteIndex)
+        private static void FillObject(VoxelObject voxelObject, List<VoxelEditorFrame> frameList, VoxelPalette palette, int paletteIndex)
         {
             Vector3Int[] minBounds = new Vector3Int[frameList.Count];
             Vector3Int[] maxBounds = new Vector3Int[frameList.Count];
@@ -79,14 +79,14 @@ namespace FoxEdit
 
             for (int frame = 0; frame < frameList.Count; frame++)
             {
-                Vector3Int min;
-                Vector3Int max;
                 bool[] isColorTransparent = palette.Colors.Select(material => material.Color.a < 1.0f).ToArray();
-                VoxelData[] voxelData = frameList[frame].GetMeshData(out min, out max, isColorTransparent);
-                editorVoxelPositions[frame].VoxelPositions = frameList[frame].GetEditorVoxelPositions();
-                editorVoxelPositions[frame].ColorIndices = frameList[frame].GetEditorVoxelColorIndices();
-                minBounds[frame] = min;
-                maxBounds[frame] = max;
+                VoxelObjectPackedFrameData packedData = frameList[frame].GetPackedData(isColorTransparent);
+
+                VoxelData[] voxelData = packedData.Data;
+                editorVoxelPositions[frame].VoxelPositions = packedData.VoxelPositions;
+                editorVoxelPositions[frame].ColorIndices = packedData.ColorIndices;
+                minBounds[frame] = packedData.MinBounds;
+                maxBounds[frame] = packedData.MaxBounds;
 
                 int instanceCount = 0;
 
@@ -112,10 +112,10 @@ namespace FoxEdit
             voxelObject.Bounds = CreateBounds(minBounds, maxBounds);
             voxelObject.PaletteIndex = paletteIndex;
 
-            voxelObject.VoxelPositions = positionsAndColorIndices.Select(voxelData => (Vector3)voxelData).ToArray();
+            voxelObject.VoxelPositions = positionsAndColorIndices.Select(position => (Vector3)position).ToArray();
             voxelObject.VoxelIndices = voxelIndices;
             voxelObject.FaceIndices = faceIndices;
-            voxelObject.ColorIndices = positionsAndColorIndices.Select(voxelData => (int)voxelData.w).ToArray();
+            voxelObject.ColorIndices = positionsAndColorIndices.Select(colorIndex => (int)colorIndex.w).ToArray();
 
             voxelObject.FrameCount = frameList.Count;
             voxelObject.InstanceCount = instanceCounts;
