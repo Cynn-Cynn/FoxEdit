@@ -26,7 +26,6 @@ namespace FoxEdit
         [SerializeField] private Material _material = null;
         [SerializeField] private Material _staticMaterial = null;
 
-
         public VoxelObject VoxelObject { get { return _voxelObject; } set { SetVoxelObject(value); } }
 
         private GraphicsBuffer _voxelPositionBuffer = null;
@@ -127,13 +126,16 @@ namespace FoxEdit
             DisposeBuffers();
         }
 
-        /// <summary>
-        /// /!\ Do not call /!\
-        /// </summary>
-        public void Refresh()
+        internal void Refresh()
         {
             SetBuffers();
             _meshFilter.mesh = _voxelObject?.StaticMesh;
+        }
+
+        internal void RefreshColors()
+        {
+            SetPalette(_voxelObject.PaletteIndex);
+            RunComputeShader();
         }
 
         private void SetBuffers()

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 180976cd42a3e26439b154912f900c4d, type: 3}
   m_Name: BasePalette
   m_EditorClassIdentifier: 
-  Colors:
+  _colors:
   - Color: {r: 0.16862746, g: 0.16862746, b: 0.16862746, a: 1}
     EmissiveIntensity: 0
     Metallic: 0

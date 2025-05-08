@@ -8,18 +8,18 @@ namespace FoxEdit
     {
         private Transform _frameObject = null;
         private MeshRenderer _voxelPrefab = null;
-        private VoxelSharedData _sharedData = null;
+        private FoxEditWindow _editWindow = null;
         private Dictionary<Vector3Int, VoxelEditorObject> _grid = null;
 
         #region Initialization
 
-        internal VoxelEditorFrame(Transform parent, int frameIndex, MeshRenderer voxelPrefab, VoxelSharedData sharedData)
+        internal VoxelEditorFrame(Transform parent, int frameIndex, MeshRenderer voxelPrefab, FoxEditWindow editWindow)
         {
             _frameObject = new GameObject("Frame_" + frameIndex.ToString("00")).transform;
             _frameObject.parent = parent;
             _frameObject.localPosition = Vector3.zero;
             _voxelPrefab = voxelPrefab;
-            _sharedData = sharedData;
+            _editWindow = editWindow;
 
             _grid = new Dictionary<Vector3Int, VoxelEditorObject>();
         }
@@ -40,14 +40,14 @@ namespace FoxEdit
 
         internal VoxelEditorFrame GetCopy(int newFrameIndex, int paletteIndex)
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_frameObject.parent, newFrameIndex, _voxelPrefab, _sharedData);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_frameObject.parent, newFrameIndex, _voxelPrefab, _editWindow);
             Dictionary<Vector3Int, VoxelEditorObject> otherGrid = new Dictionary<Vector3Int, VoxelEditorObject>();
 
             foreach (Vector3Int gridPosition in _grid.Keys)
             {
                 VoxelEditorObject voxelObject = newFrame.CreateVoxelObject(gridPosition);
                 int colorIndex = _grid[gridPosition].ColorIndex;
-                Material material = _sharedData.GetMaterial(paletteIndex, colorIndex);
+                Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
                 voxelObject.SetColor(material, colorIndex);
 
                 otherGrid[gridPosition] = voxelObject;
@@ -122,7 +122,7 @@ namespace FoxEdit
             if (!_grid.ContainsKey(position))
                 return;
 
-            Material material = _sharedData.GetMaterial(paletteIndex, colorIndex);
+            Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
             _grid[position].SetColor(material, colorIndex);
         }
 
