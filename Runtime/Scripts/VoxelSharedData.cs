@@ -11,7 +11,47 @@ namespace FoxEdit
     [ExecuteAlways]
     public class VoxelSharedData : MonoBehaviour
     {
-        internal struct ColorData
+        [SerializeField] private VoxelGlobalData _globalData = null;
+
+        public static VoxelSharedData Instance { get; private set; } = null;
+
+
+        #region Buffers
+
+        private GraphicsBuffer _faceVertexBuffer = null;
+        private GraphicsBuffer _faceTriangleBuffer = null;
+        private GraphicsBuffer _rotationMatricesBuffer = null;
+        private List<GraphicsBuffer> _colorsBuffers = null;
+        private int _faceTriangleCount = 0;
+
+        internal GraphicsBuffer FaceVertexBuffer { get { return _faceVertexBuffer; } }
+        internal GraphicsBuffer FaceTriangleBuffer { get { return _faceTriangleBuffer; } }
+        internal GraphicsBuffer RotationMatricesBuffer { get { return _rotationMatricesBuffer; } }
+        internal int FaceTriangleCount { get { return _faceTriangleCount; } }
+
+        #endregion Buffers
+
+        #region Vertices
+
+        private Vector3[] _faceVertices =
+        {
+            new Vector3(0.05f, 0.05f, 0.05f),
+            new Vector3(0.05f, 0.05f, -0.05f),
+            new Vector3(-0.05f, 0.05f, -0.05f),
+            new Vector3(-0.05f, 0.05f, 0.05f)
+        };
+
+        private int[] _faceTriangles =
+        {
+            0, 1, 2,
+            0, 2, 3
+        };
+
+        private Matrix4x4[] _rotationMatrices = null;
+
+        #endregion Vertices
+
+        private struct ColorData
         {
             private Vector4 Color;
             float Emissive;
@@ -26,47 +66,6 @@ namespace FoxEdit
                 Smoothness = smoothness;
             }
         }
-
-        public static VoxelSharedData Instance { get; private set; } = null;
-
-        [SerializeField] VoxelPalette[] _palettes;
-
-#if UNITY_EDITOR
-        [Serializable]
-        private struct PaletteMaterials
-        {
-            public Material[] Materials;
-        }
-
-        [HideInInspector][SerializeField] private PaletteMaterials[] _materials = null;
-#endif
-
-        private GraphicsBuffer _faceVertexBuffer = null;
-        private GraphicsBuffer _faceTriangleBuffer = null;
-        private GraphicsBuffer _rotationMatricesBuffer = null;
-        private List<GraphicsBuffer> _colorsBuffers = null;
-        private int _faceTriangleCount = 0;
-
-        public GraphicsBuffer FaceVertexBuffer { get { return _faceVertexBuffer; } }
-        public GraphicsBuffer FaceTriangleBuffer { get { return _faceTriangleBuffer; } }
-        public GraphicsBuffer RotationMatricesBuffer { get { return _rotationMatricesBuffer; } }
-        public int FaceTriangleCount { get { return _faceTriangleCount; } }
-
-        private Vector3[] _faceVertices =
-        {
-        new Vector3(0.05f, 0.05f, 0.05f),
-        new Vector3(0.05f, 0.05f, -0.05f),
-        new Vector3(-0.05f, 0.05f, -0.05f),
-        new Vector3(-0.05f, 0.05f, 0.05f)
-    };
-
-        private int[] _faceTriangles =
-        {
-        0, 1, 2,
-        0, 2, 3
-    };
-
-        private Matrix4x4[] _rotationMatrices = null;
 
         private void Awake()
         {
@@ -107,7 +106,6 @@ namespace FoxEdit
         }
 
 #if UNITY_EDITOR
-        [Button("Refresh")]
         private void Refresh()
         {
             CreateBuffers();
@@ -129,6 +127,23 @@ namespace FoxEdit
             CreateColorsBuffers();
         }
 
+        private void DisposeBuffers()
+        {
+            _faceTriangleBuffer?.Dispose();
+            _faceVertexBuffer?.Dispose();
+
+            _rotationMatricesBuffer?.Dispose();
+
+            if (_colorsBuffers != null)
+            {
+                for (int i = 0; i < _colorsBuffers.Count; i++)
+                {
+                    if (_colorsBuffers[i] != null)
+                        _colorsBuffers[i]?.Dispose();
+                }
+            }
+        }
+
         #region Faces
 
         private void CreateFacesBuffers()
@@ -144,10 +159,6 @@ namespace FoxEdit
             _rotationMatricesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 6, sizeof(float) * 16);
             _rotationMatricesBuffer.SetData(_rotationMatrices);
         }
-
-        #endregion Faces
-
-        #region Rotation
 
         private void SetRotationMatrices()
         {
@@ -190,83 +201,14 @@ namespace FoxEdit
             );
         }
 
-        #endregion Rotation
+        #endregion Faces
 
-        #region Color
+        #region Colors
 
-#if UNITY_EDITOR
-        [Button("Refresh Palettes")]
-        private void RefreshColorPalettes()
-        {
-            if (_colorsBuffers != null)
-            {
-                for (int i = 0; i < _colorsBuffers.Count; i++)
-                {
-                    if (_colorsBuffers[i] != null)
-                        _colorsBuffers[i].Dispose();
-                }
-                _colorsBuffers.Clear();
-            }
-
-            CreateColorsBuffers();
-
-            VoxelRenderer[] renderers = FindObjectsOfType<VoxelRenderer>();
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                renderers[i].Refresh();
-            }
-        }
-
-        void CreateMaterials()
-        {
-            string materialPath = AssetDatabase.GUIDToAssetPath("3ba88c2707cea7843b37c87a3a206258");
-            Material materialPrefab = AssetDatabase.LoadAssetAtPath(materialPath, typeof(Material)) as Material;
-            _materials = new PaletteMaterials[_palettes.Length];
-
-            for (int paletteIndex = 0; paletteIndex < _palettes.Length; paletteIndex++)
-            {
-                VoxelPalette palette = _palettes[paletteIndex];
-                int colorCount = palette.Colors.Length;
-                _materials[paletteIndex].Materials = new Material[colorCount];
-
-                for (int colorIndex = 0; colorIndex < colorCount; colorIndex++)
-                {
-                    VoxelColor color = palette.Colors[colorIndex];
-                    Material newMaterial = new Material(materialPrefab);
-                    newMaterial.color = color.Color + color.Color * color.EmissiveIntensity;
-                    newMaterial.SetFloat("_Smoothness", color.Smoothness);
-                    newMaterial.SetFloat("_Metallic", color.Metallic);
-                    _materials[paletteIndex].Materials[colorIndex] = newMaterial;
-                }
-            }
-        }
-
-        public VoxelPalette GetPalette(int index)
-        {
-            if (index >= _palettes.Length)
-                return null;
-            return _palettes[index];
-        }
-
-        public Material GetMaterial(int paletteIndex, int colorIndex)
-        {
-            if (_materials == null || _materials.Length == 0)
-                CreateMaterials();
-
-            if (paletteIndex > _materials.Length)
-                return null;
-
-            if (colorIndex > _materials[paletteIndex].Materials.Length)
-                return null;
-
-            return _materials[paletteIndex].Materials[colorIndex];
-        }
-#endif
-
-        private void CreateColorsBuffers()
+        internal void CreateColorsBuffers()
         {
             _colorsBuffers = new List<GraphicsBuffer>();
-            for (int i = 0; i < _palettes.Length; i++)
+            for (int i = 0; i < _globalData.Palettes.Length; i++)
             {
                 ColorData[] colors = CreateColorBufferFromPalette(i);
                 GraphicsBuffer colorBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, colors.Length, sizeof(float) * 7);
@@ -277,7 +219,7 @@ namespace FoxEdit
 
         private ColorData[] CreateColorBufferFromPalette(int index)
         {
-            return _palettes[index].Colors.Select(color =>
+            return _globalData.Palettes[index].Colors.Select(color =>
             {
                 return new ColorData(
                     new Vector4(color.Color.r, color.Color.g, color.Color.b, color.Color.a),
@@ -286,35 +228,34 @@ namespace FoxEdit
             }).ToArray();
         }
 
-        public GraphicsBuffer GetColorBuffer(int index)
+        internal GraphicsBuffer GetColorBuffer(int index)
         {
             if (_colorsBuffers == null || index >= _colorsBuffers.Count)
                 return null;
             return _colorsBuffers[index];
         }
 
-        #endregion
+        #endregion Colors
 
-        private void DisposeBuffers()
+        #region Palettes
+
+        public int GetPaletteCount()
         {
-            _faceTriangleBuffer?.Dispose();
-            _faceVertexBuffer?.Dispose();
+            return _globalData.Palettes.Length;
+        }
 
-            _rotationMatricesBuffer?.Dispose();
-
-            if (_colorsBuffers != null)
-            {
-                for (int i = 0; i < _colorsBuffers.Count; i++)
-                {
-                    if (_colorsBuffers[i] != null)
-                        _colorsBuffers[i]?.Dispose();
-                }
-            }
+        public VoxelPalette GetPalette(int index)
+        {
+            if (index >= _globalData.Palettes.Length)
+                return null;
+            return _globalData.Palettes[index];
         }
 
         public string[] GetPaletteNames()
         {
-            return _palettes.Select(palette => palette.name).ToArray();
+            return _globalData.Palettes.Select(palette => palette.name).ToArray();
         }
+
+        #endregion Palettes
     }
 }

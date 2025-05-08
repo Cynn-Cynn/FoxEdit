@@ -94,7 +94,7 @@ namespace FoxEdit
 
         private void PaletteIndexOverrideDisplay()
         {
-            int paletteIndexOverride = EditorGUILayout.Popup("Palette index", _paletteIndexOverride, _paletteNames);
+            int paletteIndexOverride = EditorGUILayout.Popup("Palette Index", _paletteIndexOverride, _paletteNames);
             if (paletteIndexOverride != _paletteIndexOverride)
             {
                 _voxelRenderer.SetPalette(paletteIndexOverride);

@@ -24,6 +24,7 @@ namespace FoxEdit
         private string _saveDirectory = "Meshes";
         private VoxelRenderer _voxelRenderer = null;
         private VoxelSharedData _sharedData = null;
+        private Material[][] _editorMaterials = null;
 
         //Edit
         private int _selectedAction = 0;
@@ -74,6 +75,44 @@ namespace FoxEdit
 
             if (_edit)
                 DisableEditing();
+
+            CreateMaterials();
+        }
+
+        private void CreateMaterials()
+        {
+            string materialPath = AssetDatabase.GUIDToAssetPath("3ba88c2707cea7843b37c87a3a206258");
+            Material materialPrefab = AssetDatabase.LoadAssetAtPath(materialPath, typeof(Material)) as Material;
+            int paletteCount = _sharedData.GetPaletteCount();
+            _editorMaterials = new Material[paletteCount][];
+
+            for (int paletteIndex = 0; paletteIndex < paletteCount; paletteIndex++)
+            {
+                VoxelPalette palette = _sharedData.GetPalette(paletteIndex);
+                int colorCount = palette.Colors.Length;
+                _editorMaterials[paletteIndex] = new Material[colorCount];
+
+                for (int colorIndex = 0; colorIndex < colorCount; colorIndex++)
+                {
+                    VoxelColor color = palette.Colors[colorIndex];
+                    Material newMaterial = new Material(materialPrefab);
+                    newMaterial.color = color.Color + color.Color * color.EmissiveIntensity;
+                    newMaterial.SetFloat("_Smoothness", color.Smoothness);
+                    newMaterial.SetFloat("_Metallic", color.Metallic);
+                    _editorMaterials[paletteIndex][colorIndex] = newMaterial;
+                }
+            }
+        }
+
+        public Material GetMaterial(int paletteIndex, int colorIndex)
+        {
+            if (paletteIndex > _editorMaterials.Length)
+                return null;
+
+            if (colorIndex > _editorMaterials[paletteIndex].Length)
+                return null;
+
+            return _editorMaterials[paletteIndex][colorIndex];
         }
 
         private void OnDisable()
@@ -245,7 +284,7 @@ namespace FoxEdit
             JumpLine();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Mesh name", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Mesh Name", EditorStyles.boldLabel);
             _meshName = EditorGUILayout.TextField(_meshName);
             EditorGUILayout.EndHorizontal();
 
@@ -309,7 +348,7 @@ namespace FoxEdit
             {
                 for (int i = 0; i < voxelObject.EditorVoxelPositions.Length; i++)
                 {
-                    VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, _sharedData);
+                    VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, this);
                     frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
                     if (i != _selectedFrame)
                         frame.Hide();
@@ -413,7 +452,7 @@ namespace FoxEdit
 
         private void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, _sharedData);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, _selectedPalette, 0);
             _frameList.Add(newFrame);
 
