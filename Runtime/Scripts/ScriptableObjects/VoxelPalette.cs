@@ -18,7 +18,7 @@ namespace FoxEdit
             _colors.Add(color);
         }
 
-        public void RemoveColor(int index)
+        public void RemoveAt(int index)
         {
             _colors.RemoveAt(index);
         }

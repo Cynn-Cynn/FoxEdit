@@ -203,7 +203,10 @@ namespace FoxEdit
             }
 
             Bounds bounds = new Bounds();
-            bounds.center = (new Vector3(min.x + max.x + 1.0f, min.y + max.y + 1.0f, min.z + max.z + 1.0f) / 2.0f) * 0.1f;
+            Vector3 center = (new Vector3(min.x + max.x + 1.0f, min.y + max.y + 1.0f, min.z + max.z + 1.0f) / 2.0f) * 0.1f;
+            center.x -= 0.05f;
+            center.z -= 0.05f;
+            bounds.center = center;
 
             Vector3Int size = max - min;
             size.x = Mathf.Abs(size.x) + 1;

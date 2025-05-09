@@ -59,6 +59,9 @@ namespace FoxEdit
 
         private void OnEnable()
         {
+            if (Application.isPlaying)
+                return;
+
             LoadSharedData();
 
             string voxelPrefabPath = AssetDatabase.GUIDToAssetPath("b372f3a77bc32ba418920cfa5cab2b28");
@@ -69,12 +72,6 @@ namespace FoxEdit
             _frameList = new List<VoxelEditorFrame>();
 
             _isOpen = true;
-
-            if (!_edit)
-                EnableEditing();
-
-            if (_edit)
-                DisableEditing();
 
             CreateMaterials();
         }
@@ -115,17 +112,6 @@ namespace FoxEdit
             return _editorMaterials[paletteIndex][colorIndex];
         }
 
-        private void OnDisable()
-        {
-            _isOpen = false;
-        }
-
-        private void OnBecameVisible()
-        {
-            if (!_edit)
-                EnableEditing();
-        }
-
         private void OnBecameInvisible()
         {
             if (_edit)
@@ -136,6 +122,12 @@ namespace FoxEdit
 
         private void OnGUI()
         {
+            if (Application.isPlaying)
+            {
+                EditorGUILayout.LabelField("Cannot edit in play mode", EditorStyles.boldLabel);
+                return;
+            }
+
             EditButton();
 
             if (!_edit)

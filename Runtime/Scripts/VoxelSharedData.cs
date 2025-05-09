@@ -11,7 +11,7 @@ namespace FoxEdit
     [ExecuteAlways]
     public class VoxelSharedData : MonoBehaviour
     {
-        [SerializeField] private VoxelGlobalData _globalData = null;
+        [SerializeField] private FoxEditSettings _settings = null;
 
         public static VoxelSharedData Instance { get; private set; } = null;
 
@@ -134,14 +134,7 @@ namespace FoxEdit
 
             _rotationMatricesBuffer?.Dispose();
 
-            if (_colorsBuffers != null)
-            {
-                for (int i = 0; i < _colorsBuffers.Count; i++)
-                {
-                    if (_colorsBuffers[i] != null)
-                        _colorsBuffers[i]?.Dispose();
-                }
-            }
+            DisposeColorsBuffers();
         }
 
         #region Faces
@@ -207,19 +200,39 @@ namespace FoxEdit
 
         internal void CreateColorsBuffers()
         {
+            DisposeColorsBuffers();
+
             _colorsBuffers = new List<GraphicsBuffer>();
-            for (int i = 0; i < _globalData.Palettes.Length; i++)
+            VoxelPalette[] palettes = _settings.Palettes;
+            for (int i = 0; i < palettes.Length; i++)
             {
-                ColorData[] colors = CreateColorBufferFromPalette(i);
+                if (palettes[i] == null)
+                {
+                    _colorsBuffers.Add(null);
+                    continue;
+                }
+
+                ColorData[] colors = CreateColorBufferFromPalette(palettes[i]);
                 GraphicsBuffer colorBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, colors.Length, sizeof(float) * 7);
                 colorBuffer.SetData(colors);
                 _colorsBuffers.Add(colorBuffer);
             }
         }
 
-        private ColorData[] CreateColorBufferFromPalette(int index)
+        private void DisposeColorsBuffers()
         {
-            return _globalData.Palettes[index].Colors.Select(color =>
+            if (_colorsBuffers == null)
+                return;
+
+            for (int i = 0; i <  _colorsBuffers.Count; i++)
+            {
+                _colorsBuffers[i]?.Dispose();
+            }
+        }
+
+        private ColorData[] CreateColorBufferFromPalette(VoxelPalette palette)
+        {
+            return palette.Colors.Select(color =>
             {
                 return new ColorData(
                     new Vector4(color.Color.r, color.Color.g, color.Color.b, color.Color.a),
@@ -241,19 +254,19 @@ namespace FoxEdit
 
         public int GetPaletteCount()
         {
-            return _globalData.Palettes.Length;
+            return _settings.Palettes.Length;
         }
 
         public VoxelPalette GetPalette(int index)
         {
-            if (index >= _globalData.Palettes.Length)
+            if (index >= _settings.Palettes.Length)
                 return null;
-            return _globalData.Palettes[index];
+            return _settings.Palettes[index];
         }
 
         public string[] GetPaletteNames()
         {
-            return _globalData.Palettes.Select(palette => palette.name).ToArray();
+            return _settings.Palettes.Select(palette => palette.name).ToArray();
         }
 
         #endregion Palettes

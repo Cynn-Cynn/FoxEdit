@@ -35,6 +35,7 @@ namespace FoxEdit
         private GraphicsBuffer _colorIndicesBuffer = null;
 
         private Bounds _bounds;
+        private Bounds _baseBounds;
 
         private int _kernel = 0;
         private uint _threadGroupSize = 0;
@@ -56,7 +57,7 @@ namespace FoxEdit
 
         void Start()
         {
-            transform.hasChanged = false;
+            transform.hasChanged = true;
         }
 
         #region UserEditable
@@ -151,6 +152,7 @@ namespace FoxEdit
             SetRenderParams();
 
             _bounds = _voxelObject.Bounds;
+            _baseBounds = _voxelObject.Bounds;
             _bounds.center += transform.position;
 
             RunComputeShader();
@@ -283,6 +285,9 @@ namespace FoxEdit
             if (transform.hasChanged)
             {
                 transform.hasChanged = false;
+                _bounds = _baseBounds;
+                _bounds.center += transform.position;
+                _renderParams.worldBounds = _bounds;
                 RunComputeShader();
             }
 
