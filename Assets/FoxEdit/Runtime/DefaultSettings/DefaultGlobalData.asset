@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53f3955cb9a6c65449f9a06db5510088, type: 3}
   m_Name: DefaultGlobalData
   m_EditorClassIdentifier: 
-  Palettes:
+  _palettes:
   - {fileID: 11400000, guid: 2018349bc5077014daddb8178c4c004f, type: 2}
   - {fileID: 11400000, guid: 413abcab50e67f84e815dd0e271eef34, type: 2}
