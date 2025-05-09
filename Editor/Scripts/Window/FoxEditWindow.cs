@@ -27,6 +27,9 @@ namespace FoxEdit
         private Material[][] _editorMaterials = null;
 
         //Edit
+        private int _selectedTool = 0;
+        private string[] _tools = { "Brush", "Fill" };
+
         private int _selectedAction = 0;
         private string[] _actions = { "Paint", "Erase", "Color" };
 
@@ -57,7 +60,7 @@ namespace FoxEdit
             window.titleContent = new GUIContent("FoxEdit");
         }
 
-        private void OnEnable()
+        private void OnBecameVisible()
         {
             if (Application.isPlaying)
                 return;
@@ -73,7 +76,17 @@ namespace FoxEdit
 
             _isOpen = true;
 
-            CreateMaterials();
+            CreateMaterials(); ;
+
+            if (!_edit)
+                EnableEditing();
+        }
+
+
+        private void OnBecameInvisible()
+        {
+            if (_edit)
+                DisableEditing();
         }
 
         private void CreateMaterials()
@@ -110,12 +123,6 @@ namespace FoxEdit
                 return null;
 
             return _editorMaterials[paletteIndex][colorIndex];
-        }
-
-        private void OnBecameInvisible()
-        {
-            if (_edit)
-                DisableEditing();
         }
 
         #endregion Initialization
@@ -163,7 +170,32 @@ namespace FoxEdit
 
         #region Shortcuts
 
-        [MenuItem("FoxEdit/Paint &1", false, 1)]
+        [MenuItem("FoxEdit/Brush &R", false, 1)]
+        private static void SelectBrushShortcut()
+        {
+            if (!_isOpen)
+                return;
+
+            FoxEditWindow window = GetWindow<FoxEditWindow>();
+            window.SelectTool(0);
+        }
+
+        [MenuItem("FoxEdit/Color &F", false, 2)]
+        private static void SelectFillShortcut()
+        {
+            if (!_isOpen)
+                return;
+
+            FoxEditWindow window = GetWindow<FoxEditWindow>();
+            window.SelectTool(1);
+        }
+
+        private void SelectTool(int index)
+        {
+            _selectedTool = index;
+        }
+
+        [MenuItem("FoxEdit/Paint &1", false, 3)]
         private static void SelectPaint()
         {
             if (!_isOpen)
@@ -173,7 +205,7 @@ namespace FoxEdit
             window.SelectAction(0);
         }
 
-        [MenuItem("FoxEdit/Erase &2", false, 2)]
+        [MenuItem("FoxEdit/Erase &2", false, 4)]
         private static void SelectEraseShortcut()
         {
             if (!_isOpen)
@@ -183,7 +215,7 @@ namespace FoxEdit
             window.SelectAction(1);
         }
 
-        [MenuItem("FoxEdit/Color &3", false, 3)]
+        [MenuItem("FoxEdit/Color &3", false, 5)]
         private static void SelectColorShortcut()
         {
             if (!_isOpen)
@@ -198,7 +230,7 @@ namespace FoxEdit
             _selectedAction = index;
         }
 
-        [MenuItem("FoxEdit/New Frame &N", false, 4)]
+        [MenuItem("FoxEdit/New Frame &N", false, 6)]
         private static void NewFrameShortcut()
         {
             if (!_isOpen)
@@ -208,7 +240,7 @@ namespace FoxEdit
             window.NewFrame();
         }
 
-        [MenuItem("FoxEdit/Duplicate Frame &D", false, 5)]
+        [MenuItem("FoxEdit/Duplicate Frame &D", false, 7)]
         private static void DuplicateFrameShortcut()
         {
             if (!_isOpen)
@@ -218,7 +250,7 @@ namespace FoxEdit
             window.DuplicateFrame();
         }
 
-        [MenuItem("FoxEdit/Delete Frame &X", false, 6)]
+        [MenuItem("FoxEdit/Delete Frame &X", false, 8)]
         private static void DeleteFrameShortcut()
         {
             if (!_isOpen)
@@ -287,6 +319,9 @@ namespace FoxEdit
 
             if (voxelRenderer != _voxelRenderer)
             {
+                if (voxelRenderer == null)
+                    DestroyEditorFrame();
+
                 _voxelRenderer = voxelRenderer;
                 if (_voxelRenderer != null)
                 {
@@ -369,14 +404,25 @@ namespace FoxEdit
                 _needToSave = false;
             }
 
-            DestroyImmediate(_voxelParent.gameObject);
-            _voxelParent = null;
-            _frameList.Clear();
-
-            _voxelRenderer.enabled = true;
-            _voxelRenderer.Refresh();
+            DestroyEditorFrame();
             _edit = false;
             SceneView.duringSceneGui -= OnSceneGUI;
+        }
+
+        private void DestroyEditorFrame()
+        {
+            if (_voxelParent != null)
+            {
+                DestroyImmediate(_voxelParent.gameObject);
+                _voxelParent = null;
+                _frameList.Clear();
+            }
+
+            if (_voxelRenderer != null)
+            {
+                _voxelRenderer.enabled = true;
+                _voxelRenderer.Refresh();
+            }
         }
 
         private string ExtractDirectoryFromPath(string path)
@@ -409,6 +455,7 @@ namespace FoxEdit
 
             if (_sharedData != null)
             {
+                ToolSelection();
                 ActionSelection();
                 PaletteSelection();
                 ColorSelection();
@@ -484,6 +531,14 @@ namespace FoxEdit
             _frameList[_selectedFrame].Hide();
             _selectedFrame = index;
             _frameList[_selectedFrame].Show();
+        }
+
+        private void ToolSelection()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Tools (Alt + R/F)", EditorStyles.boldLabel);
+            _selectedTool = EditorGUILayout.Popup(_selectedTool, _tools);
+            EditorGUILayout.EndHorizontal();
         }
 
         private void ActionSelection()
@@ -582,13 +637,26 @@ namespace FoxEdit
                 Vector3Int direction = currentFrame.NormalToDirection(worldNormal);
 
                 if (_selectedAction == 0)
-                    currentFrame.TryAddVoxelNextTo(gridPosition, direction, _selectedPalette, _selectedColor);
+                {
+                    if (_selectedTool == 0)
+                        _needToSave = currentFrame.TryAddVoxelNextTo(gridPosition, direction, _selectedPalette, _selectedColor);
+                    else if (_selectedTool == 1)
+                        _needToSave = currentFrame.TryAddLayer(gridPosition, direction, _selectedPalette, _selectedColor);
+                }
                 else if (_selectedAction == 1)
-                    currentFrame.TryRemoveVoxel(gridPosition);
+                {
+                    if (_selectedTool == 0)
+                        _needToSave = currentFrame.TryRemoveVoxel(gridPosition);
+                    else if (_selectedTool == 1)
+                        _needToSave = currentFrame.TryRemoveLayer(gridPosition, direction);
+                }
                 else if (_selectedAction == 2)
-                    currentFrame.TryColorVoxel(gridPosition, _selectedPalette, _selectedColor);
-
-                _needToSave = true;
+                {
+                    if (_selectedTool == 0)
+                        _needToSave = currentFrame.TryColorVoxel(gridPosition, _selectedPalette, _selectedColor);
+                    else if (_selectedTool == 1)
+                        _needToSave = currentFrame.TryFillColor(gridPosition, _selectedPalette, _selectedColor);
+                }
             }
         }
 

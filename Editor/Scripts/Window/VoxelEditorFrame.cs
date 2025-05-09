@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace FoxEdit
 {
@@ -61,12 +62,12 @@ namespace FoxEdit
 
         #region Editing
 
-        public void Show()
+        internal void Show()
         {
             _frameObject.gameObject.SetActive(true);
         }
 
-        public void Hide()
+        internal void Hide()
         {
             _frameObject.gameObject.SetActive(false);
         }
@@ -87,22 +88,97 @@ namespace FoxEdit
             return true;
         }
 
-        public bool TryRemoveVoxel(Vector3Int position)
+        internal bool TryAddLayer(Vector3Int gridPosition, Vector3Int direction, int paletteIndex, int colorIndex, int baseColorIndex = -1)
         {
-            if (!_grid.ContainsKey(position) || _grid.Count == 1)
+            if (!_grid.ContainsKey(gridPosition))
                 return false;
 
-            _grid[position].Destroy();
-            _grid.Remove(position);
+            Vector3Int newGridPosition = gridPosition + direction;
+
+            if (_grid.ContainsKey(newGridPosition))
+                return false;
+
+            if (baseColorIndex == -1)
+                baseColorIndex = _grid[gridPosition].ColorIndex;
+            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
+                return false;
+
+            _grid[newGridPosition] = CreateVoxelObject(newGridPosition);
+            SetColor(newGridPosition, paletteIndex, colorIndex);
+
+            Vector3Int tangent = new Vector3Int(direction.z, direction.x, direction.y);
+            TryAddLayer(gridPosition + tangent, direction, paletteIndex, colorIndex, baseColorIndex);
+            TryAddLayer(gridPosition - tangent, direction, paletteIndex, colorIndex, baseColorIndex);
+
+            Vector3Int bitangent = new Vector3Int(direction.y, direction.z, direction.x);
+            TryAddLayer(gridPosition + bitangent, direction, paletteIndex, colorIndex, baseColorIndex);
+            TryAddLayer(gridPosition - bitangent, direction, paletteIndex, colorIndex, baseColorIndex);
+
             return true;
         }
 
-        public bool TryColorVoxel(Vector3Int position, int paletteIndex, int colorIndex)
+        internal bool TryRemoveVoxel(Vector3Int gridPosition)
         {
-            if (!_grid.ContainsKey(position) || _grid.Count == 1)
+            if (!_grid.ContainsKey(gridPosition) || _grid.Count == 1)
                 return false;
 
-            SetColor(position, paletteIndex, colorIndex);
+            _grid[gridPosition].Destroy();
+            _grid.Remove(gridPosition);
+            return true;
+        }
+
+        internal bool TryRemoveLayer(Vector3Int gridPosition, Vector3Int direction, int baseColorIndex = -1)
+        {
+            if (!_grid.ContainsKey(gridPosition) || _grid.Count == 1)
+                return false;
+
+            if (baseColorIndex == -1)
+                baseColorIndex = _grid[gridPosition].ColorIndex;
+            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
+                return false;
+
+            _grid[gridPosition].Destroy();
+            _grid.Remove(gridPosition);
+
+            Vector3Int tangent = new Vector3Int(direction.z, direction.x, direction.y);
+            TryRemoveLayer(gridPosition + tangent, direction, baseColorIndex);
+            TryRemoveLayer(gridPosition - tangent, direction, baseColorIndex);
+
+            Vector3Int bitangent = new Vector3Int(direction.y, direction.z, direction.x);
+            TryRemoveLayer(gridPosition + bitangent, direction, baseColorIndex);
+            TryRemoveLayer(gridPosition - bitangent, direction, baseColorIndex);
+
+            return true;
+        }
+
+        internal bool TryColorVoxel(Vector3Int gridPosition, int paletteIndex, int colorIndex)
+        {
+            if (!_grid.ContainsKey(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
+                return false;
+
+            SetColor(gridPosition, paletteIndex, colorIndex);
+            return true;
+        }
+
+        internal bool TryFillColor(Vector3Int gridPosition, int paletteIndex, int colorIndex, int baseColorIndex = -1)
+        {
+            if (!_grid.ContainsKey(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
+                return false;
+
+            if (baseColorIndex == -1)
+                baseColorIndex = _grid[gridPosition].ColorIndex;
+            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
+                return false;
+
+            SetColor(gridPosition, paletteIndex, colorIndex);
+
+            TryFillColor(gridPosition + Vector3Int.up, paletteIndex, colorIndex, baseColorIndex);
+            TryFillColor(gridPosition + Vector3Int.down, paletteIndex, colorIndex, baseColorIndex);
+            TryFillColor(gridPosition + Vector3Int.right, paletteIndex, colorIndex, baseColorIndex);
+            TryFillColor(gridPosition + Vector3Int.left, paletteIndex, colorIndex, baseColorIndex);
+            TryFillColor(gridPosition + Vector3Int.forward, paletteIndex, colorIndex, baseColorIndex);
+            TryFillColor(gridPosition + Vector3Int.back, paletteIndex, colorIndex, baseColorIndex);
+
             return true;
         }
 
@@ -117,13 +193,13 @@ namespace FoxEdit
             return voxelObject;
         }
 
-        private void SetColor(Vector3Int position, int paletteIndex, int colorIndex)
+        private void SetColor(Vector3Int gridPosition, int paletteIndex, int colorIndex)
         {
-            if (!_grid.ContainsKey(position))
+            if (!_grid.ContainsKey(gridPosition))
                 return;
 
             Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-            _grid[position].SetColor(material, colorIndex);
+            _grid[gridPosition].SetColor(material, colorIndex);
         }
 
         internal void Destroy()
