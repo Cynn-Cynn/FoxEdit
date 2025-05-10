@@ -7,6 +7,8 @@ namespace FoxEdit
     internal class VoxelEditorObject
     {
         internal int ColorIndex { get; private set; } = 0;
+        internal GameObject GameObject { get { return _voxelRenderer?.gameObject; } }
+        internal Vector3 WorldPosition { get { return _voxelRenderer.transform.position; } }
         private MeshRenderer _voxelRenderer = null;
 
         internal VoxelEditorObject(MeshRenderer voxelRenderer, Vector3 localPosition)
@@ -25,6 +27,11 @@ namespace FoxEdit
         internal void Destroy()
         {
             GameObject.DestroyImmediate(_voxelRenderer.gameObject);
+        }
+
+        internal void SetLocalPosition(Vector3 localPosition)
+        {
+            _voxelRenderer.transform.localPosition = localPosition;
         }
     }
 }

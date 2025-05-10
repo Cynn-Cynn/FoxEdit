@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Autodesk.Fbx;
+using System.Reflection;
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 using UnityEngine.InputSystem;
 #endif
@@ -18,6 +19,8 @@ namespace FoxEdit
         private bool _edit = false;
         private bool _canClick = true;
         private bool _needToSave = false;
+        private bool _selection = false;
+        private bool _drag = false;
 
         //Mesh
         private string _meshName = null;
@@ -60,10 +63,32 @@ namespace FoxEdit
             window.titleContent = new GUIContent("FoxEdit");
         }
 
+        void OnSelection()
+        {
+            GameObject voxel = Selection.gameObjects.ToList().Find(gameObject => gameObject.name == "EditorVoxel");
+            if (voxel == null)
+            {
+                _selection = false;
+                _drag = false;
+                return;
+            }
+
+            using (EditorGUI.DisabledGroupScope scope = new EditorGUI.DisabledGroupScope(Selection.activeGameObject == null))
+            {
+                Type type = typeof(EditorWindow).Assembly.GetType("UnityEditor.SceneHierarchyWindow");
+                EditorWindow window = GetWindow(type);
+                MethodInfo exprec = type.GetMethod("SetExpandedRecursive");
+                exprec!.Invoke(window, new object[] { voxel.transform.parent.parent.parent.GetInstanceID(), false });
+                _selection = true;
+            }
+        }
+
         private void OnBecameVisible()
         {
             if (Application.isPlaying)
                 return;
+
+            Selection.selectionChanged += OnSelection;
 
             LoadSharedData();
 
@@ -85,6 +110,8 @@ namespace FoxEdit
 
         private void OnBecameInvisible()
         {
+            Selection.selectionChanged -= OnSelection;
+
             if (_edit)
                 DisableEditing();
         }
@@ -605,6 +632,42 @@ namespace FoxEdit
                 return;
 
             MouseManagement();
+            StopDragDetection();
+        }
+
+        private void StopDragDetection()
+        {
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (_selection && Event.current.button == 0 && Event.current.type == EventType.MouseUp)
+            {
+                if (!_drag)
+                {
+                    _drag = true;
+                }
+                else
+                {
+                    _frameList[_selectedFrame].AlignVoxels();
+                    if (Selection.gameObjects.Length == 0)
+                        _drag = false;
+                    _needToSave = true;
+                }
+            }
+#else
+            if (_selection && !Mouse.current.leftButton.IsPressed())
+            {
+                if (!_drag)
+                {
+                    _drag = true;
+                }
+                else
+                {
+                    _frameList[_selectedFrame].AlignVoxels();
+                    if (Selection.gameObjects.Length == 0)
+                        _drag = false;
+                    _needToSave = true;
+                }
+            }
+#endif
         }
 
         private void MouseManagement()

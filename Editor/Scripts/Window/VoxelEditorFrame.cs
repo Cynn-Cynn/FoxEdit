@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -180,6 +181,37 @@ namespace FoxEdit
             TryFillColor(gridPosition + Vector3Int.back, paletteIndex, colorIndex, baseColorIndex);
 
             return true;
+        }
+
+        internal void AlignVoxels()
+        {
+            List<GameObject> selectedVoxels = Selection.gameObjects.ToList();
+            Vector3Int[] gridPositions = _grid.Keys.ToArray();
+
+            for (int i = 0; i < gridPositions.Length; i++)
+            {
+                Vector3Int gridPosition = gridPositions[i];
+                if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
+                    continue;
+
+                int colorIndex = _grid[gridPosition].ColorIndex;
+                Vector3 worldPosition = _grid[gridPosition].WorldPosition;
+                Vector3Int newGridPosition = WorldToGridPosition(worldPosition);
+
+                if (_grid.ContainsKey(newGridPosition) && gridPosition != newGridPosition)
+                {
+                    selectedVoxels.Remove(_grid[gridPosition].GameObject);
+                    TryRemoveVoxel(gridPosition);
+                }
+                else
+                {
+                    VoxelEditorObject voxel = _grid[gridPosition];
+                    _grid.Remove(gridPosition);
+                    Vector3 localPosition = GridToLocalPosition(newGridPosition);
+                    voxel.SetLocalPosition(localPosition);
+                    _grid[newGridPosition] = voxel;
+                }
+            }
         }
 
         private VoxelEditorObject CreateVoxelObject(Vector3Int gridPosition)
