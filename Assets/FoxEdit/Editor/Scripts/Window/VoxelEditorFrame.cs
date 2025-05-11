@@ -187,31 +187,66 @@ namespace FoxEdit
         {
             List<GameObject> selectedVoxels = Selection.gameObjects.ToList();
             Vector3Int[] gridPositions = _grid.Keys.ToArray();
+            Dictionary<Vector3Int, VoxelEditorObject> gridCopy = new Dictionary<Vector3Int, VoxelEditorObject>();
+            RotationAlign(selectedVoxels);
 
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
                 if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
+                {
+                    gridCopy[gridPosition] = _grid[gridPosition];
                     continue;
+                }
 
-                int colorIndex = _grid[gridPosition].ColorIndex;
                 Vector3 worldPosition = _grid[gridPosition].WorldPosition;
                 Vector3Int newGridPosition = WorldToGridPosition(worldPosition);
 
-                if (_grid.ContainsKey(newGridPosition) && gridPosition != newGridPosition)
+                if (_grid.ContainsKey(newGridPosition) && !selectedVoxels.Contains(_grid[newGridPosition].GameObject))
                 {
-                    selectedVoxels.Remove(_grid[gridPosition].GameObject);
-                    TryRemoveVoxel(gridPosition);
+                    _grid[gridPosition].Destroy();
                 }
                 else
                 {
                     VoxelEditorObject voxel = _grid[gridPosition];
-                    _grid.Remove(gridPosition);
+                    voxel.ResetRotation();
                     Vector3 localPosition = GridToLocalPosition(newGridPosition);
                     voxel.SetLocalPosition(localPosition);
-                    _grid[newGridPosition] = voxel;
+                    gridCopy[newGridPosition] = voxel;
                 }
             }
+
+            _grid = gridCopy;
+        }
+
+        private void RotationAlign(List<GameObject> selection)
+        {
+            Vector3 eulerAngles = selection[0].transform.eulerAngles;
+            float angle = eulerAngles.magnitude;
+            if (angle == 0.0f)
+                return;
+
+            Vector3 axis = eulerAngles.normalized;
+            Vector3 center = GetCenter(selection);
+
+
+            for (int i = 0; i < selection.Count; i++)
+            {
+                selection[i].transform.RotateAround(center, axis, -angle);
+                angle = Mathf.Round(angle / 45.0f);
+                angle *= 45.0f;
+                selection[i].transform.RotateAround(center, axis, angle);
+            }
+        }
+
+        private Vector3 GetCenter(List<GameObject> selection)
+        {
+            Vector3 center = Vector3.zero;
+            for (int i = 0; i < selection.Count; i++)
+            {
+                center += selection[i].transform.position;
+            }
+            return center / selection.Count;
         }
 
         private VoxelEditorObject CreateVoxelObject(Vector3Int gridPosition)
