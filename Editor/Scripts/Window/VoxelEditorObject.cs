@@ -33,5 +33,10 @@ namespace FoxEdit
         {
             _voxelRenderer.transform.localPosition = localPosition;
         }
+
+        internal void ResetRotation()
+        {
+            _voxelRenderer.transform.rotation = Quaternion.identity;
+        }
     }
 }
