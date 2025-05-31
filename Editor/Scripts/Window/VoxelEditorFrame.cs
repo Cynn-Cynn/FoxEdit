@@ -183,26 +183,41 @@ namespace FoxEdit
             return true;
         }
 
-        internal void AlignVoxels()
+        internal void ApplyVoxelTransform(int paletteIndex)
         {
             List<GameObject> selectedVoxels = Selection.gameObjects.ToList();
+            float voxelScale = selectedVoxels[0].transform.localScale.x;
+            if (voxelScale < 1.0f)
+                DownScale(selectedVoxels, voxelScale);
+            else if (voxelScale > 1.0f)
+                Upscale(selectedVoxels, voxelScale, paletteIndex);
+            else
+                SnapToGrid(selectedVoxels);
+        }
+
+        private void SnapToGrid(List<GameObject> selectedVoxels)
+        {
             Vector3Int[] gridPositions = _grid.Keys.ToArray();
             Dictionary<Vector3Int, VoxelEditorObject> gridCopy = new Dictionary<Vector3Int, VoxelEditorObject>();
-            RotationAlign(selectedVoxels);
+            RotationSnap(selectedVoxels);
+            List<Vector3Int> selectedGridPosition = new List<Vector3Int>();
 
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
                 if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
-                {
                     gridCopy[gridPosition] = _grid[gridPosition];
-                    continue;
-                }
+                else
+                    selectedGridPosition.Add(gridPosition);
+            }
 
+            for (int i = 0; i < selectedGridPosition.Count; i++)
+            {
+                Vector3Int gridPosition = selectedGridPosition[i];
                 Vector3 worldPosition = _grid[gridPosition].WorldPosition;
                 Vector3Int newGridPosition = WorldToGridPosition(worldPosition);
 
-                if (_grid.ContainsKey(newGridPosition) && !selectedVoxels.Contains(_grid[newGridPosition].GameObject))
+                if (gridCopy.ContainsKey(newGridPosition))
                 {
                     _grid[gridPosition].Destroy();
                 }
@@ -219,7 +234,67 @@ namespace FoxEdit
             _grid = gridCopy;
         }
 
-        private void RotationAlign(List<GameObject> selection)
+        private void Upscale(List<GameObject> selectedVoxels, float scale, int paletteIndex)
+        {
+            int roundedScale = Mathf.RoundToInt(scale);
+            Vector3Int[] gridPositions = _grid.Keys.ToArray();
+            Dictionary<Vector3Int, VoxelEditorObject> gridCopy = new Dictionary<Vector3Int, VoxelEditorObject>();
+
+            for (int i = 0; i < gridPositions.Length; i++)
+            {
+                Vector3Int gridPosition = gridPositions[i];
+                _grid[gridPosition].ResetScale();
+                Vector3 localPosition = GridToLocalPosition(gridPosition);
+                _grid[gridPosition].SetLocalPosition(localPosition);
+            }
+
+            if (roundedScale == 1)
+                return;
+
+            for (int i = 0; i < gridPositions.Length; i++)
+            {
+                Vector3Int gridPosition = gridPositions[i];
+                if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
+                {
+                    gridCopy[gridPosition] = _grid[gridPosition];
+                    continue;
+                }
+
+                for (int x = 0; x < roundedScale; x++)
+                {
+                    for (int y = 0; y < roundedScale; y++)
+                    {
+                        for (int z = 0; z < roundedScale; z++)
+                        {
+                            int colorIndex = _grid[gridPosition].ColorIndex;
+                            Vector3Int initialGridPosition = gridPosition * roundedScale;
+                            Vector3Int offset = new Vector3Int(x, y, z);
+                            if (x == 0 && y == 0 && z == 0)
+                            {
+                                gridCopy[initialGridPosition] = _grid[gridPosition];
+                                Vector3 localPosition = GridToLocalPosition(initialGridPosition);
+                                gridCopy[initialGridPosition].SetLocalPosition(localPosition);
+                            }
+                            else
+                            {
+                                Vector3Int newGridPosition = initialGridPosition + offset;
+                                gridCopy[newGridPosition] = CreateVoxelObject(newGridPosition);
+                                Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
+                                gridCopy[newGridPosition].SetColor(material, colorIndex);
+                            }
+                        }
+                    }
+                }
+
+                gridCopy[gridPosition] = _grid[gridPosition];
+            }
+        }
+
+        private void DownScale(List<GameObject> selectedVoxels, float scale)
+        {
+        }
+
+        private void RotationSnap(List<GameObject> selection)
         {
             Vector3 eulerAngles = selection[0].transform.eulerAngles;
             float angle = eulerAngles.magnitude;
@@ -228,14 +303,13 @@ namespace FoxEdit
 
             Vector3 axis = eulerAngles.normalized;
             Vector3 center = GetCenter(selection);
-
+            float snapAngle = Mathf.Round(angle / 45.0f);
+            snapAngle *= 45.0f;
 
             for (int i = 0; i < selection.Count; i++)
             {
                 selection[i].transform.RotateAround(center, axis, -angle);
-                angle = Mathf.Round(angle / 45.0f);
-                angle *= 45.0f;
-                selection[i].transform.RotateAround(center, axis, angle);
+                selection[i].transform.RotateAround(center, axis, snapAngle);
             }
         }
 

@@ -38,5 +38,10 @@ namespace FoxEdit
         {
             _voxelRenderer.transform.rotation = Quaternion.identity;
         }
+
+        internal void ResetScale()
+        {
+            _voxelRenderer.transform.localScale = Vector3.one;
+        }
     }
 }

@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using Autodesk.Fbx;
 using System.Reflection;
+using UnityEngine.UIElements;
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 using UnityEngine.InputSystem;
 #endif
@@ -50,9 +51,11 @@ namespace FoxEdit
         private MeshRenderer _voxelPrefab = null;
         private Transform _voxelParent = null;
         private List<VoxelEditorFrame> _frameList;
+        private Transform _selectedVoxel = null;
 
         //Save
         private ComputeShader _computeStaticMesh = null;
+
 
         #region Initialization
 
@@ -70,6 +73,7 @@ namespace FoxEdit
             {
                 _selection = false;
                 _drag = false;
+                _selectedVoxel = null;
                 return;
             }
 
@@ -80,6 +84,7 @@ namespace FoxEdit
                 MethodInfo exprec = type.GetMethod("SetExpandedRecursive");
                 exprec!.Invoke(window, new object[] { voxel.transform.parent.parent.parent.GetInstanceID(), false });
                 _selection = true;
+                _selectedVoxel = voxel.transform;
             }
         }
 
@@ -171,6 +176,7 @@ namespace FoxEdit
             ObjectDisplay();
             JumpLine();
             EditDisplay();
+            SelectionDisplay();
             JumpLine();
             SaveDisplay();
         }
@@ -207,7 +213,7 @@ namespace FoxEdit
             window.SelectTool(0);
         }
 
-        [MenuItem("FoxEdit/Color &F", false, 2)]
+        [MenuItem("FoxEdit/Fill &F", false, 2)]
         private static void SelectFillShortcut()
         {
             if (!_isOpen)
@@ -476,6 +482,23 @@ namespace FoxEdit
 
         #region EditingDisplay
 
+        private void SelectionDisplay()
+        {
+            if (!_selection)
+                return;
+
+            EditorGUILayout.LabelField("");
+            EditorGUILayout.LabelField("Current transformation", EditorStyles.boldLabel);
+            float angle = _selectedVoxel.eulerAngles.magnitude;
+            angle = Mathf.Round(angle / 45.0f);
+            angle *= 45.0f;
+            EditorGUILayout.LabelField($"Rotation: {angle}");
+            float scale = Mathf.Round(_selectedVoxel.localScale.x);
+            EditorGUILayout.LabelField($"Scale: {scale}");
+            EditorGUILayout.LabelField("");
+        }
+
+
         private void EditDisplay()
         {
             FrameSelection();
@@ -637,6 +660,9 @@ namespace FoxEdit
 
         private void StopDragDetection()
         {
+            if (_selection)
+                Repaint();
+
 #if ENABLE_LEGACY_INPUT_MANAGER
             if (_selection && Event.current.button == 0 && Event.current.type == EventType.MouseUp)
             {
@@ -646,7 +672,7 @@ namespace FoxEdit
                 }
                 else
                 {
-                    _frameList[_selectedFrame].AlignVoxels();
+                    _frameList[_selectedFrame].ApplyVoxelTransform(_selectedPalette);
                     if (Selection.gameObjects.Length == 0)
                         _drag = false;
                     _needToSave = true;
