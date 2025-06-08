@@ -11,7 +11,7 @@ namespace FoxEdit
         private Transform _frameObject = null;
         private MeshRenderer _voxelPrefab = null;
         private FoxEditWindow _editWindow = null;
-        private Dictionary<Vector3Int, VoxelEditorObject> _grid = null;
+        private Grid3D _grid = null;
 
         #region Initialization
 
@@ -23,19 +23,19 @@ namespace FoxEdit
             _voxelPrefab = voxelPrefab;
             _editWindow = editWindow;
 
-            _grid = new Dictionary<Vector3Int, VoxelEditorObject>();
+            _grid = new Grid3D();
         }
 
         internal void LoadFromSave(Vector3Int[] voxelPositions, int paletteIndex, int[] colorIndices)
         {
             for (int i = 0; i < voxelPositions.Length; i++)
             {
-                _grid[voxelPositions[i]] = CreateVoxelObject(voxelPositions[i]);
+                _grid.Set(voxelPositions[i], CreateVoxelObject(voxelPositions[i]));
                 SetColor(voxelPositions[i], paletteIndex, colorIndices[i]);
             }
         }
 
-        private void LoadFromCopy(Dictionary<Vector3Int, VoxelEditorObject> gridCopy)
+        private void LoadFromCopy(Grid3D gridCopy)
         {
             _grid = gridCopy;
         }
@@ -43,16 +43,16 @@ namespace FoxEdit
         internal VoxelEditorFrame GetCopy(int newFrameIndex, int paletteIndex)
         {
             VoxelEditorFrame newFrame = new VoxelEditorFrame(_frameObject.parent, newFrameIndex, _voxelPrefab, _editWindow);
-            Dictionary<Vector3Int, VoxelEditorObject> otherGrid = new Dictionary<Vector3Int, VoxelEditorObject>();
+            Grid3D otherGrid = new Grid3D();
 
             foreach (Vector3Int gridPosition in _grid.Keys)
             {
                 VoxelEditorObject voxelObject = newFrame.CreateVoxelObject(gridPosition);
-                int colorIndex = _grid[gridPosition].ColorIndex;
+                int colorIndex = _grid.Get(gridPosition).ColorIndex;
                 Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
                 voxelObject.SetColor(material, colorIndex);
 
-                otherGrid[gridPosition] = voxelObject;
+                otherGrid.Set(gridPosition, voxelObject);
             }
 
             newFrame.LoadFromCopy(otherGrid);
@@ -75,15 +75,15 @@ namespace FoxEdit
 
         public bool TryAddVoxelNextTo(Vector3Int gridPosition, Vector3Int direction, int paletteIndex, int colorIndex)
         {
-            if (!_grid.ContainsKey(gridPosition) && gridPosition != Vector3Int.zero)
+            if (_grid.IsEmpty(gridPosition) && gridPosition != Vector3Int.zero)
                 return false;
 
             Vector3Int newGridPosition = gridPosition + direction;
 
-            if (_grid.ContainsKey(newGridPosition))
+            if (!_grid.IsEmpty(newGridPosition))
                 return false;
 
-            _grid[newGridPosition] = CreateVoxelObject(newGridPosition);
+            _grid.Set(newGridPosition, CreateVoxelObject(newGridPosition));
             SetColor(newGridPosition, paletteIndex, colorIndex);
 
             return true;
@@ -91,20 +91,20 @@ namespace FoxEdit
 
         internal bool TryAddLayer(Vector3Int gridPosition, Vector3Int direction, int paletteIndex, int colorIndex, int baseColorIndex = -1)
         {
-            if (!_grid.ContainsKey(gridPosition))
+            if (_grid.IsEmpty(gridPosition))
                 return false;
 
             Vector3Int newGridPosition = gridPosition + direction;
 
-            if (_grid.ContainsKey(newGridPosition))
+            if (!_grid.IsEmpty(newGridPosition))
                 return false;
 
             if (baseColorIndex == -1)
-                baseColorIndex = _grid[gridPosition].ColorIndex;
-            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
+                baseColorIndex = _grid.Get(gridPosition).ColorIndex;
+            else if (_grid.Get(gridPosition).ColorIndex != baseColorIndex)
                 return false;
 
-            _grid[newGridPosition] = CreateVoxelObject(newGridPosition);
+            _grid.Set(newGridPosition, CreateVoxelObject(newGridPosition));
             SetColor(newGridPosition, paletteIndex, colorIndex);
 
             Vector3Int tangent = new Vector3Int(direction.z, direction.x, direction.y);
@@ -120,25 +120,25 @@ namespace FoxEdit
 
         internal bool TryRemoveVoxel(Vector3Int gridPosition)
         {
-            if (!_grid.ContainsKey(gridPosition) || _grid.Count == 1)
+            if (_grid.IsEmpty(gridPosition) || _grid.Count == 1)
                 return false;
 
-            _grid[gridPosition].Destroy();
+            _grid.Get(gridPosition).Destroy();
             _grid.Remove(gridPosition);
             return true;
         }
 
         internal bool TryRemoveLayer(Vector3Int gridPosition, Vector3Int direction, int baseColorIndex = -1)
         {
-            if (!_grid.ContainsKey(gridPosition) || _grid.Count == 1)
+            if (_grid.IsEmpty(gridPosition) || _grid.Count == 1)
                 return false;
 
             if (baseColorIndex == -1)
-                baseColorIndex = _grid[gridPosition].ColorIndex;
-            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
+                baseColorIndex = _grid.Get(gridPosition).ColorIndex;
+            else if (_grid.Get(gridPosition).ColorIndex != baseColorIndex)
                 return false;
 
-            _grid[gridPosition].Destroy();
+            _grid.Get(gridPosition).Destroy();
             _grid.Remove(gridPosition);
 
             Vector3Int tangent = new Vector3Int(direction.z, direction.x, direction.y);
@@ -154,7 +154,7 @@ namespace FoxEdit
 
         internal bool TryColorVoxel(Vector3Int gridPosition, int paletteIndex, int colorIndex)
         {
-            if (!_grid.ContainsKey(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
+            if (_grid.IsEmpty(gridPosition) || _grid.Get(gridPosition).ColorIndex == colorIndex)
                 return false;
 
             SetColor(gridPosition, paletteIndex, colorIndex);
@@ -163,12 +163,12 @@ namespace FoxEdit
 
         internal bool TryFillColor(Vector3Int gridPosition, int paletteIndex, int colorIndex, int baseColorIndex = -1)
         {
-            if (!_grid.ContainsKey(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
+            if (_grid.IsEmpty(gridPosition) || _grid.Get(gridPosition).ColorIndex == colorIndex)
                 return false;
 
             if (baseColorIndex == -1)
-                baseColorIndex = _grid[gridPosition].ColorIndex;
-            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
+                baseColorIndex = _grid.Get(gridPosition).ColorIndex;
+            else if (_grid.Get(gridPosition).ColorIndex != baseColorIndex)
                 return false;
 
             SetColor(gridPosition, paletteIndex, colorIndex);
@@ -198,15 +198,15 @@ namespace FoxEdit
         private void SnapToGrid(List<GameObject> selectedVoxels)
         {
             Vector3Int[] gridPositions = _grid.Keys.ToArray();
-            Dictionary<Vector3Int, VoxelEditorObject> gridCopy = new Dictionary<Vector3Int, VoxelEditorObject>();
+            Grid3D gridCopy = new Grid3D();
             RotationSnap(selectedVoxels);
             List<Vector3Int> selectedGridPosition = new List<Vector3Int>();
 
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
-                if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
-                    gridCopy[gridPosition] = _grid[gridPosition];
+                if (!selectedVoxels.Contains(_grid.Get(gridPosition).GameObject))
+                    gridCopy.Set(gridPosition, _grid.Get(gridPosition));
                 else
                     selectedGridPosition.Add(gridPosition);
             }
@@ -214,20 +214,20 @@ namespace FoxEdit
             for (int i = 0; i < selectedGridPosition.Count; i++)
             {
                 Vector3Int gridPosition = selectedGridPosition[i];
-                Vector3 worldPosition = _grid[gridPosition].WorldPosition;
+                Vector3 worldPosition = _grid.Get(gridPosition).WorldPosition;
                 Vector3Int newGridPosition = WorldToGridPosition(worldPosition);
 
-                if (gridCopy.ContainsKey(newGridPosition))
+                if (!gridCopy.IsEmpty(newGridPosition))
                 {
-                    _grid[gridPosition].Destroy();
+                    _grid.Get(gridPosition).Destroy();
                 }
                 else
                 {
-                    VoxelEditorObject voxel = _grid[gridPosition];
+                    VoxelEditorObject voxel = _grid.Get(gridPosition);
                     voxel.ResetRotation();
                     Vector3 localPosition = GridToLocalPosition(newGridPosition);
                     voxel.SetLocalPosition(localPosition);
-                    gridCopy[newGridPosition] = voxel;
+                    gridCopy.Set(newGridPosition, voxel);
                 }
             }
 
@@ -243,9 +243,9 @@ namespace FoxEdit
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
-                _grid[gridPosition].ResetScale();
+                _grid.Get(gridPosition).ResetScale();
                 Vector3 localPosition = GridToLocalPosition(gridPosition);
-                _grid[gridPosition].SetLocalPosition(localPosition);
+                _grid.Get(gridPosition).SetLocalPosition(localPosition);
             }
 
             if (roundedScale == 1)
@@ -254,9 +254,9 @@ namespace FoxEdit
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
-                if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
+                if (!selectedVoxels.Contains(_grid.Get(gridPosition).GameObject))
                 {
-                    gridCopy[gridPosition] = _grid[gridPosition];
+                    gridCopy[gridPosition] = _grid.Get(gridPosition);
                     continue;
                 }
 
@@ -266,12 +266,12 @@ namespace FoxEdit
                     {
                         for (int z = 0; z < roundedScale; z++)
                         {
-                            int colorIndex = _grid[gridPosition].ColorIndex;
+                            int colorIndex = _grid.Get(gridPosition).ColorIndex;
                             Vector3Int initialGridPosition = gridPosition * roundedScale;
                             Vector3Int offset = new Vector3Int(x, y, z);
                             if (x == 0 && y == 0 && z == 0)
                             {
-                                gridCopy[initialGridPosition] = _grid[gridPosition];
+                                gridCopy[initialGridPosition] = _grid.Get(gridPosition);
                                 Vector3 localPosition = GridToLocalPosition(initialGridPosition);
                                 gridCopy[initialGridPosition].SetLocalPosition(localPosition);
                             }
@@ -286,12 +286,26 @@ namespace FoxEdit
                     }
                 }
 
-                gridCopy[gridPosition] = _grid[gridPosition];
+                gridCopy[gridPosition] = _grid.Get(gridPosition);
             }
         }
 
         private void DownScale(List<GameObject> selectedVoxels, float scale)
         {
+            int roundedScale = Mathf.RoundToInt(scale);
+            Vector3Int[] gridPositions = _grid.Keys.ToArray();
+            Dictionary<Vector3Int, VoxelEditorObject> gridCopy = new Dictionary<Vector3Int, VoxelEditorObject>();
+
+            for (int i = 0; i < gridPositions.Length; i++)
+            {
+                Vector3Int gridPosition = gridPositions[i];
+                _grid.Get(gridPosition).ResetScale();
+                Vector3 localPosition = GridToLocalPosition(gridPosition);
+                _grid.Get(gridPosition).SetLocalPosition(localPosition);
+            }
+
+            if (roundedScale == 1)
+                return;
         }
 
         private void RotationSnap(List<GameObject> selection)
@@ -336,11 +350,11 @@ namespace FoxEdit
 
         private void SetColor(Vector3Int gridPosition, int paletteIndex, int colorIndex)
         {
-            if (!_grid.ContainsKey(gridPosition))
+            if (_grid.IsEmpty(gridPosition))
                 return;
 
             Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-            _grid[gridPosition].SetColor(material, colorIndex);
+            _grid.Get(gridPosition).SetColor(material, colorIndex);
         }
 
         internal void Destroy()
@@ -419,7 +433,7 @@ namespace FoxEdit
             foreach (Vector3Int key in _grid.Keys)
             {
                 VoxelData data = GetVisibleFaces(new VoxelData(key), key, isColorTransparent);
-                data.ColorIndex = _grid[key].ColorIndex;
+                data.ColorIndex = _grid.Get(key).ColorIndex;
                 if (data.GetFaces().Length != 0)
                     meshData.Add(data);
             }
@@ -433,7 +447,7 @@ namespace FoxEdit
 
         private VoxelData GetVisibleFaces(VoxelData meshData, Vector3Int key, bool[] isColorTransparent)
         {
-            bool isTransparent = isColorTransparent[_grid[key].ColorIndex];
+            bool isTransparent = isColorTransparent[_grid.Get(key).ColorIndex];
 
             if (IsFaceVisible(key + new Vector3Int(0, 1, 0), isTransparent, isColorTransparent))
                 meshData.AddFace(0);
@@ -453,10 +467,10 @@ namespace FoxEdit
 
         private bool IsFaceVisible(Vector3Int key, bool isTransparent, bool[] isColorTransparent)
         {
-            if (!_grid.ContainsKey(key))
+            if (_grid.IsEmpty(key))
                 return true;
 
-            if (isColorTransparent[_grid[key].ColorIndex])
+            if (isColorTransparent[_grid.Get(key).ColorIndex])
                 return !isTransparent;
 
             return false;
