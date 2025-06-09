@@ -9,10 +9,13 @@ namespace FoxEdit
         internal int ColorIndex { get; private set; } = 0;
         internal GameObject GameObject { get { return _voxelRenderer?.gameObject; } }
         internal Vector3 WorldPosition { get { return _voxelRenderer.transform.position; } }
+        internal Vector3Int GridPosition { get; private set; }
+
         private MeshRenderer _voxelRenderer = null;
 
-        internal VoxelEditorObject(MeshRenderer voxelRenderer, Vector3 localPosition)
+        internal VoxelEditorObject(MeshRenderer voxelRenderer, Vector3 localPosition, Vector3Int gridPosition)
         {
+            GridPosition = gridPosition;
             _voxelRenderer = voxelRenderer;
             _voxelRenderer.transform.localPosition = localPosition;
             ColorIndex = 0;
@@ -29,9 +32,10 @@ namespace FoxEdit
             GameObject.DestroyImmediate(_voxelRenderer.gameObject);
         }
 
-        internal void SetLocalPosition(Vector3 localPosition)
+        internal void SetPosition(Vector3 localPosition, Vector3Int gridPosition)
         {
             _voxelRenderer.transform.localPosition = localPosition;
+            GridPosition = gridPosition;
         }
 
         internal void ResetRotation()
