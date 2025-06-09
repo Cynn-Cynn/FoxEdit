@@ -493,7 +493,12 @@ namespace FoxEdit
             angle = Mathf.Round(angle / 45.0f);
             angle *= 45.0f;
             EditorGUILayout.LabelField($"Rotation: {angle}");
-            float scale = Mathf.Round(_selectedVoxel.localScale.x);
+            float scale = 1.0f;
+            if (_selectedVoxel.localScale.x > 1)
+                scale = Mathf.Round(_selectedVoxel.localScale.x);
+            else
+                scale = 1.0f / Mathf.Round(1.0f / _selectedVoxel.localScale.x);
+
             EditorGUILayout.LabelField($"Scale: {scale}");
             EditorGUILayout.LabelField("");
         }

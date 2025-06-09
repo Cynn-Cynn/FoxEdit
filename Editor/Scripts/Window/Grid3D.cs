@@ -16,6 +16,8 @@ internal class Grid3D : IEnumerable
     internal int Count { get { return _grid.Count; } }
     internal IEnumerable<Vector3Int> Keys { get { return _grid.Keys; } }
     internal IEnumerable<VoxelEditorObject> Values { get { return _grid.Values; } }
+    internal Vector3Int Min { get { return _min; } }
+    internal Vector3Int Max { get { return _max; } }
 
     internal Grid3D()
     {

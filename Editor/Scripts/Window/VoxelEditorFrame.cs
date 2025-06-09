@@ -188,7 +188,7 @@ namespace FoxEdit
             List<GameObject> selectedVoxels = Selection.gameObjects.ToList();
             float voxelScale = selectedVoxels[0].transform.localScale.x;
             if (voxelScale < 1.0f)
-                DownScale(selectedVoxels, voxelScale);
+                DownScale(selectedVoxels, voxelScale, paletteIndex);
             else if (voxelScale > 1.0f)
                 Upscale(selectedVoxels, voxelScale, paletteIndex);
             else
@@ -226,7 +226,7 @@ namespace FoxEdit
                     VoxelEditorObject voxel = _grid.Get(gridPosition);
                     voxel.ResetRotation();
                     Vector3 localPosition = GridToLocalPosition(newGridPosition);
-                    voxel.SetLocalPosition(localPosition);
+                    voxel.SetPosition(localPosition, newGridPosition);
                     gridCopy.Set(newGridPosition, voxel);
                 }
             }
@@ -238,14 +238,14 @@ namespace FoxEdit
         {
             int roundedScale = Mathf.RoundToInt(scale);
             Vector3Int[] gridPositions = _grid.Keys.ToArray();
-            Dictionary<Vector3Int, VoxelEditorObject> gridCopy = new Dictionary<Vector3Int, VoxelEditorObject>();
+            Grid3D gridCopy = new Grid3D();
 
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
                 _grid.Get(gridPosition).ResetScale();
                 Vector3 localPosition = GridToLocalPosition(gridPosition);
-                _grid.Get(gridPosition).SetLocalPosition(localPosition);
+                _grid.Get(gridPosition).SetPosition(localPosition, gridPosition);
             }
 
             if (roundedScale == 1)
@@ -256,7 +256,7 @@ namespace FoxEdit
                 Vector3Int gridPosition = gridPositions[i];
                 if (!selectedVoxels.Contains(_grid.Get(gridPosition).GameObject))
                 {
-                    gridCopy[gridPosition] = _grid.Get(gridPosition);
+                    gridCopy.Set(gridPosition, _grid.Get(gridPosition));
                     continue;
                 }
 
@@ -271,41 +271,102 @@ namespace FoxEdit
                             Vector3Int offset = new Vector3Int(x, y, z);
                             if (x == 0 && y == 0 && z == 0)
                             {
-                                gridCopy[initialGridPosition] = _grid.Get(gridPosition);
+                                gridCopy.Set(initialGridPosition, _grid.Get(gridPosition));
                                 Vector3 localPosition = GridToLocalPosition(initialGridPosition);
-                                gridCopy[initialGridPosition].SetLocalPosition(localPosition);
+                                gridCopy.Get(initialGridPosition).SetPosition(localPosition, initialGridPosition);
                             }
                             else
                             {
                                 Vector3Int newGridPosition = initialGridPosition + offset;
-                                gridCopy[newGridPosition] = CreateVoxelObject(newGridPosition);
+                                gridCopy.Set(newGridPosition, CreateVoxelObject(newGridPosition));
                                 Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-                                gridCopy[newGridPosition].SetColor(material, colorIndex);
+                                gridCopy.Get(newGridPosition).SetColor(material, colorIndex);
                             }
                         }
                     }
                 }
-
-                gridCopy[gridPosition] = _grid.Get(gridPosition);
             }
+
+            _grid = gridCopy;
         }
 
-        private void DownScale(List<GameObject> selectedVoxels, float scale)
+        private void DownScale(List<GameObject> selectedVoxels, float scale, int paletteIndex)
         {
-            int roundedScale = Mathf.RoundToInt(scale);
-            Vector3Int[] gridPositions = _grid.Keys.ToArray();
-            Dictionary<Vector3Int, VoxelEditorObject> gridCopy = new Dictionary<Vector3Int, VoxelEditorObject>();
-
-            for (int i = 0; i < gridPositions.Length; i++)
-            {
-                Vector3Int gridPosition = gridPositions[i];
-                _grid.Get(gridPosition).ResetScale();
-                Vector3 localPosition = GridToLocalPosition(gridPosition);
-                _grid.Get(gridPosition).SetLocalPosition(localPosition);
-            }
-
+            int roundedScale = Mathf.RoundToInt(1.0f / scale);
             if (roundedScale == 1)
                 return;
+
+            Grid3D gridCopy = new Grid3D();
+
+            for (int x = _grid.Min.x; x < _grid.Max.x; x += roundedScale)
+            {
+                for (int y = _grid.Min.y; y < _grid.Max.y; y += roundedScale)
+                {
+                    for (int z = _grid.Min.z; z < _grid.Max.z; z += roundedScale)
+                    {
+                        gridCopy = MergeVoxels(selectedVoxels, gridCopy, new Vector3Int(x, y, z), roundedScale, paletteIndex);
+                    }
+                }
+            }
+
+            _grid = gridCopy;
+        }
+
+        private Grid3D MergeVoxels(List<GameObject> selectedVoxels, Grid3D gridCopy, Vector3Int basePosition, int roundedScale, int paletteIndex)
+        {
+            List<int> colorIndices = new List<int>();
+            VoxelEditorObject baseVoxel = null;
+
+            for (int x = 0; x < roundedScale; x++)
+            {
+                for (int y = 0; y < roundedScale; y++)
+                {
+                    for (int z = 0; z < roundedScale; z++)
+                    {
+                        Vector3Int offsetPosition = basePosition + new Vector3Int(x, y, z);
+
+                        VoxelEditorObject voxel = _grid.Get(offsetPosition);
+                        if (voxel == null)
+                            continue;
+
+                        if (!selectedVoxels.Contains(voxel.GameObject))
+                        {
+                            gridCopy.Set(voxel.GridPosition, voxel);
+                            continue;
+                        }
+
+                        colorIndices.Add(voxel.ColorIndex);
+
+                        if (baseVoxel == null)
+                        {
+                            baseVoxel = voxel;
+                            Vector3Int newPosition = DividePosition(basePosition, roundedScale);
+                            Vector3 localPosition = GridToLocalPosition(newPosition);
+                            voxel.SetPosition(localPosition, newPosition);
+                            voxel.ResetScale();
+                            gridCopy.Set(newPosition, voxel);
+                        }
+                        else
+                        {
+                            voxel.Destroy();
+                        }
+                    }
+                }
+            }
+
+            if (baseVoxel != null)
+            {
+                int colorIndex = colorIndices.GroupBy(index => index).OrderByDescending(item => item.Count()).First().Key;
+                Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
+                baseVoxel.SetColor(material, colorIndex);
+            }
+
+            return gridCopy;
+        }
+
+        private Vector3Int DividePosition(Vector3Int position, int divide)
+        {
+            return new Vector3Int(Mathf.FloorToInt(position.x / (float)divide), Mathf.FloorToInt(position.y / (float)divide), Mathf.FloorToInt(position.z / (float)divide));
         }
 
         private void RotationSnap(List<GameObject> selection)
@@ -343,7 +404,7 @@ namespace FoxEdit
             voxelRenderer.name = "EditorVoxel";
 
             Vector3 localPosition = GridToLocalPosition(gridPosition);
-            VoxelEditorObject voxelObject = new VoxelEditorObject(voxelRenderer, localPosition);
+            VoxelEditorObject voxelObject = new VoxelEditorObject(voxelRenderer, localPosition, gridPosition);
 
             return voxelObject;
         }
