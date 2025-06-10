@@ -118,7 +118,14 @@ namespace FoxEdit
             Selection.selectionChanged -= OnSelection;
 
             if (_edit)
-                DisableEditing();
+                DisableEditing(true);
+        }
+
+        private void OnDisable()
+        {
+            if (_edit)
+                DisableEditing(true);
+            Selection.selectionChanged -= OnSelection;
         }
 
         private void CreateMaterials()
@@ -196,7 +203,7 @@ namespace FoxEdit
                 if (_edit)
                     EnableEditing();
                 else
-                    DisableEditing();
+                    DisableEditing(false);
             }
             GUI.backgroundColor = baseColor;
         }
@@ -353,7 +360,7 @@ namespace FoxEdit
             if (voxelRenderer != _voxelRenderer)
             {
                 if (voxelRenderer == null)
-                    DestroyEditorFrame();
+                    DestroyEditorFrame(false);
 
                 _voxelRenderer = voxelRenderer;
                 if (_voxelRenderer != null)
@@ -427,7 +434,7 @@ namespace FoxEdit
             SceneView.duringSceneGui += OnSceneGUI;
         }
 
-        private void DisableEditing()
+        private void DisableEditing(bool isFromReload)
         {
             if (_needToSave)
             {
@@ -437,12 +444,12 @@ namespace FoxEdit
                 _needToSave = false;
             }
 
-            DestroyEditorFrame();
+            DestroyEditorFrame(isFromReload);
             _edit = false;
             SceneView.duringSceneGui -= OnSceneGUI;
         }
 
-        private void DestroyEditorFrame()
+        private void DestroyEditorFrame(bool isFromReload)
         {
             if (_voxelParent != null)
             {
@@ -451,7 +458,7 @@ namespace FoxEdit
                 _frameList.Clear();
             }
 
-            if (_voxelRenderer != null)
+            if (_voxelRenderer != null && !isFromReload)
             {
                 _voxelRenderer.enabled = true;
                 _voxelRenderer.Refresh();

@@ -119,7 +119,7 @@ namespace FoxEdit
 
         private void OnEnable()
         {
-            SetBuffers();
+            //SetBuffers();
         }
 
         private void OnDisable()
@@ -144,7 +144,7 @@ namespace FoxEdit
             if (_voxelObject == null)
                 return;
 
-            _kernel = _computeShader.FindKernel("VoxelGeneration");
+            _kernel = _computeShader.FindKernel("VoxelGeneration"); ;
 
             SetVoxelBuffers();
             SetColorBuffer();
@@ -215,7 +215,7 @@ namespace FoxEdit
             _colorIndicesBuffer.SetData(_voxelObject.ColorIndices);
         }
 
-        private void SetRenderParams()
+        internal void SetRenderParams()
         {
             _renderParams = new RenderParams(_material);
             _renderParams.worldBounds = _bounds;
@@ -229,7 +229,7 @@ namespace FoxEdit
             VoxelSharedData sharedData = GetSharedData();
             if (sharedData != null && sharedData.RotationMatricesBuffer != null)
             {
-                _renderParams.matProps.SetBuffer("_VertexPositions", sharedData.FaceVertexBuffer);
+                _renderParams.matProps.SetBuffer("_VertexPositions", sharedData.FaceVertexBuffer); ;
                 _computeShader.SetBuffer(_kernel, "_RotationMatrices", sharedData.RotationMatricesBuffer);
             }
 
