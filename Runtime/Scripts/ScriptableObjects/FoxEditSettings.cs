@@ -30,9 +30,11 @@ public class FoxEditSettings : ScriptableObject
         _palettes[index] = palette;
     }
 
+#if UNITY_EDITOR
     public static FoxEditSettings GetSettings()
     {
         string settingsPath = AssetDatabase.GUIDToAssetPath("025fe4d424868cb438483d89fb07a75e");
         return AssetDatabase.LoadAssetAtPath<FoxEditSettings>(settingsPath);
     }
+#endif
 }

@@ -45,14 +45,12 @@ namespace FoxEdit
 
         RenderParams _renderParams;
 
-#if UNITY_EDITOR
-        [SerializeField] private VoxelSharedData _sharedData = null;
-#endif
-
         private void Awake()
         {
             _isSetup = !_isSetup;
             _isSetup = !_isSetup;
+
+            SetBuffers();
         }
 
         void Start()
@@ -93,11 +91,7 @@ namespace FoxEdit
 
         public void SetPalette(int index)
         {
-            VoxelSharedData sharedData = GetSharedData();
-            if (sharedData == null)
-                return;
-
-            GraphicsBuffer colorsBuffer = sharedData.GetColorBuffer(index);
+            GraphicsBuffer colorsBuffer = VoxelSharedData.GetColorBuffer(index);
             if (colorsBuffer != null)
             {
                 _renderParams.matProps.SetBuffer("_Colors", colorsBuffer);
@@ -116,11 +110,6 @@ namespace FoxEdit
         #endregion UserEditable
 
         #region Buffers
-
-        private void OnEnable()
-        {
-            //SetBuffers();
-        }
 
         private void OnDisable()
         {
@@ -144,7 +133,7 @@ namespace FoxEdit
             if (_voxelObject == null)
                 return;
 
-            _kernel = _computeShader.FindKernel("VoxelGeneration"); ;
+            _kernel = _computeShader.FindKernel("VoxelGeneration");
 
             SetVoxelBuffers();
             SetColorBuffer();
@@ -226,12 +215,9 @@ namespace FoxEdit
             _renderParams.matProps.SetBuffer("_VoxelIndices", _voxelIndicesBuffer);
             _renderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
 
-            VoxelSharedData sharedData = GetSharedData();
-            if (sharedData != null && sharedData.RotationMatricesBuffer != null)
-            {
-                _renderParams.matProps.SetBuffer("_VertexPositions", sharedData.FaceVertexBuffer); ;
-                _computeShader.SetBuffer(_kernel, "_RotationMatrices", sharedData.RotationMatricesBuffer);
-            }
+            _renderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer); ;
+            _computeShader.SetBuffer(_kernel, "_RotationMatrices", VoxelSharedData.RotationMatricesBuffer);
+
 
             SetPalette(_voxelObject.PaletteIndex);
         }
@@ -267,9 +253,7 @@ namespace FoxEdit
 
         private void StaticRender()
         {
-            VoxelSharedData sharedData = GetSharedData();
-            if (sharedData != null)
-                _staticMaterial.SetBuffer("_Colors", sharedData.GetColorBuffer(_voxelObject.PaletteIndex));
+            _staticMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(_voxelObject.PaletteIndex));
         }
 
         private void AnimationRender()
@@ -291,9 +275,7 @@ namespace FoxEdit
                 RunComputeShader();
             }
 
-            VoxelSharedData sharedData = GetSharedData();
-            if (sharedData != null)
-                Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, sharedData.FaceTriangleBuffer, sharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
+            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, VoxelSharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
         }
 
         private void RunComputeShader()
@@ -312,25 +294,5 @@ namespace FoxEdit
             _renderParams.matProps.SetInteger("_InstanceStartIndex", instanceStartIndex);
             _renderParams.matProps.SetVector("_Scale", transform.localScale);
         }
-
-        private VoxelSharedData GetSharedData()
-        {
-            VoxelSharedData sharedData = VoxelSharedData.Instance;
-#if UNITY_EDITOR
-            if (!Application.isPlaying && (_sharedData != null || TryGetSharedData()))
-                sharedData = _sharedData;
-#endif
-            return sharedData;
-        }
-
-#if UNITY_EDITOR
-        private bool TryGetSharedData()
-        {
-            _sharedData = FindObjectOfType<VoxelSharedData>();
-            if (_sharedData == null)
-                return false;
-            return true;
-        }
-#endif
     }
 }

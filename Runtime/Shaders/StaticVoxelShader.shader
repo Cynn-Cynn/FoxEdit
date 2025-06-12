@@ -101,9 +101,9 @@ Shader "Voxel/StaticVoxelShader"
                 o.shadowCoord = GetShadowCoord(vertexInput);
 
                 OUTPUT_LIGHTMAP_UV(v.staticLightmapUV, unity_LightmapST, o.staticLightmapUV);
-#ifdef DYNAMICLIGHTMAP_ON
-                o.dynamicLightmapUV = v.dynamicLightmapUV.xy * unityDynamicLightmapST.xy + unityDynamicLightmapST.zw;
-#endif
+// #ifdef DYNAMICLIGHTMAP_ON
+//                 o.dynamicLightmapUV = v.dynamicLightmapUV.xy * unityDynamicLightmapST.xy + unityDynamicLightmapST.zw;
+// #endif
                 OUTPUT_SH(o.normalWS.xyz, o.vertexSH);
 
                 return o;
@@ -150,11 +150,11 @@ Shader "Voxel/StaticVoxelShader"
 
                 inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
 
-#if defined(DYNAMICLIGHTMAP_ON)
-                inputData.bakedGO = SAMPLE_GI(i.staticLightmapUV, i.dynamicLightmapUV, i.vertexSH, inputData.normalWS);
-#else
+// #if defined(DYNAMICLIGHTMAP_ON)
+//                 inputData.bakedGO = SAMPLE_GI(i.staticLightmapUV, i.dynamicLightmapUV, i.vertexSH, inputData.normalWS);
+// #else
                 inputData.bakedGI = SAMPLE_GI(i.staticLightmapUV, i.vertexSH, inputData.normalWS);
-#endif
+//#endif
                 inputData.shadowMask = SAMPLE_SHADOWMASK(i.staticLightmapUV);
                 inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(i.positionCS);
 

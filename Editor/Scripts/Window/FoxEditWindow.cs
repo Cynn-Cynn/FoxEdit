@@ -13,6 +13,7 @@ using UnityEngine.InputSystem;
 
 namespace FoxEdit
 {
+    [InitializeOnLoad]
     internal class FoxEditWindow : EditorWindow
     {
         //Flags
@@ -27,7 +28,6 @@ namespace FoxEdit
         private string _meshName = null;
         private string _saveDirectory = "Meshes";
         private VoxelRenderer _voxelRenderer = null;
-        private VoxelSharedData _sharedData = null;
         private Material[][] _editorMaterials = null;
 
         //Edit
@@ -58,6 +58,11 @@ namespace FoxEdit
 
 
         #region Initialization
+
+        static FoxEditWindow()
+        {
+            VoxelSharedData.Initialize();
+        }
 
         [MenuItem("FoxEdit/Voxel editor", false, 0)]
         public static void ShowExample()
@@ -95,8 +100,6 @@ namespace FoxEdit
 
             Selection.selectionChanged += OnSelection;
 
-            LoadSharedData();
-
             string voxelPrefabPath = AssetDatabase.GUIDToAssetPath("b372f3a77bc32ba418920cfa5cab2b28");
             _voxelPrefab = AssetDatabase.LoadAssetAtPath(voxelPrefabPath, typeof(MeshRenderer)) as MeshRenderer;
 
@@ -132,12 +135,12 @@ namespace FoxEdit
         {
             string materialPath = AssetDatabase.GUIDToAssetPath("3ba88c2707cea7843b37c87a3a206258");
             Material materialPrefab = AssetDatabase.LoadAssetAtPath(materialPath, typeof(Material)) as Material;
-            int paletteCount = _sharedData.GetPaletteCount();
+            int paletteCount = VoxelSharedData.GetPaletteCount();
             _editorMaterials = new Material[paletteCount][];
 
             for (int paletteIndex = 0; paletteIndex < paletteCount; paletteIndex++)
             {
-                VoxelPalette palette = _sharedData.GetPalette(paletteIndex);
+                VoxelPalette palette = VoxelSharedData.GetPalette(paletteIndex);
                 int colorCount = palette.Colors.Length;
                 _editorMaterials[paletteIndex] = new Material[colorCount];
 
@@ -179,7 +182,6 @@ namespace FoxEdit
             if (!_edit)
                 return;
 
-            SharedDataDisplay();
             ObjectDisplay();
             JumpLine();
             EditDisplay();
@@ -304,36 +306,9 @@ namespace FoxEdit
 
         #region Data
 
-        private void SharedDataDisplay()
-        {
-            if (_sharedData == null)
-            {
-                EditorGUILayout.LabelField("Data", EditorStyles.boldLabel);
-                EditorGUILayout.LabelField("Shared data not loaded");
-                if (GUILayout.Button("Load shared data"))
-                    LoadSharedData();
-                JumpLine();
-            }
-        }
-
-        private void LoadSharedData()
-        {
-            _sharedData = FindObjectOfType<VoxelSharedData>();
-            if (_sharedData == null)
-                return;
-
-            _paletteNames = _sharedData.GetPaletteNames();
-            if (_voxelRenderer == null)
-                _selectedPalette = 0;
-            else
-                _selectedPalette = _voxelRenderer.VoxelObject.PaletteIndex;
-
-            LoadColors();
-        }
-
         private void LoadColors()
         {
-            _palette = _sharedData.GetPalette(_selectedPalette);
+            _palette = VoxelSharedData.GetPalette(_selectedPalette);
             _colors = _palette.Colors.Select(color => color.Color).ToArray();
 
             _selectedColor = 0;
@@ -514,14 +489,11 @@ namespace FoxEdit
         private void EditDisplay()
         {
             FrameSelection();
+            ToolSelection();
+            ActionSelection();
+            PaletteSelection();
+            ColorSelection();
 
-            if (_sharedData != null)
-            {
-                ToolSelection();
-                ActionSelection();
-                PaletteSelection();
-                ColorSelection();
-            }
         }
 
         private void FrameSelection()

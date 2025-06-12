@@ -9,7 +9,6 @@ namespace FoxEdit
     public class VoxelRendererEditor : Editor
     {
         private VoxelRenderer _voxelRenderer = null;
-        private VoxelSharedData _sharedData = null;
 
         private bool _staticRender = false;
         private float _frameDuration = 0.0f;
@@ -33,8 +32,7 @@ namespace FoxEdit
 
         private void PaletteSetup()
         {
-            _sharedData = FindObjectOfType<VoxelSharedData>();
-            _paletteNames = _sharedData.GetPaletteNames();
+            _paletteNames = VoxelSharedData.GetPaletteNames();
             _paletteIndexOverride = serializedObject.FindProperty("_paletteIndexOverride").intValue;
         }
 
