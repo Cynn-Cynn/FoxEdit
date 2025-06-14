@@ -49,13 +49,13 @@ namespace FoxEdit
         {
             _isSetup = !_isSetup;
             _isSetup = !_isSetup;
-
-            SetBuffers();
         }
 
         void Start()
         {
             transform.hasChanged = true;
+
+            SetBuffers();
         }
 
         #region UserEditable
