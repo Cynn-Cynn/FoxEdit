@@ -4,37 +4,39 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "VoxelGlobalData", menuName = "FoxEdit/Global Data")]
-public class FoxEditSettings : ScriptableObject
+namespace FoxEdit
 {
-    [SerializeField] private List<VoxelPalette> _palettes;
-
-    public VoxelPalette[] Palettes { get { return _palettes.ToArray(); } }
-
-    public void AddPalette(VoxelPalette palette)
+    [CreateAssetMenu(fileName = "VoxelGlobalData", menuName = "FoxEdit/Global Data")]
+    public class FoxEditSettings : ScriptableObject
     {
-        if (!_palettes.Contains(palette))
-            _palettes.Add(palette);
-    }
+        [SerializeField] private List<VoxelPalette> _palettes;
 
-    public void RemoveAt(int index)
-    {
-        _palettes.RemoveAt(index);
-    }
+        public VoxelPalette[] Palettes { get { return _palettes.ToArray(); } }
 
-    public void SetPalette(VoxelPalette palette, int index)
-    {
-        if (index >= _palettes.Count)
-            return;
+        public void AddPalette(VoxelPalette palette)
+        {
+            if (!_palettes.Contains(palette))
+                _palettes.Add(palette);
+        }
 
-        _palettes[index] = palette;
-    }
+        public void RemoveAt(int index)
+        {
+            _palettes.RemoveAt(index);
+        }
+
+        public void SetPalette(VoxelPalette palette, int index)
+        {
+            if (index >= _palettes.Count)
+                return;
+
+            _palettes[index] = palette;
+        }
 
 #if UNITY_EDITOR
-    public static FoxEditSettings GetSettings()
-    {
-        string settingsPath = AssetDatabase.GUIDToAssetPath("025fe4d424868cb438483d89fb07a75e");
-        return AssetDatabase.LoadAssetAtPath<FoxEditSettings>(settingsPath);
-    }
+        public static FoxEditSettings GetSettings()
+        {
+            return Resources.Load<FoxEditSettings>("FoxEditSettings");
+        }
 #endif
+    }
 }
