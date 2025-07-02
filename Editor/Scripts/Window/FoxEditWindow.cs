@@ -183,6 +183,9 @@ namespace FoxEdit
                 return;
 
             ObjectDisplay();
+            if (_voxelRenderer == null)
+                return;
+
             JumpLine();
             EditDisplay();
             SelectionDisplay();
@@ -309,6 +312,7 @@ namespace FoxEdit
         private void LoadColors()
         {
             _palette = VoxelSharedData.GetPalette(_selectedPalette);
+            _paletteNames = VoxelSharedData.GetPaletteNames();
             _colors = _palette.Colors.Select(color => color.Color).ToArray();
 
             _selectedColor = 0;
