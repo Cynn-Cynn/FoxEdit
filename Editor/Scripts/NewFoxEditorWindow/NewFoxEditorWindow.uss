@@ -1,0 +1,19 @@
+.custom-label {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(68, 138, 255);
+}
+
+.title {
+    -unity-text-align: upper-center;
+    font-size: 20px;
+    -unity-font-style: bold;
+    padding-bottom: 15px;
+}
+
+.window-segment {
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-color: var(--unity-colors-default-background);
+    border-bottom-color: var(--unity-colors-default-background);
+}
