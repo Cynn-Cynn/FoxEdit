@@ -19,8 +19,6 @@ public class NewFoxEditorWindow : EditorWindow
         // Each editor window contains a root VisualElement object
         VisualElement root = rootVisualElement;
 
-        // Instantiate UXML
-        VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
-        root.Add(labelFromUXML);
+        m_VisualTreeAsset.CloneTree(root);
     }
 }

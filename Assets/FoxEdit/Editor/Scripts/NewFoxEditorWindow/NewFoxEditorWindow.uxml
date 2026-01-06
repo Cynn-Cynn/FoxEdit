@@ -1,16 +1,44 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
     <Style src="project://database/Assets/FoxEdit/Editor/Scripts/NewFoxEditorWindow/NewFoxEditorWindow.uss?fileID=7433441132597879392&amp;guid=4211e588db51b0441a92e0b76227a629&amp;type=3#NewFoxEditorWindow" />
     <Style src="project://database/Assets/FoxEdit/Editor/Scripts/NewFoxEditorWindow/CustomComponents/ColorPaletteEditor/ColorPaletteStyle.uss?fileID=7433441132597879392&amp;guid=81291b5e93b2fb74fb07d6a3a61c16a5&amp;type=3#ColorPaletteStyle" />
-    <ui:VisualElement name="tools" class="window-segment">
-        <ui:Label tabindex="-1" text="Tools" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
-        <ui:VisualElement name="toolbars">
-            <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.Tool, FoxEdit.Editor" name="actions" Tooltips="Apply on only one voxel | Apply on a full surface" />
-            <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.Action, FoxEdit.Editor" index="1" Index="1" name="tools" Tooltips="Add voxels | Remove voxels | Colorize Voxels" style="flex-direction: row;" />
+    <Style src="project://database/Assets/FoxEdit/Editor/Scripts/NewFoxEditorWindow/CustomComponents/FrameSelector.cs/FrameSelectorStyle.uss?fileID=7433441132597879392&amp;guid=dde8b3820896f6d47a2b5b29bc152e22&amp;type=3#FrameSelectorStyle" />
+    <ui:Label tabindex="-1" text="FoxEdit" parse-escape-sequences="true" display-tooltip-when-elided="true" name="window-title" />
+    <ui:ScrollView scroll-deceleration-rate="0,135" elasticity="0,1" style="flex-grow: 1;">
+        <ui:VisualElement name="tools" class="window-segment">
+            <ui:Label tabindex="-1" text="Tools" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
+            <ui:VisualElement name="toolbars">
+                <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.Tool, FoxEdit.Editor" name="actions" Tooltips="Apply on only one voxel | Apply on a full surface" />
+                <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.Action, FoxEdit.Editor" index="1" Index="1" name="tools" Tooltips="Add voxels | Remove voxels | Colorize Voxels" style="flex-direction: row;" />
+            </ui:VisualElement>
         </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="color-palette" class="window-segment">
-        <ui:Label tabindex="-1" text="Color Palette" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
-        <ui:DropdownField label="Palette" name="palette-selector" />
-        <FoxEdit.WindowComponents.ColorPaletteElement PaletteSize="10" ItemIndex="6" />
+        <ui:VisualElement name="color-palette" class="window-segment">
+            <ui:Label tabindex="-1" text="Color Palette" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
+            <ui:DropdownField label="Palette" name="palette-selector" />
+            <FoxEdit.WindowComponents.ColorPaletteElement PaletteSize="10" ItemIndex="6" />
+        </ui:VisualElement>
+        <ui:VisualElement name="frame-selector" class="window-segment">
+            <ui:Label tabindex="-1" text="Frames" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
+            <ui:DropdownField label="Animation" name="animation-selector" />
+            <FoxEdit.WindowComponents.FrameSelectorElement FramesCount="10" />
+        </ui:VisualElement>
+        <ui:VisualElement name="transformations" class="window-segment">
+            <ui:Label tabindex="-1" text="Transformations" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
+            <ui:VisualElement name="buttons-container" picking-mode="Ignore">
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="translate-transformation" tooltip="Scale voxel object" class="transformation-button">
+                    <ui:VisualElement />
+                </ui:Button>
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="rotate-transformation" tooltip="Rotate voxel object" class="transformation-button">
+                    <ui:VisualElement />
+                </ui:Button>
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="scale-transformation" tooltip="Scale voxel object" class="transformation-button">
+                    <ui:VisualElement />
+                </ui:Button>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:ScrollView>
+    <ui:VisualElement name="fox-icon" style="background-image: url(&quot;project://database/Assets/FoxEdit/Editor/Icons/foxidle1.png?fileID=2800000&amp;guid=820b241376ceae246875a222e45355f4&amp;type=3#foxidle1&quot;);" />
+    <ui:VisualElement name="save-section">
+        <ui:Button text="Save" parse-escape-sequences="true" display-tooltip-when-elided="true" name="save-button" />
+        <ui:Button text="Save as..." parse-escape-sequences="true" display-tooltip-when-elided="true" name="save-as-button" />
     </ui:VisualElement>
 </ui:UXML>

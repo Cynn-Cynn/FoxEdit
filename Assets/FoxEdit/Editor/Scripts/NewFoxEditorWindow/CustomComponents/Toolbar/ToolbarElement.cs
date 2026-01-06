@@ -151,7 +151,7 @@ namespace FoxEdit.WindowComponents
 
             for (int i = 0; i < tooltips.Length && i < buttons.Count; i++)
             {
-                buttons[i].tooltip = tooltips[i];
+                buttons[i].tooltip = tooltips[i].Trim();
             }
         }
     }
