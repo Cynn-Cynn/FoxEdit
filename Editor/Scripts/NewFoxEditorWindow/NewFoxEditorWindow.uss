@@ -17,6 +17,9 @@
     border-top-color: var(--unity-colors-default-background);
     border-bottom-color: var(--unity-colors-default-background);
     padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 20px;
+    padding-left: 20px;
 }
 
 .toolbar {
@@ -101,4 +104,67 @@
 }
 
 #Fill-button {
+}
+
+.transformation-button {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#transformations > #buttons-container {
+    flex-direction: row;
+    justify-content: center;
+}
+
+#scale-transformation > VisualElement {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/scale-icon.png?fileID=2800000&guid=5493ff9b8cb6bcc4595e4559c6873c30&type=3#scale-icon");
+}
+
+#rotate-transformation > VisualElement {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/rotate-icon.png?fileID=2800000&guid=fda2f21bdb2b56048a67a79fdf4a378a&type=3#rotate-icon");
+}
+
+#translate-transformation > VisualElement {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/translate-icon.png?fileID=2800000&guid=d6fd3c835dee52948ae2a19a99c4095f&type=3#translate-icon");
+}
+
+.transformation-button > VisualElement {
+    flex-grow: 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#save-section {
+    height: 30px;
+    border-top-width: 1px;
+    border-top-color: var(--unity-colors-default-border);
+    position: absolute;
+    bottom: 0;
+    flex-grow: 1;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    background-color: var(--unity-colors-default-background);
+}
+
+#save-section > Button {
+    flex-grow: 1;
+}
+
+#window-title {
+    -unity-text-align: middle-center;
+    font-size: 30px;
+    -unity-font-style: bold-and-italic;
+}
+
+#fox-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/foxidle1.png?fileID=2800000&guid=820b241376ceae246875a222e45355f4&type=3#foxidle1");
+    position: absolute;
+    right: -14px;
+    width: 50px;
+    height: 50px;
+    bottom: 15px;
+    scale: -1 1;
 }
