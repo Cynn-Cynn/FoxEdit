@@ -21,6 +21,7 @@
     margin-right: 3px;
     margin-bottom: 3px;
     margin-left: 3px;
+    cursor: url("project://database/Assets/FoxEdit/Editor/Icons/color-picker.png?fileID=2800000&guid=9796e03ec2c007245b16274d06c109c4&type=3#color-picker");
 }
 
 .palette-item-selected {
