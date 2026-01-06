@@ -1,6 +1,13 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
     <Style src="project://database/Assets/FoxEdit/Editor/Scripts/NewFoxEditorWindow/NewFoxEditorWindow.uss?fileID=7433441132597879392&amp;guid=4211e588db51b0441a92e0b76227a629&amp;type=3#NewFoxEditorWindow" />
     <Style src="project://database/Assets/FoxEdit/Editor/Scripts/NewFoxEditorWindow/CustomComponents/ColorPaletteEditor/ColorPaletteStyle.uss?fileID=7433441132597879392&amp;guid=81291b5e93b2fb74fb07d6a3a61c16a5&amp;type=3#ColorPaletteStyle" />
+    <ui:VisualElement name="tools" class="window-segment">
+        <ui:Label tabindex="-1" text="Tools" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
+        <ui:VisualElement name="toolbars">
+            <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.Tool, FoxEdit.Editor" name="actions" Tooltips="Apply on only one voxel | Apply on a full surface" />
+            <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.Action, FoxEdit.Editor" index="1" Index="1" name="tools" Tooltips="Add voxels | Remove voxels | Colorize Voxels" style="flex-direction: row;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
     <ui:VisualElement name="color-palette" class="window-segment">
         <ui:Label tabindex="-1" text="Color Palette" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
         <ui:DropdownField label="Palette" name="palette-selector" />

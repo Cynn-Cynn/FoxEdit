@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using FoxEdit;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -32,6 +33,7 @@ namespace FoxEdit.WindowComponents
                 this.style.borderBottomColor = invColor;
                 this.style.borderLeftColor = invColor;
                 this.style.borderRightColor = invColor;
+                this.tooltip = GetTooltip();
             }
         }
 
@@ -64,6 +66,18 @@ namespace FoxEdit.WindowComponents
         public void SetSelected(bool selected)
         {
             this.EnableInClassList(PALETTE_ITEM_SELECTED_CLASS_NAME, selected);
+        }
+
+        private string GetTooltip()
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            stringBuilder.AppendLine(string.Format("Color: {0}", ColorNameUtility.GetClosestColorName(_color.Color)));
+            stringBuilder.AppendLine(string.Format("Emissive: {0}", _color.EmissiveIntensity));
+            stringBuilder.AppendLine(string.Format("Metallic: {0}%", Mathf.Round(_color.Metallic * 100)));
+            stringBuilder.Append(string.Format("Smoothness: {0}%", Mathf.Round(_color.Smoothness * 100)));
+
+            return stringBuilder.ToString();
         }
     }
 }
