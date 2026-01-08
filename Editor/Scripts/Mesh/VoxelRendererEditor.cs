@@ -17,6 +17,35 @@ namespace FoxEdit
         private string[] _paletteNames = null;
         private int _paletteIndexOverride = 0;
 
+        public static void SetupVoxelRenderer(VoxelRenderer voxelRenderer)
+        {
+            SerializedObject serializedObject = new SerializedObject(voxelRenderer);
+            SerializedProperty isSetupProperty = serializedObject.FindProperty("_isSetup");
+
+            if (isSetupProperty.boolValue)
+                return;
+
+            string computeShaderPath = AssetDatabase.GUIDToAssetPath("eeb2b127e157ea043be7bf2207221e36");
+            ComputeShader computeShader = AssetDatabase.LoadAssetAtPath<ComputeShader>(computeShaderPath);
+            ComputeShader computeShaderInstance = Instantiate(computeShader);
+            serializedObject.FindProperty("_computeShader").objectReferenceValue = computeShaderInstance;
+
+            string materialPath = AssetDatabase.GUIDToAssetPath("3f0281ad1cf83de4795cd67224e84cb6");
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            Material materialInstance = Instantiate(material);
+            serializedObject.FindProperty("_material").objectReferenceValue = materialInstance;
+
+            string staticMaterialPath = AssetDatabase.GUIDToAssetPath("90c432c76eaa99648809ebe571f57d1e");
+            Material staticMaterial = AssetDatabase.LoadAssetAtPath<Material>(staticMaterialPath);
+            Material staticMaterialInstance = Instantiate(staticMaterial);
+            serializedObject.FindProperty("_staticMaterial").objectReferenceValue = staticMaterialInstance;
+
+            voxelRenderer.SetRenderParams();
+    
+            isSetupProperty.boolValue = true;
+            serializedObject.ApplyModifiedProperties();
+        }
+
         private void OnEnable()
         {
             _voxelRenderer = target as VoxelRenderer;
@@ -38,35 +67,7 @@ namespace FoxEdit
 
         private void SetupRenderer()
         {
-            SerializedProperty isSetupProperty = serializedObject.FindProperty("_isSetup");
-
-            if (isSetupProperty.boolValue)
-                return;
-
-            serializedObject.FindProperty("_meshFilter").objectReferenceValue = _voxelRenderer.GetComponent<MeshFilter>();
-
-            string computeShaderPath = AssetDatabase.GUIDToAssetPath("eeb2b127e157ea043be7bf2207221e36");
-            ComputeShader computeShader = AssetDatabase.LoadAssetAtPath<ComputeShader>(computeShaderPath);
-            ComputeShader computeShaderInstance = Instantiate(computeShader);
-            serializedObject.FindProperty("_computeShader").objectReferenceValue = computeShaderInstance;
-
-            string materialPath = AssetDatabase.GUIDToAssetPath("3f0281ad1cf83de4795cd67224e84cb6");
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-            Material materialInstance = Instantiate(material);
-            serializedObject.FindProperty("_material").objectReferenceValue = materialInstance;
-
-            string staticMaterialPath = AssetDatabase.GUIDToAssetPath("90c432c76eaa99648809ebe571f57d1e");
-            Material staticMaterial = AssetDatabase.LoadAssetAtPath<Material>(staticMaterialPath);
-            Material staticMaterialInstance = Instantiate(staticMaterial);
-            serializedObject.FindProperty("_staticMaterial").objectReferenceValue = staticMaterialInstance;
-
-            MeshRenderer meshRenderer = _voxelRenderer.GetComponent<MeshRenderer>();
-            serializedObject.FindProperty("_meshRenderer").objectReferenceValue = meshRenderer;
-            meshRenderer.material = staticMaterialInstance;
-            meshRenderer.enabled = false;
-
-            isSetupProperty.boolValue = true;
-
+            SetupVoxelRenderer(_voxelRenderer);
             Save();
         }
 
@@ -137,5 +138,6 @@ namespace FoxEdit
             serializedObject.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
         }
+
     }
 }
