@@ -1,0 +1,170 @@
+.custom-label {
+    font-size: 20px;
+    -unity-font-style: bold;
+    color: rgb(68, 138, 255);
+}
+
+.window-segment {
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-color: var(--unity-colors-default-background);
+    border-bottom-color: var(--unity-colors-default-background);
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 20px;
+    padding-left: 20px;
+}
+
+.toolbar {
+    flex-grow: 0;
+    flex-direction: row;
+    justify-content: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.toolbar-button {
+    height: 50px;
+    width: 50px;
+    margin-left: 0;
+    margin-right: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-right-width: 1px;
+    border-left-width: 0;
+}
+
+.toolbar-button-icon {
+    flex-grow: 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.toolbar-button-first {
+    border-left-width: 1px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.toolbar-button-last {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.toolbar-button-selected {
+    background-color: var(--unity-colors-highlight-background);
+}
+
+#toolbars {
+    flex-direction: row;
+    justify-content: center;
+    align-items: auto;
+}
+
+#Paint-button > .toolbar-button-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/add-cube.png?fileID=2800000&guid=98084a4e8150fe946a04a4ebebfe24ab&type=3#add-cube");
+}
+
+#Erase-button > .toolbar-button-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/eraser.png?fileID=2800000&guid=4d1167178bb2a914cb1740fcf5c63aba&type=3#eraser");
+}
+
+#Color-button > .toolbar-button-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/palette.png?fileID=2800000&guid=1a1324b9931772946b093ca989493504&type=3#palette");
+}
+
+#Brush-button > .toolbar-button-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/brush.png?fileID=2800000&guid=a573551a0e928b14dadaddfb48f3867d&type=3#brush");
+}
+
+#Fill-button > .toolbar-button-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/fill.png?fileID=2800000&guid=fd47e6cf7c805264ba23805ecda61b1f&type=3#fill");
+}
+
+#Paint-button {
+}
+
+#Erase-button {
+}
+
+#Color-button {
+}
+
+#Brush-button {
+}
+
+#Fill-button {
+}
+
+.transformation-button {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#transformations > #buttons-container {
+    flex-direction: row;
+    justify-content: center;
+}
+
+#scale-transformation > VisualElement {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/scale-icon.png?fileID=2800000&guid=5493ff9b8cb6bcc4595e4559c6873c30&type=3#scale-icon");
+}
+
+#rotate-transformation > VisualElement {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/rotate-icon.png?fileID=2800000&guid=fda2f21bdb2b56048a67a79fdf4a378a&type=3#rotate-icon");
+}
+
+#translate-transformation > VisualElement {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/translate-icon.png?fileID=2800000&guid=d6fd3c835dee52948ae2a19a99c4095f&type=3#translate-icon");
+}
+
+.transformation-button > VisualElement {
+    flex-grow: 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#save-section {
+    height: 30px;
+    border-top-width: 1px;
+    border-top-color: var(--unity-colors-default-border);
+    position: absolute;
+    bottom: 0;
+    flex-grow: 1;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    background-color: var(--unity-colors-default-background);
+}
+
+#save-section > Button {
+    flex-grow: 1;
+}
+
+#fox-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/foxidle1.png?fileID=2800000&guid=820b241376ceae246875a222e45355f4&type=3#foxidle1");
+    position: absolute;
+    right: -14px;
+    width: 50px;
+    height: 50px;
+    bottom: 15px;
+    scale: -1 1;
+}
+
+#voxel-object-editor {
+    flex-grow: 1;
+}
+
+#stop-edit-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 25px;
+    background-color: rgb(69, 29, 29);
+    -unity-font-style: bold;
+}
