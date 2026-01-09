@@ -56,7 +56,6 @@ public class NewFoxEditorWindow : EditorWindow
         if (newPanel == currentPanel)
             return;
         voxelRendererSelectorContainer.style.display = newPanel == EPanel.Selector ? DisplayStyle.Flex : DisplayStyle.None;
-        Debug.Log(voxelRendererSelectorContainer.style.display);
         objectEditor.SetVisibility(newPanel == EPanel.Editor);
     }
 }

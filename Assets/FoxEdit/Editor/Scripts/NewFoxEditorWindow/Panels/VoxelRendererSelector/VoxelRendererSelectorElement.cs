@@ -1,9 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
+using FoxEdit.EditorUtils;
 
 namespace FoxEdit.WindowPanels
 {
@@ -80,19 +79,19 @@ namespace FoxEdit.WindowPanels
             icon.AddToClassList(VOXEL_RENDERER_SELECTOR_ITEM_ICON_CLASS_NAME);
 
             button.Add(icon);
-
             return button;
         }
 
         private void SelectVoxelRenderer(VoxelObject voxelObject)
         {
+            VoxelStageUtility.OpenVoxelStage(voxelObject);
             onSelectVoxelObject?.Invoke(voxelObject);
         }
 
-        private async Task SetIcon(VoxelObject voxelRenderer, VisualElement visualElement)
+        private async void SetIcon(VoxelObject voxelRenderer, VisualElement visualElement)
         {
             Texture2D texture2D = await voxelRenderer.GetPreviewIcon();
-            
+
             if (texture2D != null)
                 visualElement.style.backgroundImage = texture2D;
         }
