@@ -9,6 +9,7 @@ namespace FoxEdit.EditorUtils
     public class VoxelStage : PreviewSceneStage
     {
         private VoxelObject voxelObject;
+        public VoxelRenderer VoxelRenderer {get; private set;}
 
 
         public void SetVoxelObject(VoxelObject voxelObject)
@@ -34,7 +35,8 @@ namespace FoxEdit.EditorUtils
             GameObject voxelGO = new GameObject(voxelObject.name, typeof(MeshFilter), typeof(MeshRenderer));
             VoxelRenderer voxelRenderer = voxelGO.AddComponent<VoxelRenderer>();
             voxelRenderer.SetVoxelObject(voxelObject);
-            voxelRenderer.SetRenderParams();
+            voxelRenderer.Setup();
+            voxelRenderer.RenderSwap();
 
 
             SceneManager.MoveGameObjectToScene(light.gameObject, scene);
@@ -46,27 +48,15 @@ namespace FoxEdit.EditorUtils
             sceneView.camera.backgroundColor = Color.red;
 
             sceneView.Repaint();
-
-
-            UpdateSceneView(voxelGO);
+            this.VoxelRenderer = voxelRenderer;
 
             return success;
         }
 
-        private void UpdateSceneView(GameObject voxelGO)
+        protected override void OnCloseStage()
         {
-            EditorApplication.delayCall += () =>
-            {
-                SceneView sceneView = SceneView.lastActiveSceneView;
-                if (sceneView != null)
-                {
-                    sceneView.camera.clearFlags = CameraClearFlags.SolidColor;
-                    sceneView.camera.backgroundColor = Color.red;
-                    Selection.activeGameObject = voxelGO;
-                    sceneView.FrameSelected();
-                    sceneView.Repaint();
-                }
-            };
+            FoxEditManager.StopEditVoxelObject();
+            base.OnCloseStage();
         }
     }
 
@@ -74,14 +64,14 @@ namespace FoxEdit.EditorUtils
     {
         public const string TMP_PREFAB_PATH = "Assets/__TempPrefab.prefab";
 
-        public static void OpenVoxelStage(VoxelObject target)
+        public static VoxelStage OpenVoxelStage(VoxelObject target)
         {
             VoxelStage voxelStage = ScriptableObject.CreateInstance<VoxelStage>();
 
             voxelStage.SetVoxelObject(target);
             StageUtility.GoToStage(voxelStage, true);
 
-
+            return voxelStage;
         }
 
         public static void CloseVoxelStage()

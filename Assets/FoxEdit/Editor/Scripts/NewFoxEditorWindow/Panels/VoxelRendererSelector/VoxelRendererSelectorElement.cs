@@ -40,7 +40,7 @@ namespace FoxEdit.WindowPanels
             }
         }
 
-        public void UpdateVoxelRendererList(List<VoxelObject> voxelObjects)
+        public void UpdateVoxelObjectList(List<VoxelObject> voxelObjects)
         {
             this.voxelRenderers = voxelObjects;
             Clear();
@@ -84,7 +84,6 @@ namespace FoxEdit.WindowPanels
 
         private void SelectVoxelRenderer(VoxelObject voxelObject)
         {
-            VoxelStageUtility.OpenVoxelStage(voxelObject);
             onSelectVoxelObject?.Invoke(voxelObject);
         }
 

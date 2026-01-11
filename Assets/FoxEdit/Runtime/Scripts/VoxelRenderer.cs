@@ -19,8 +19,10 @@ namespace FoxEdit
         [SerializeField] private float _frameDuration = 0.2f;
 
         //Setup
-        [SerializeField] private bool _isSetup = false;
         [SerializeField] private ComputeShader _computeShader = null;
+        [SerializeField] internal MeshRenderer _meshRenderer = null;
+        [SerializeField] internal MeshFilter _meshFilter = null;
+
         [SerializeField] private Material _material = null;
         [SerializeField] private Material _staticMaterial = null;
 
@@ -41,37 +43,43 @@ namespace FoxEdit
         private float _timer = 0.0f;
         private int _frameIndex = 0;
 
+        public bool IsSetup {get; private set;} = false;
+
         RenderParams _renderParams;
 
-        [SerializeField] internal MeshRenderer _meshRenderer = null;
-        public MeshRenderer MeshRenderer
+        public void Setup()
         {
-            get
-            {
-                if (_meshRenderer == null)
-                {
-                    _meshRenderer = GetComponent<MeshRenderer>();
-                    _meshRenderer.material = _staticMaterial;
-                }
-                return _meshRenderer;
-            }
-        }
+            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
 
-        [SerializeField] internal MeshFilter _meshFilter = null;
-        public MeshFilter MeshFilter
-        {
-            get
+            if (_material == null)
+                _material = Instantiate(foxEditSettings.Materials.animatedMaterial);
+            if (_staticMaterial == null)
+                _staticMaterial = Instantiate(foxEditSettings.Materials.staticMaterial);
+            if (_computeShader == null)
+                _computeShader = Instantiate(foxEditSettings.computeShader);
+
+            if (_meshFilter == null)
+                _meshFilter = GetComponent<MeshFilter>();
+            if (_meshRenderer == null)
             {
-                if (_meshFilter == null)
-                    _meshFilter = GetComponent<MeshFilter>();
-                return _meshFilter;
+                _meshRenderer = GetComponent<MeshRenderer>();
+                _meshRenderer.material = _staticMaterial;
+                _meshRenderer.enabled = _staticRender;
             }
+            if (VoxelObject != null)
+                SetRenderParams();
+            IsSetup = true;
         }
 
         private void Awake()
         {
-            _isSetup = !_isSetup;
-            _isSetup = !_isSetup;
+            if (!IsSetup)
+                Setup();
+        }
+
+        void OnValidate()
+        {
+            Setup();
         }
 
         void Start()
@@ -80,6 +88,7 @@ namespace FoxEdit
 
             SetBuffers();
         }
+
 
         #region UserEditable
 
@@ -93,7 +102,7 @@ namespace FoxEdit
 
             if (_voxelObject.StaticMesh != null)
             {
-                MeshFilter.mesh = voxelObject.StaticMesh;
+                _meshFilter.mesh = voxelObject.StaticMesh;
                 Refresh();
             }
 #if UNITY_EDITOR
@@ -108,7 +117,7 @@ namespace FoxEdit
         public void RenderSwap()
         {
             _staticRender = !_staticRender;
-            MeshRenderer.enabled = _staticRender;
+            _meshRenderer.enabled = _staticRender;
             _timer = 0.0f;
         }
 
@@ -142,7 +151,7 @@ namespace FoxEdit
         internal void Refresh()
         {
             SetBuffers();
-            MeshFilter.mesh = _voxelObject?.StaticMesh;
+            _meshFilter.mesh = _voxelObject?.StaticMesh;
         }
 
         internal void RefreshColors()

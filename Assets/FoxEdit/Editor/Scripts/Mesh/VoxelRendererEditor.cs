@@ -17,35 +17,6 @@ namespace FoxEdit
         private string[] _paletteNames = null;
         private int _paletteIndexOverride = 0;
 
-        public static void SetupVoxelRenderer(VoxelRenderer voxelRenderer)
-        {
-            SerializedObject serializedObject = new SerializedObject(voxelRenderer);
-            SerializedProperty isSetupProperty = serializedObject.FindProperty("_isSetup");
-
-            if (isSetupProperty.boolValue)
-                return;
-
-            string computeShaderPath = AssetDatabase.GUIDToAssetPath("eeb2b127e157ea043be7bf2207221e36");
-            ComputeShader computeShader = AssetDatabase.LoadAssetAtPath<ComputeShader>(computeShaderPath);
-            ComputeShader computeShaderInstance = Instantiate(computeShader);
-            serializedObject.FindProperty("_computeShader").objectReferenceValue = computeShaderInstance;
-
-            string materialPath = AssetDatabase.GUIDToAssetPath("3f0281ad1cf83de4795cd67224e84cb6");
-            Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
-            Material materialInstance = Instantiate(material);
-            serializedObject.FindProperty("_material").objectReferenceValue = materialInstance;
-
-            string staticMaterialPath = AssetDatabase.GUIDToAssetPath("90c432c76eaa99648809ebe571f57d1e");
-            Material staticMaterial = AssetDatabase.LoadAssetAtPath<Material>(staticMaterialPath);
-            Material staticMaterialInstance = Instantiate(staticMaterial);
-            serializedObject.FindProperty("_staticMaterial").objectReferenceValue = staticMaterialInstance;
-
-            voxelRenderer.SetRenderParams();
-    
-            isSetupProperty.boolValue = true;
-            serializedObject.ApplyModifiedProperties();
-        }
-
         private void OnEnable()
         {
             _voxelRenderer = target as VoxelRenderer;
@@ -55,7 +26,6 @@ namespace FoxEdit
             _frameDurationProperty = serializedObject.FindProperty("_frameDuration");
             _frameDuration = _frameDurationProperty.floatValue;
 
-            SetupRenderer();
             PaletteSetup();
         }
 
@@ -63,12 +33,6 @@ namespace FoxEdit
         {
             _paletteNames = VoxelSharedData.GetPaletteNames();
             _paletteIndexOverride = serializedObject.FindProperty("_paletteIndexOverride").intValue;
-        }
-
-        private void SetupRenderer()
-        {
-            SetupVoxelRenderer(_voxelRenderer);
-            Save();
         }
 
         public override void OnInspectorGUI()
@@ -82,6 +46,8 @@ namespace FoxEdit
             StaticRenderDisplay();
             if (!_staticRender)
                 FrameTimeDisplay();
+            if (GUILayout.Button("Edit Voxel"))
+                FoxEditManager.StartEditVoxelObject(_voxelRenderer);
         }
 
         private void VoxelObjectDisplay()
