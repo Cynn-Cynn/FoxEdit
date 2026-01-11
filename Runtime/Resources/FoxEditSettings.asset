@@ -15,3 +15,7 @@ MonoBehaviour:
   _palettes:
   - {fileID: 11400000, guid: 2018349bc5077014daddb8178c4c004f, type: 2}
   - {fileID: 11400000, guid: 413abcab50e67f84e815dd0e271eef34, type: 2}
+  Materials:
+    animatedMaterial: {fileID: 2100000, guid: 3f0281ad1cf83de4795cd67224e84cb6, type: 2}
+    staticMaterial: {fileID: 2100000, guid: 90c432c76eaa99648809ebe571f57d1e, type: 2}
+  computeShader: {fileID: 7200000, guid: eeb2b127e157ea043be7bf2207221e36, type: 3}

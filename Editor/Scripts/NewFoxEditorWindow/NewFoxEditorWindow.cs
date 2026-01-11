@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using FoxEdit;
 using FoxEdit.WindowPanels;
@@ -21,12 +22,13 @@ public class NewFoxEditorWindow : EditorWindow
     private VoxelObjectEditor objectEditor = null;
     private VisualElement voxelRendererSelectorContainer = null;
     private VoxelRendererSelectorElement voxelRendererSelectorElement = null;
+    public static NewFoxEditorWindow currentWindow {get; private set;}
 
-    [MenuItem("Window/UI Toolkit/NewFoxEditorWindow")]
-    public static void ShowExample()
+    [MenuItem("FoxEdit/NewFoxEditorWindow")]
+    public static void Open()
     {
-        NewFoxEditorWindow wnd = GetWindow<NewFoxEditorWindow>();
-        wnd.titleContent = new GUIContent("NewFoxEditorWindow");
+        currentWindow = GetWindow<NewFoxEditorWindow>();
+        currentWindow.titleContent = new GUIContent("FoxEditor");
     }
 
     public void CreateGUI()
@@ -36,19 +38,54 @@ public class NewFoxEditorWindow : EditorWindow
 
         m_VisualTreeAsset.CloneTree(root);
         objectEditor = new VoxelObjectEditor(root.Q("voxel-object-editor"));
+
         voxelRendererSelectorContainer = root.Q("voxel-renderer-selector");
         voxelRendererSelectorElement = voxelRendererSelectorContainer.Q<VoxelRendererSelectorElement>();
+        voxelRendererSelectorElement.onSelectVoxelObject += OnSelectVoxelObject;
 
-        ShowVoxelRendererSelector();
+        ShowVoxelObjectSelector();
     }
 
-    public void ShowVoxelRendererSelector()
+    private void OnEnable()
+    {
+        RegisterCallbacks();
+    }
+
+    private void OnDisable()
+    {
+        UnregisterCallbacks();
+    }
+
+    private void RegisterCallbacks()
+    {
+        FoxEditManager.OnStartEditVoxelObject += ShowVoxelEditor;
+        FoxEditManager.OnStopEditVoxelObject += ShowVoxelObjectSelector;
+    }
+
+    private void UnregisterCallbacks()
+    {
+        FoxEditManager.OnStartEditVoxelObject -= ShowVoxelEditor;
+        FoxEditManager.OnStopEditVoxelObject -= ShowVoxelObjectSelector;
+        voxelRendererSelectorElement.onSelectVoxelObject += OnSelectVoxelObject;
+    }
+
+    private void OnSelectVoxelObject(VoxelObject voxelObject)
+    {
+        Debug.Log("Start edit");
+        FoxEditManager.StartEditVoxelObject(voxelObject);
+    }
+
+    public void ShowVoxelObjectSelector()
     {
         SetActivePanel(EPanel.Selector);
 
         List<VoxelObject> voxelObjects = AssetDatabaseUtility.FindAssetsByType<VoxelObject>();
-        Debug.Log(voxelObjects.Count);
-        voxelRendererSelectorElement.UpdateVoxelRendererList(voxelObjects);
+        voxelRendererSelectorElement.UpdateVoxelObjectList(voxelObjects);
+    }
+
+    public void ShowVoxelEditor(VoxelObject voxelObject, VoxelRenderer voxelRenderer)
+    {
+        SetActivePanel(EPanel.Editor);
     }
 
     private void SetActivePanel(EPanel newPanel)

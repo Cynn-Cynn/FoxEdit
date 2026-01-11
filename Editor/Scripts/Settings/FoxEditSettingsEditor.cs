@@ -77,6 +77,11 @@ namespace FoxEdit
                 _settings.AddPalette(null);
                 _palettes = _settings.Palettes;
             }
+
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(FoxEditSettings.Materials)));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(FoxEditSettings.computeShader)));
+
+            serializedObject.ApplyModifiedProperties();
         }
 
         private void Save()
