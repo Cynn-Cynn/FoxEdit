@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using FoxEdit.EditorUtils;
+using FoxEdit.VoxelTools;
 using UnityEditor;
+using UnityEditor.EditorTools;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
@@ -13,34 +15,71 @@ namespace FoxEdit
     {
         public static event Action<VoxelObject, VoxelRenderer> OnStartEditVoxelObject;
         public static event Action OnStopEditVoxelObject;
+        public static event Action<vxTool> OnChangeTool;
+        public static event Action<vxAction> OnChangeAction;
+        internal static VoxelEditor VoxelEditor { get; private set; }
 
-        private static VoxelStage voxelStage = null;
-        private static VoxelRenderer voxelRenderer = null;
-        private static VoxelObject voxelObject = null;
 
-        public static void StartEditVoxelObject(VoxelRenderer voxelRenderer) => StartEditVoxelObject(voxelRenderer.VoxelObject, voxelRenderer);
+        private static VoxelStage _voxelStage = null;
+        private static VoxelRenderer _voxelRenderer = null;
+        private static VoxelObject _voxelObject = null;
 
-        public static void StartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer = null)
+
+        private static vxAction _action = vxAction.Paint;
+        public static vxAction Action
+        {
+            get => _action;
+            set
+            {
+                if (_action == value)
+                    return;
+                _action = value;
+                OnChangeAction?.Invoke(_action);
+                if (VoxelEditor != null)
+                    VoxelEditor.SelectedAction = value;
+            }
+        }
+
+        private static vxTool _tool = vxTool.Brush;
+        public static vxTool Tool
+        {
+            get => _tool;
+            set
+            {
+                if (_tool == value)
+                    return;
+                _tool = value;
+                OnChangeTool?.Invoke(_tool);
+                if (VoxelEditor != null)
+                    VoxelEditor.SelectedTool = value;
+            }
+        }
+
+        internal static VoxelEditor StartEditVoxelObject(VoxelRenderer voxelRenderer) => StartEditVoxelObject(voxelRenderer.VoxelObject, voxelRenderer);
+
+        internal static VoxelEditor StartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer = null)
         {
             EnsureFoxEditWindowIsOpen();
             if (voxelObject == null)
             {
                 Debug.LogError("Cannot edit null voxelObject");
-                return;
+                return null;
             }
             if (voxelRenderer == null)
             {
-                voxelStage = VoxelStageUtility.OpenVoxelStage(voxelObject);
-                FoxEditManager.voxelRenderer = voxelStage.VoxelRenderer;
+                _voxelStage = VoxelStageUtility.OpenVoxelStage(voxelObject);
+                FoxEditManager._voxelRenderer = _voxelStage.VoxelRenderer;
             }
             else
             {
-                FoxEditManager.voxelRenderer = voxelRenderer;
+                FoxEditManager._voxelRenderer = voxelRenderer;
             }
 
-            FoxEditManager.voxelObject = voxelObject;
-            FocusGameObject(FoxEditManager.voxelRenderer.gameObject);
+            FoxEditManager._voxelObject = voxelObject;
+            FocusGameObject(FoxEditManager._voxelRenderer.gameObject);
+            VoxelEditor = new VoxelEditor(_tool, _action, voxelRenderer);
             OnStartEditVoxelObject?.Invoke(voxelObject, voxelRenderer);
+            return VoxelEditor;
         }
 
         private static void EnsureFoxEditWindowIsOpen()
@@ -50,11 +89,18 @@ namespace FoxEdit
 
         public static void StopEditVoxelObject()
         {
-            if (voxelStage != null)
+            if (_voxelStage != null)
                 StageUtility.GoToMainStage();
-            voxelObject = null;
-            voxelRenderer = null;
-            voxelStage = null;
+            _voxelObject = null;
+            _voxelRenderer = null;
+            _voxelStage = null;
+            if (VoxelEditor != null)
+                VoxelEditor.Dispose();
+            if (ToolManager.activeToolType == typeof(VoxelEditorTool))
+            {
+                Tools.current = UnityEditor.Tool.None;
+            }
+            VoxelEditor = null;
             OnStopEditVoxelObject?.Invoke();
         }
 

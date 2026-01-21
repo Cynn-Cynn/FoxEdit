@@ -54,6 +54,7 @@ public class NewFoxEditorWindow : EditorWindow
     private void OnDisable()
     {
         UnregisterCallbacks();
+        FoxEditManager.StopEditVoxelObject();
     }
 
     private void RegisterCallbacks()
