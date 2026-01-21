@@ -10,12 +10,12 @@ namespace FoxEdit
     {
         private Transform _frameObject = null;
         private MeshRenderer _voxelPrefab = null;
-        private FoxEditWindow _editWindow = null;
+        private VoxelEditor _editWindow = null;
         private Grid3D _grid = null;
 
         #region Initialization
 
-        internal VoxelEditorFrame(Transform parent, int frameIndex, MeshRenderer voxelPrefab, FoxEditWindow editWindow)
+        internal VoxelEditorFrame(Transform parent, int frameIndex, MeshRenderer voxelPrefab, VoxelEditor editWindow)
         {
             _frameObject = new GameObject("Frame_" + frameIndex.ToString("00")).transform;
             _frameObject.parent = parent;

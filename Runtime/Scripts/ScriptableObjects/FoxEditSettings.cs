@@ -15,6 +15,7 @@ namespace FoxEdit
         {
             public Material animatedMaterial;
             public Material staticMaterial;
+            public Material baseMaterial;
         }
 
         [SerializeField] private List<VoxelPalette> _palettes;
@@ -22,6 +23,9 @@ namespace FoxEdit
         public VoxelPalette[] Palettes { get { return _palettes.ToArray(); } }
         public MaterialsSettings Materials;
         public ComputeShader computeShader;
+        public ComputeShader staticVoxelComputeShader;
+        public MeshRenderer voxelPrefab;
+
 
         public void AddPalette(VoxelPalette palette)
         {

@@ -18,4 +18,7 @@ MonoBehaviour:
   Materials:
     animatedMaterial: {fileID: 2100000, guid: 3f0281ad1cf83de4795cd67224e84cb6, type: 2}
     staticMaterial: {fileID: 2100000, guid: 90c432c76eaa99648809ebe571f57d1e, type: 2}
+    baseMaterial: {fileID: 2100000, guid: 3ba88c2707cea7843b37c87a3a206258, type: 2}
   computeShader: {fileID: 7200000, guid: eeb2b127e157ea043be7bf2207221e36, type: 3}
+  staticVoxelComputeShader: {fileID: 7200000, guid: 2cb62f122b08a144ba5d96639b73bd19, type: 3}
+  voxelPrefab: {fileID: 5324761641246575033, guid: b372f3a77bc32ba418920cfa5cab2b28, type: 3}

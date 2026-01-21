@@ -1,13 +1,13 @@
 
 namespace FoxEdit.VoxelTools
 {
-    public enum Tool
+    public enum vxTool
     {
         Brush,
         Fill
     }
 
-    public enum Action
+    public enum vxAction
     {
         Paint,
         Erase,

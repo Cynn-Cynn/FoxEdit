@@ -394,11 +394,11 @@ namespace FoxEdit
             {
                 for (int i = 0; i < voxelObject.EditorVoxelPositions.Length; i++)
                 {
-                    VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, this);
+                    /*VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, new VoxelEditor(VoxelTools.vxTool.Brush, VoxelTools.vxAction.Color));
                     frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
                     if (i != _selectedFrame)
                         frame.Hide();
-                    _frameList.Add(frame);
+                    _frameList.Add(frame);*/
                 }
             }
             else
@@ -529,7 +529,7 @@ namespace FoxEdit
 
         private void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
+            /*VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, new VoxelEditor(VoxelTools.vxTool.Brush, VoxelTools.vxAction.Color));
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, _selectedPalette, 0);
             _frameList.Add(newFrame);
 
@@ -538,7 +538,7 @@ namespace FoxEdit
 
             CreateFrameIndices(_frameList.Count);
 
-            _needToSave = true;
+            _needToSave = true;*/
         }
 
         private void DuplicateFrame()
