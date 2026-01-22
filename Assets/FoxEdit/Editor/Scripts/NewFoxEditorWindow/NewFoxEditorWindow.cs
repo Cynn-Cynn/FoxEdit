@@ -19,7 +19,7 @@ public class NewFoxEditorWindow : EditorWindow
     private VisualTreeAsset m_VisualTreeAsset = default;
 
     private EPanel currentPanel = EPanel.None;
-    private VoxelObjectEditor objectEditor = null;
+    private VoxelObjectEditorPanel objectEditor = null;
     private VisualElement voxelRendererSelectorContainer = null;
     private VoxelRendererSelectorElement voxelRendererSelectorElement = null;
     public static NewFoxEditorWindow currentWindow {get; private set;}
@@ -37,7 +37,7 @@ public class NewFoxEditorWindow : EditorWindow
         VisualElement root = rootVisualElement;
 
         m_VisualTreeAsset.CloneTree(root);
-        objectEditor = new VoxelObjectEditor(root.Q("voxel-object-editor"));
+        objectEditor = new VoxelObjectEditorPanel(root.Q("voxel-object-editor"));
 
         voxelRendererSelectorContainer = root.Q("voxel-renderer-selector");
         voxelRendererSelectorElement = voxelRendererSelectorContainer.Q<VoxelRendererSelectorElement>();

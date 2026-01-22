@@ -1,11 +1,11 @@
-using System;
 using System.Linq;
 using FoxEdit.WindowComponents;
 using UnityEngine.UIElements;
+using UnityEngine;
 
 namespace FoxEdit.WindowPanels
 {
-    public class VoxelObjectEditor
+    public class VoxelObjectEditorPanel
     {
         private VisualElement root;
 
@@ -14,17 +14,20 @@ namespace FoxEdit.WindowPanels
         private ToolbarElement actionToolbar;
         private DropdownField paletteDropdown;
         private ColorPaletteElement colorSelector;
+        private FrameSelectorElement frameSelector;
 
-        public VoxelObjectEditor(VisualElement root)
+        private VoxelObject voxelObject;
+        private VoxelRenderer voxelRenderer;
+
+        public VoxelObjectEditorPanel(VisualElement root)
         {
             this.root = root;
             GetElements();
             RegisterCallbacks();
-
             SetupFields();
         }
 
-        ~VoxelObjectEditor()
+        ~VoxelObjectEditorPanel()
         {
             UnregisterCallbacks();
         }
@@ -37,7 +40,16 @@ namespace FoxEdit.WindowPanels
             toolToolbar.SelectTool((int)VoxelEditor.Tool, false);
             actionToolbar.SelectTool((int)VoxelEditor.Action, false);
 
+            UpdateFrameSelector();
             UpdateColorSelector();
+        }
+
+        private void UpdateFrameSelector()
+        {
+            if (voxelObject == null)
+                return;
+            frameSelector.FramesCount = voxelObject.FrameCount;
+            frameSelector.FramesIndex = 0;
         }
 
         private void UpdateColorSelector()
@@ -56,6 +68,7 @@ namespace FoxEdit.WindowPanels
             actionToolbar = root.Q<ToolbarElement>("actions");
             paletteDropdown = root.Q<DropdownField>("palette-selector");
             colorSelector = root.Q<ColorPaletteElement>();
+            frameSelector = root.Q<FrameSelectorElement>();
         }
 
 #region Callbacks
@@ -66,8 +79,31 @@ namespace FoxEdit.WindowPanels
             actionToolbar.OnToolSelected += OnActionSelected;
             paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             colorSelector.OnIndexChanged += OnColorSelectorValueChanged;
+            frameSelector.onFrameChanged += OnSelectFrame;
+
+            FoxEditManager.OnStartEditVoxelObject += OnStartEditVoxelObject;
+            FoxEditManager.OnStopEditVoxelObject += OnStopEditVoxelObject;
         }
 
+        private void OnSelectFrame(int newFrame)
+        {
+            if (FoxEditManager.VoxelEditor != null)
+                FoxEditManager.VoxelEditor.ChangeFrame(newFrame);
+        }
+
+        private void OnStopEditVoxelObject()
+        {
+            voxelObject = null;
+            voxelRenderer = null;
+        }
+
+        private void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer)
+        {
+            this.voxelObject = voxelObject;
+            this.voxelRenderer = voxelRenderer;
+
+            SetupFields();
+        }
 
         private void UnregisterCallbacks()
         {
@@ -115,9 +151,6 @@ namespace FoxEdit.WindowPanels
         public void SetVisibility(bool visible)
         {
             root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
-
-            if (visible == true)
-                SetupFields();
         }
 
 
