@@ -49,7 +49,7 @@ namespace FoxEdit
             {
                 if (_colorIndex == value)
                     return;
-                _colorIndex = Mathf.Clamp(ColorIndex, 0, VoxelSharedData.GetPalette(_paletteIndex).Colors.Length - 1);
+                _colorIndex = Mathf.Clamp(value, 0, CurrentPalette.Colors.Length - 1);
                 OnChangeColor?.Invoke(_colorIndex);
             }
         }
@@ -68,6 +68,8 @@ namespace FoxEdit
             }
         }
 
+        public static VoxelPalette CurrentPalette => VoxelSharedData.GetPalette(PaletteIndex);
+
         //Flags
         private bool _edit = false;
         private bool _canClick = true;
@@ -79,11 +81,6 @@ namespace FoxEdit
         private string _saveDirectory = "Meshes";
         private VoxelRenderer _voxelRenderer = null;
         private Material[][] _editorMaterials = null;
-
-        //Edit
-        private int _selectedColor = 0;
-        private VoxelPalette _palette = null;
-        private Color[] _colors = null;
 
         private int _selectedFrame = 0;
         private string[] _frameIndices = null;
@@ -167,7 +164,6 @@ namespace FoxEdit
                 PaletteIndex = voxelObject.PaletteIndex;
             else
                 PaletteIndex = 0;
-            LoadColors();
 
             if (_voxelParent != null)
             {
@@ -215,10 +211,10 @@ namespace FoxEdit
                 switch (Tool)
                 {
                     case vxTool.Brush:
-                        _needToSave = currentFrame.TryAddVoxelNextTo(gridPosition, direction, PaletteIndex, _selectedColor);
+                        _needToSave = currentFrame.TryAddVoxelNextTo(gridPosition, direction, PaletteIndex, ColorIndex);
                         break;
                     case vxTool.Fill:
-                        _needToSave = currentFrame.TryAddLayer(gridPosition, direction, PaletteIndex, _selectedColor);
+                        _needToSave = currentFrame.TryAddLayer(gridPosition, direction, PaletteIndex, ColorIndex);
                         break;
                 }
             }
@@ -239,10 +235,10 @@ namespace FoxEdit
                 switch (Tool)
                 {
                     case vxTool.Brush:
-                        _needToSave = currentFrame.TryColorVoxel(gridPosition, PaletteIndex, _selectedColor);
+                        _needToSave = currentFrame.TryColorVoxel(gridPosition, PaletteIndex, ColorIndex);
                         break;
                     case vxTool.Fill:
-                        _needToSave = currentFrame.TryFillColor(gridPosition, PaletteIndex, _selectedColor);
+                        _needToSave = currentFrame.TryFillColor(gridPosition, PaletteIndex, ColorIndex);
                         break;
                 }
             }
@@ -321,14 +317,6 @@ namespace FoxEdit
             _frameList[_selectedFrame].Show();
         }
         #endregion
-
-        private void LoadColors()
-        {
-            _palette = VoxelSharedData.GetPalette(PaletteIndex);
-            _colors = _palette.Colors.Select(color => color.Color).ToArray();
-
-            _selectedColor = 0;
-        }
 
         private void DisableEditing(bool isFromReload)
         {
