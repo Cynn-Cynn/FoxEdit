@@ -29,6 +29,10 @@
     border-right-color: var(--unity-colors-default-border);
     border-bottom-color: var(--unity-colors-default-border);
     border-left-color: var(--unity-colors-default-border);
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
 }
 
 .frameselector-item-selected {
@@ -44,9 +48,12 @@
 }
 
 .frameselector-item-label {
-    -unity-text-align: middle-center;
-    flex-grow: 1;
-    font-size: 20px;
+    -unity-text-align: lower-right;
+    flex-grow: 0;
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
 }
 
 .frameselector-add-button-container {
@@ -58,4 +65,32 @@
 
 .frameselector-add-button {
     flex-grow: 1;
+}
+
+.frameselector-item-thumbnail {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(255, 255, 255);
+}
+
+.frameselector-ghost-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/foxidle1.png?fileID=2800000&guid=820b241376ceae246875a222e45355f4&type=3#foxidle1");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.3);
+}
+
+.drag-insertion-marker {
+    background-color: var(--unity-colors-highlight-background);
+    border-top-color: rgba(255, 255, 255, 0);
+    border-left-color: rgba(255, 255, 255, 0);
+    border-right-color: rgba(255, 255, 255, 0);
+    border-bottom-color: rgba(255, 255, 255, 0);
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    border-top-left-radius: 148px;
+    border-top-right-radius: 148px;
+    border-bottom-right-radius: 148px;
+    border-bottom-left-radius: 148px;
 }
