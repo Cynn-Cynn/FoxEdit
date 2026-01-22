@@ -41,20 +41,19 @@ namespace FoxEdit.WindowComponents
             }
         }
 
+        public event Action<int> OnIndexChanged;
+
+        private VisualElement itemsContainer = null;
+        private VoxelPalette voxelPalette = null;
+        private List<PaletteItem> _paletteItems = new List<PaletteItem>();
+        private PaletteItem lastSelectedPaletteItem = null;
+        private VisualElement addColorButton;
+
         private int _itemIndex = -1;
         public int ItemIndex
         {
             get => _itemIndex;
-            set
-            {
-                if (value >= _paletteItems.Count || value < 0)
-                    return;
-                if (lastSelectedPaletteItem != null)
-                    lastSelectedPaletteItem.SetSelected(false);
-                lastSelectedPaletteItem  = _paletteItems[value];
-                lastSelectedPaletteItem.SetSelected(true);
-                _itemIndex = value;
-            }
+            set => SetIndexValue(value);
         }
 
         private int _paletteSize = 0;
@@ -68,11 +67,19 @@ namespace FoxEdit.WindowComponents
             }
         }
 
-        private VisualElement itemsContainer = null;
-        private VoxelPalette voxelPalette = null;
-        private List<PaletteItem> _paletteItems = new List<PaletteItem>();
-        private PaletteItem lastSelectedPaletteItem = null;
-        private VisualElement addColorButton;
+        public void SetIndexValue(int value, bool notify = true)
+        {
+            if (value >= _paletteItems.Count || value < 0)
+                return;
+            if (lastSelectedPaletteItem != null)
+                lastSelectedPaletteItem.SetSelected(false);
+            lastSelectedPaletteItem = _paletteItems[value];
+            lastSelectedPaletteItem.SetSelected(true);
+            _itemIndex = value;
+            if (notify)
+                OnIndexChanged?.Invoke(_itemIndex);
+        }
+
 
         public ColorPaletteElement()
         {
@@ -135,7 +142,7 @@ namespace FoxEdit.WindowComponents
             }
         }
 
-        private void ClearPaletteItems()
+        public void ClearPaletteItems()
         {
             foreach (PaletteItem paletteItem in _paletteItems)
                 paletteItem.RemoveFromHierarchy();
@@ -157,7 +164,7 @@ namespace FoxEdit.WindowComponents
             this.voxelPalette = voxelPalette;
         }
 
-        private void AddPaletteItem(VoxelColor voxelColor)
+        public void AddPaletteItem(VoxelColor voxelColor)
         {
             int newPaletteItemIndex = _paletteItems.Count;
             PaletteItem paletteItem = new PaletteItem();
