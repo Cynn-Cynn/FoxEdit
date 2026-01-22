@@ -103,6 +103,7 @@ namespace FoxEdit
             _voxelPrefab = _foxEditSettings.voxelPrefab;
             _computeStaticMesh = _foxEditSettings.staticVoxelComputeShader;
             _frameList = new List<VoxelEditorFrame>();
+            VoxelEditor.OnChangePalette += OnPaletteChanged;
 
             CreateMaterials(); ;
 
@@ -110,9 +111,11 @@ namespace FoxEdit
                 EnableEditing();
         }
 
+
         ~VoxelEditor()
         {
             DisableEditing(false);
+            VoxelEditor.OnChangePalette -= OnPaletteChanged;
         }
 
         private void CreateMaterials()
@@ -287,6 +290,11 @@ namespace FoxEdit
             _needToSave = true;
         }
 
+        private void OnPaletteChanged(int paletteColor)
+        {
+            UpdateColors();
+        }
+
         private void DeleteFrame()
         {
             _frameList[_selectedFrame].Destroy();
@@ -317,6 +325,11 @@ namespace FoxEdit
             _frameList[_selectedFrame].Show();
         }
         #endregion
+
+        private void UpdateColors()
+        {
+            _frameList[_selectedFrame].UpdatePalette(PaletteIndex);
+        }
 
         private void DisableEditing(bool isFromReload)
         {

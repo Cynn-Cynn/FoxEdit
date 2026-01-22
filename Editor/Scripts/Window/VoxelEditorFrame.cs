@@ -418,6 +418,22 @@ namespace FoxEdit
             _grid.Get(gridPosition).SetColor(material, colorIndex);
         }
 
+        public void UpdatePalette(int paletteIndex)
+        {
+            Material material = null;
+            int colorIndex = -1;
+
+            foreach (VoxelEditorObject obj in _grid)
+            {
+                if (obj == null)
+                    continue;
+                colorIndex = obj.ColorIndex;
+                material = _editWindow.GetMaterial(paletteIndex, colorIndex);
+
+                obj.SetColor(material, colorIndex);
+            }
+        }
+
         internal void Destroy()
         {
             _grid.Clear();
