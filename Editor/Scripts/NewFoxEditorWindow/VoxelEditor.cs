@@ -10,13 +10,69 @@ namespace FoxEdit
 {
     internal class VoxelEditor : IDisposable
     {
+        public static event Action<vxTool> OnChangeTool;
+        public static event Action<vxAction> OnChangeAction;
+        public static event Action<int> OnChangeColor;
+        public static event Action<int> OnChangePalette;
+
+        private static vxAction _action = vxAction.Paint;
+        public static vxAction Action
+        {
+            get => _action;
+            set
+            {
+                if (_action == value)
+                    return;
+                _action = value;
+                OnChangeAction?.Invoke(_action);
+            }
+        }
+
+        private static vxTool _tool = vxTool.Brush;
+        public static vxTool Tool
+        {
+            get => _tool;
+            set
+            {
+                if (_tool == value)
+                    return;
+                _tool = value;
+                OnChangeTool?.Invoke(_tool);
+            }
+        }
+
+        private static int _colorIndex;
+        public static int ColorIndex
+        {
+            get => _colorIndex;
+            set
+            {
+                if (_colorIndex == value)
+                    return;
+                _colorIndex = Mathf.Clamp(ColorIndex, 0, VoxelSharedData.GetPalette(_paletteIndex).Colors.Length - 1);
+                OnChangeColor?.Invoke(_colorIndex);
+            }
+        }
+
+        private static int _paletteIndex;
+        public static int PaletteIndex
+        {
+            get => _paletteIndex;
+            set
+            {
+                if (_paletteIndex == value)
+                    return;
+                _paletteIndex = Mathf.Clamp(value, 0, VoxelSharedData.GetPaletteCount() - 1);
+                ColorIndex = ColorIndex;
+                OnChangePalette?.Invoke(_paletteIndex);
+            }
+        }
+
         //Flags
-        private static bool _isOpen = false;
         private bool _edit = false;
         private bool _canClick = true;
         private bool _needToSave = false;
         private bool _selection = false;
-        private bool _drag = false;
 
         //Mesh
         private string _meshName = null;
@@ -25,12 +81,6 @@ namespace FoxEdit
         private Material[][] _editorMaterials = null;
 
         //Edit
-        public vxTool SelectedTool = vxTool.Brush;
-        public vxAction SelectedAction = vxAction.Paint;
-
-        private int _selectedPalette = 0;
-        private string[] _paletteNames = null;
-
         private int _selectedColor = 0;
         private VoxelPalette _palette = null;
         private Color[] _colors = null;
@@ -49,15 +99,13 @@ namespace FoxEdit
         private FoxEditSettings _foxEditSettings = null;
 
         #region Init
-        public VoxelEditor(vxTool tool, vxAction action, VoxelRenderer voxelRenderer)
+        public VoxelEditor(VoxelRenderer voxelRenderer)
         {
             _foxEditSettings = FoxEditSettings.GetSettings();
             _voxelRenderer = voxelRenderer;
             _voxelPrefab = _foxEditSettings.voxelPrefab;
             _computeStaticMesh = _foxEditSettings.staticVoxelComputeShader;
             _frameList = new List<VoxelEditorFrame>();
-
-            _isOpen = true;
 
             CreateMaterials(); ;
 
@@ -116,9 +164,9 @@ namespace FoxEdit
 
             VoxelObject voxelObject = _voxelRenderer.VoxelObject;
             if (voxelObject != null)
-                _selectedPalette = voxelObject.PaletteIndex;
+                PaletteIndex = voxelObject.PaletteIndex;
             else
-                _selectedPalette = 0;
+                PaletteIndex = 0;
             LoadColors();
 
             if (_voxelParent != null)
@@ -136,7 +184,7 @@ namespace FoxEdit
                 for (int i = 0; i < voxelObject.EditorVoxelPositions.Length; i++)
                 {
                     VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, this);
-                    frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
+                    frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, PaletteIndex, voxelObject.EditorVoxelPositions[i].ColorIndices);
                     if (i != _selectedFrame)
                         frame.Hide();
                     _frameList.Add(frame);
@@ -156,35 +204,27 @@ namespace FoxEdit
         #region Dispose
 
         #endregion
-        #region InputHandling
-        private void Click()
-        {
-            _canClick = false;
-            Debug.Log("click");
-
-        }
-
         public void UseTool(Vector3 worldPosition, Vector3 worldNormal)
         {
             VoxelEditorFrame currentFrame = _frameList[_selectedFrame];
             Vector3Int gridPosition = currentFrame.WorldToGridPosition(worldPosition);
             Vector3Int direction = currentFrame.NormalToDirection(worldNormal);
 
-            if (SelectedAction == vxAction.Paint)
+            if (Action == vxAction.Paint)
             {
-                switch (SelectedTool)
+                switch (Tool)
                 {
                     case vxTool.Brush:
-                        _needToSave = currentFrame.TryAddVoxelNextTo(gridPosition, direction, _selectedPalette, _selectedColor);
+                        _needToSave = currentFrame.TryAddVoxelNextTo(gridPosition, direction, PaletteIndex, _selectedColor);
                         break;
                     case vxTool.Fill:
-                        _needToSave = currentFrame.TryAddLayer(gridPosition, direction, _selectedPalette, _selectedColor);
+                        _needToSave = currentFrame.TryAddLayer(gridPosition, direction, PaletteIndex, _selectedColor);
                         break;
                 }
             }
-            else if (SelectedAction == vxAction.Erase)
+            else if (Action == vxAction.Erase)
             {
-                switch (SelectedTool)
+                switch (Tool)
                 {
                     case vxTool.Brush:
                         _needToSave = currentFrame.TryRemoveVoxel(gridPosition);
@@ -194,21 +234,19 @@ namespace FoxEdit
                         break;
                 }
             }
-            else if (SelectedAction == vxAction.Color)
+            else if (Action == vxAction.Color)
             {
-                switch (SelectedTool)
+                switch (Tool)
                 {
                     case vxTool.Brush:
-                        _needToSave = currentFrame.TryColorVoxel(gridPosition, _selectedPalette, _selectedColor);
+                        _needToSave = currentFrame.TryColorVoxel(gridPosition, PaletteIndex, _selectedColor);
                         break;
                     case vxTool.Fill:
-                        _needToSave = currentFrame.TryFillColor(gridPosition, _selectedPalette, _selectedColor);
+                        _needToSave = currentFrame.TryFillColor(gridPosition, PaletteIndex, _selectedColor);
                         break;
                 }
             }
         }
-        #endregion
-
 
         #region Helpers
 
@@ -242,7 +280,7 @@ namespace FoxEdit
         private void NewFrame()
         {
             VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
-            newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, _selectedPalette, 0);
+            newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, PaletteIndex, 0);
             _frameList.Add(newFrame);
 
             if (_frameList.Count != 1)
@@ -267,7 +305,7 @@ namespace FoxEdit
 
         private void DuplicateFrame()
         {
-            VoxelEditorFrame newFrame = _frameList[_selectedFrame].GetCopy(_frameList.Count, _selectedPalette);
+            VoxelEditorFrame newFrame = _frameList[_selectedFrame].GetCopy(_frameList.Count, PaletteIndex);
             _frameList.Add(newFrame);
 
             ChangeFrame(_frameList.Count - 1);
@@ -286,8 +324,7 @@ namespace FoxEdit
 
         private void LoadColors()
         {
-            _palette = VoxelSharedData.GetPalette(_selectedPalette);
-            _paletteNames = VoxelSharedData.GetPaletteNames();
+            _palette = VoxelSharedData.GetPalette(PaletteIndex);
             _colors = _palette.Colors.Select(color => color.Color).ToArray();
 
             _selectedColor = 0;

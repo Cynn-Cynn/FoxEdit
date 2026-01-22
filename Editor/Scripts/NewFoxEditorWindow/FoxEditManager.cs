@@ -15,8 +15,6 @@ namespace FoxEdit
     {
         public static event Action<VoxelObject, VoxelRenderer> OnStartEditVoxelObject;
         public static event Action OnStopEditVoxelObject;
-        public static event Action<vxTool> OnChangeTool;
-        public static event Action<vxAction> OnChangeAction;
         internal static VoxelEditor VoxelEditor { get; private set; }
 
 
@@ -25,35 +23,6 @@ namespace FoxEdit
         private static VoxelObject _voxelObject = null;
 
 
-        private static vxAction _action = vxAction.Paint;
-        public static vxAction Action
-        {
-            get => _action;
-            set
-            {
-                if (_action == value)
-                    return;
-                _action = value;
-                OnChangeAction?.Invoke(_action);
-                if (VoxelEditor != null)
-                    VoxelEditor.SelectedAction = value;
-            }
-        }
-
-        private static vxTool _tool = vxTool.Brush;
-        public static vxTool Tool
-        {
-            get => _tool;
-            set
-            {
-                if (_tool == value)
-                    return;
-                _tool = value;
-                OnChangeTool?.Invoke(_tool);
-                if (VoxelEditor != null)
-                    VoxelEditor.SelectedTool = value;
-            }
-        }
 
         internal static VoxelEditor StartEditVoxelObject(VoxelRenderer voxelRenderer) => StartEditVoxelObject(voxelRenderer.VoxelObject, voxelRenderer);
 
@@ -76,8 +45,9 @@ namespace FoxEdit
             }
 
             FoxEditManager._voxelObject = voxelObject;
+            Selection.activeGameObject = _voxelRenderer.gameObject;
             FocusGameObject(FoxEditManager._voxelRenderer.gameObject);
-            VoxelEditor = new VoxelEditor(_tool, _action, voxelRenderer);
+            VoxelEditor = new VoxelEditor(voxelRenderer);
             OnStartEditVoxelObject?.Invoke(voxelObject, voxelRenderer);
             return VoxelEditor;
         }
@@ -118,7 +88,6 @@ namespace FoxEdit
                 {
                     sceneView.camera.clearFlags = CameraClearFlags.SolidColor;
                     sceneView.camera.backgroundColor = Color.red;
-                    Selection.activeGameObject = voxelGO;
                     sceneView.FrameSelected();
                     sceneView.Repaint();
                 }
