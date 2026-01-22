@@ -10,12 +10,11 @@ namespace FoxEdit.WindowComponents
     {
         #region CLASS_NAMES
         public const string FRAME_SELECTOR_CLASS_NAME = "frameselector";
-        public const string FRAME_SELECTOR_ITEM_CLASS_NAME = "frameselector-item";
-        public const string FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME = "frameselector-item-selected";
-        public const string FRAME_SELECTOR_ITEM_LABEL_CLASS_NAME = "frameselector-item-label";
         public const string FRAME_SELECTOR_CONTAINER_CLASS_NAME = "frameselector-items-container";
         public const string FRAME_SELECTOR_ADD_BUTTON_CLASS_NAME = "frameselector-add-button";
         public const string FRAME_SELECTOR_ADD_BUTTON_CONTAINER_CLASS_NAME = "frameselector-add-button-container";
+        public const string FRAME_SELECTOR_GHOSTICON_CLASS_NAME = "frameselector-ghost-icon";
+        public const int GHOST_ICON_SIZE = 30;
         #endregion
         public new class UxmlFactory : UxmlFactory<FrameSelectorElement, UxmlTraits> { }
         public new class UxmlTraits : VisualElement.UxmlTraits
@@ -68,9 +67,18 @@ namespace FoxEdit.WindowComponents
         }
 
         private VisualElement framesContainer = null;
-        private List<Button> frameItems = new List<Button>();
+        private Dictionary<int, FrameButton> frameItems = new Dictionary<int, FrameButton>();
         private Button addButton = null;
+        private VisualElement ghostIcon;
+        private DragInsertionMarker dragInsertionMarker;
+        public delegate void OnMoveFrameDelegate(int oldIndex, int newIndex);
         public event Action<int> onFrameChanged;
+        public event OnMoveFrameDelegate OnMoveFrame;
+
+        //Drag
+        private FrameButton dragButton;
+        private FrameButton hoveredFrameButton;
+        private int lastDropIndex = -1;
 
         public FrameSelectorElement()
         {
@@ -78,17 +86,29 @@ namespace FoxEdit.WindowComponents
             framesContainer.AddToClassList(FRAME_SELECTOR_CONTAINER_CLASS_NAME);
             framesContainer.name = "frames-container";
 
+            dragInsertionMarker = new DragInsertionMarker();
+
+            ghostIcon = new VisualElement();
+            ghostIcon.AddToClassList(FRAME_SELECTOR_GHOSTICON_CLASS_NAME);
+            ghostIcon.name = "ghost-icon";
+            ghostIcon.style.width = GHOST_ICON_SIZE;
+            ghostIcon.style.height = GHOST_ICON_SIZE;
+            ghostIcon.style.position = Position.Absolute;
+            ghostIcon.pickingMode = PickingMode.Ignore;
+            ghostIcon.style.display = DisplayStyle.None;
+
             Add(framesContainer);
             SetupAddButtons();
+            Add(ghostIcon);
         }
 
-#region AddButton
+        #region AddButton
         private void SetupAddButtons()
         {
             addButton = new Button();
             addButton.name = "add-frame-button";
             addButton.AddToClassList(FRAME_SELECTOR_ADD_BUTTON_CLASS_NAME);
-            addButton.AddToClassList(FRAME_SELECTOR_ITEM_CLASS_NAME);
+            addButton.AddToClassList(FrameButton.FRAME_SELECTOR_ITEM_CLASS_NAME);
 
             VisualElement addButtonsContainer = new VisualElement();
             addButtonsContainer.name = "Add buttons";
@@ -108,7 +128,7 @@ namespace FoxEdit.WindowComponents
 
             this.Add(addButtonsContainer);
         }
-#endregion
+        #endregion
 
         private void NewEmptyFrame()
         {
@@ -147,32 +167,93 @@ namespace FoxEdit.WindowComponents
 
         private void ClearFrameItems()
         {
-            foreach (VisualElement frame in frameItems)
-                frame.RemoveFromHierarchy();
+            foreach (var item in frameItems)
+                item.Value.RemoveFromHierarchy();
             frameItems.Clear();
         }
 
         private void AddFrameElement(int frameIndex)
         {
-            Button frameItem = new Button();
+            FrameButton frameButton = new FrameButton();
 
-            frameItem.name = string.Format("frame-{0}", frameIndex);
-            frameItem.AddToClassList(FRAME_SELECTOR_ITEM_CLASS_NAME);
+            frameButton.Index = frameIndex;
+            framesContainer.Add(frameButton);
+            frameItems.Add(frameIndex, frameButton);
 
-            Label label = new Label();
-            label.AddToClassList(FRAME_SELECTOR_ITEM_LABEL_CLASS_NAME);
-            label.text = frameIndex.ToString();
-
-            frameItem.Add(label);
-            frameItems.Add(frameItem);
-            framesContainer.Add(frameItem);
-
-            frameItem.clicked += () => SelectFrame(frameIndex);
+            frameButton.clicked += () => SelectFrame(frameIndex);
 
             ContextualMenuManipulator contextualMenuManipulator = new ContextualMenuManipulator(FrameMenuManipulator);
-            contextualMenuManipulator.target = frameItem;
+            contextualMenuManipulator.target = frameButton;
+
+            RegisterFrameCallbacks(frameButton);
 
             addButton.BringToFront();
+        }
+
+        private void RegisterFrameCallbacks(FrameButton frameButton)
+        {
+            frameButton.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                dragButton = frameButton;
+                ChangeDragInsertionMakerPosition(frameButton.Index);
+                lastDropIndex = frameButton.Index;
+                frameButton.CapturePointer(evt.pointerId);
+                hoveredFrameButton = null;
+
+            }, TrickleDown.TrickleDown);
+
+            frameButton.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (dragButton == null)
+                    return;
+                MoveFrame(dragButton.Index, lastDropIndex);
+                ChangeDragInsertionMakerPosition(-1);
+                dragButton = null;
+                ghostIcon.style.display = DisplayStyle.None;
+                frameButton.ReleasePointer(evt.pointerId);
+            });
+
+            frameButton.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (dragButton == null || !frameButton.HasPointerCapture(evt.pointerId))
+                    return;
+                Vector2 mousePos = ghostIcon.parent.WorldToLocal(evt.position);
+                ghostIcon.style.display = DisplayStyle.Flex;
+                ghostIcon.style.left = mousePos.x - GHOST_ICON_SIZE / 2;
+                ghostIcon.style.top = mousePos.y - GHOST_ICON_SIZE / 2;
+
+                if (hoveredFrameButton != null)
+                {
+                    bool isOnLeft = IsMouseOnLeftOfElement(hoveredFrameButton, evt.position);
+                    int index = hoveredFrameButton.Index + (isOnLeft ? 0 : 1);
+
+                    ChangeDragInsertionMakerPosition(index);
+                    lastDropIndex = index;
+                }
+            });
+
+            frameButton.RegisterCallback<PointerEnterEvent>(evt =>
+            {
+                if (dragButton == null)
+                    return;
+                hoveredFrameButton = frameButton;
+            });
+        }
+
+        private void ChangeDragInsertionMakerPosition(int newIndex)
+        {
+            if (framesContainer.Contains(dragInsertionMarker))
+                framesContainer.Remove(dragInsertionMarker);
+            if (newIndex >= 0)
+            {
+                framesContainer.Insert(newIndex, dragInsertionMarker);
+            }
+        }
+
+        private bool IsMouseOnLeftOfElement(VisualElement visualElement, Vector2 mousePos)
+        {
+            Vector3 center = visualElement.worldBound.center;
+            return mousePos.x < center.x;
         }
 
         private void FrameMenuManipulator(ContextualMenuPopulateEvent evt)
@@ -186,12 +267,20 @@ namespace FoxEdit.WindowComponents
             Debug.LogFormat("Remove {0}", frameItem.name);
         }
 
+        private void MoveFrame(int oldFrameIndex, int newFrameIndex)
+        {
+            if (oldFrameIndex == newFrameIndex)
+                return;
+            Debug.LogFormat("Frame #{0} move at #{1}", oldFrameIndex, newFrameIndex);
+            OnMoveFrame?.Invoke(oldFrameIndex, newFrameIndex);
+        }
+
         private void SelectFrame(int index)
         {
             index = Mathf.Clamp(index, 0, frameItems.Count - 1);
-            frameItems[_frameIndex].RemoveFromClassList(FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME);
+            frameItems[_frameIndex].SetSelected(false);
             _frameIndex = index;
-            frameItems[_frameIndex].AddToClassList(FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME);
+            frameItems[_frameIndex].SetSelected(true);
             onFrameChanged?.Invoke(index);
         }
     }
