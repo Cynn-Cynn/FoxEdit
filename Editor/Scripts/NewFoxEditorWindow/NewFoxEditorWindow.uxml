@@ -21,7 +21,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="frame-selector" class="window-segment">
                 <ui:Label tabindex="-1" text="Frames" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
-                <ui:DropdownField label="Animation" name="animation-selector" />
+                <ui:DropdownField label="Animation" name="animation-selector" style="display: none;" />
                 <FoxEdit.WindowComponents.FrameSelectorElement FramesCount="10" />
             </ui:VisualElement>
             <ui:VisualElement name="transformations" class="window-segment">

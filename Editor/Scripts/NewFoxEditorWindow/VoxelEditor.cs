@@ -14,6 +14,7 @@ namespace FoxEdit
         public static event Action<vxAction> OnChangeAction;
         public static event Action<int> OnChangeColor;
         public static event Action<int> OnChangePalette;
+        public static event Action<int> OnFrameChanged;
 
         private static vxAction _action = vxAction.Paint;
         public static vxAction Action
@@ -111,12 +112,6 @@ namespace FoxEdit
                 EnableEditing();
         }
 
-
-        ~VoxelEditor()
-        {
-            DisableEditing(false);
-            VoxelEditor.OnChangePalette -= OnPaletteChanged;
-        }
 
         private void CreateMaterials()
         {
@@ -320,14 +315,18 @@ namespace FoxEdit
 
         public void ChangeFrame(int index)
         {
+            index = Mathf.Clamp(index, 0, _frameList.Count - 1);
             _frameList[_selectedFrame].Hide();
             _selectedFrame = index;
             _frameList[_selectedFrame].Show();
+            UpdateColors();
         }
         #endregion
 
         private void UpdateColors()
         {
+            if (_frameList == null || _selectedFrame < 0 || _selectedFrame >= _frameList.Count)
+                return;
             _frameList[_selectedFrame].UpdatePalette(PaletteIndex);
         }
 
@@ -356,6 +355,7 @@ namespace FoxEdit
         public void Dispose()
         {
             DisableEditing(false);
+            VoxelEditor.OnChangePalette -= OnPaletteChanged;
         }
     }
 
