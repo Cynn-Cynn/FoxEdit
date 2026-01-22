@@ -120,14 +120,15 @@ namespace FoxEdit.WindowComponents
             SelectTool(0);
         }
 
-        private void SelectTool(int toolIndex)
+        public void SelectTool(int toolIndex, bool notify = true)
         {
             if (Index == toolIndex)
                 return;
 
             for (int i = 0; i < buttons.Count; i++)
                 buttons[i].EnableInClassList(TOOLBAR_BUTTON_SELECTED_CLASS_NAME, i == toolIndex);
-            OnToolSelected?.Invoke(toolIndex);
+            if (notify)
+                OnToolSelected?.Invoke(toolIndex);
             _index = toolIndex;
         }
 

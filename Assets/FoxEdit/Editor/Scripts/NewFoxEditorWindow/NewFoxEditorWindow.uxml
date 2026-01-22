@@ -10,8 +10,8 @@
             <ui:VisualElement name="tools" class="window-segment">
                 <ui:Label tabindex="-1" text="Tools" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
                 <ui:VisualElement name="toolbars">
-                    <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.vxAction, FoxEdit.Editor" name="actions" Tooltips="Apply on only one voxel | Apply on a full surface" />
-                    <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.vxAction, FoxEdit.Editor" index="1" Index="1" name="tools" Tooltips="Add voxels | Remove voxels | Colorize Voxels" style="flex-direction: row;" />
+                    <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.vxAction, FoxEdit.Editor" name="actions" Tooltips="Add voxel(s) |  Remove voxel(s) | Paint voxel(s)" />
+                    <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.vxTool, FoxEdit.Editor" index="1" Index="1" name="tools" Tooltips="Apply on one voxel | Apply on a full surface" style="flex-direction: row;" />
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="color-palette" class="window-segment">
@@ -39,7 +39,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:ScrollView>
-        <ui:VisualElement name="fox-icon" style="background-image: url(&quot;project://database/Assets/FoxEdit/Editor/Icons/foxidle1.png?fileID=2800000&amp;guid=820b241376ceae246875a222e45355f4&amp;type=3#foxidle1&quot;);" />
+        <ui:VisualElement name="fox-icon" style="background-image: url(&quot;project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/foxidle1.png?fileID=2800000&amp;guid=820b241376ceae246875a222e45355f4&amp;type=3#foxidle1&quot;);" />
         <ui:VisualElement name="save-section">
             <ui:Button text="Save" parse-escape-sequences="true" display-tooltip-when-elided="true" name="save-button" />
             <ui:Button text="Save as..." parse-escape-sequences="true" display-tooltip-when-elided="true" name="save-as-button" />
