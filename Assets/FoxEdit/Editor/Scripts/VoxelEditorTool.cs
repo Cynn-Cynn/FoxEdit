@@ -24,7 +24,7 @@ namespace FoxEdit
 
         }
 
-        private void OnStartEditVoxelObject(VoxelObject obj, VoxelRenderer renderer)
+        private void OnStartEditVoxelObject(VoxelObject obj, VoxelRenderer renderer, VoxelEditor voxelEditor)
         {
             if (ToolManager.activeToolType != typeof(VoxelEditorTool))
                 ToolManager.SetActiveTool<VoxelEditorTool>();
@@ -59,6 +59,11 @@ namespace FoxEdit
             {
                 OnLeftClick(e);
                 e.Use();
+            }
+
+            if (e.type == EventType.MouseDown && e.button == 3)
+            {
+
             }
 
             Handles.color = Color.green;
@@ -96,6 +101,11 @@ namespace FoxEdit
             if (!_isMouseOnVoxel) return;
             OnMouseMove(e);
             _voxelEditor.UseTool(_cubePosition, _worldNormal);
+        }
+
+        private void OnMiddleClick()
+        {
+            //todo set color from voxel under mouse
         }
 
         private bool TryGetVoxelEditor(out VoxelEditor voxelEditor)

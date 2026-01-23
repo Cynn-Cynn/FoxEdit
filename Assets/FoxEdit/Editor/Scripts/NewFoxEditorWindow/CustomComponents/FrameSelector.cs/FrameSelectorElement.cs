@@ -278,10 +278,29 @@ namespace FoxEdit.WindowComponents
         private void SelectFrame(int index)
         {
             index = Mathf.Clamp(index, 0, frameItems.Count - 1);
-            frameItems[_frameIndex].SetSelected(false);
+            if (frameItems.TryGetValue(index, out FrameButton oldFrameButton))
+                oldFrameButton.SetSelected(false);
             _frameIndex = index;
-            frameItems[_frameIndex].SetSelected(true);
+            if (frameItems.TryGetValue(index, out FrameButton newFrameButton))
+                newFrameButton.SetSelected(true);
             onFrameChanged?.Invoke(index);
+        }
+
+        public void SetFramesThumbnails(List<Texture2D> textures)
+        {
+            for (int i = 0; i < textures.Count; i++)
+            {
+                SetFrameThumbnail(i, textures[i]);
+            }
+        }
+
+        public void SetFrameThumbnail(int index, Texture2D texture)
+        {
+            FrameButton frameButton = null;
+            if (frameItems.TryGetValue(index, out frameButton))
+            {
+                frameButton.SetTexture(texture);
+            }
         }
     }
 }

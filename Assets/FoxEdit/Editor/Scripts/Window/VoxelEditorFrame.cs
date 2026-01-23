@@ -8,7 +8,7 @@ namespace FoxEdit
 {
     internal class VoxelEditorFrame
     {
-        private Transform _frameObject = null;
+        public Transform FrameObject {get; private set;}
         private MeshRenderer _voxelPrefab = null;
         private VoxelEditor _editWindow = null;
         private Grid3D _grid = null;
@@ -17,9 +17,9 @@ namespace FoxEdit
 
         internal VoxelEditorFrame(Transform parent, int frameIndex, MeshRenderer voxelPrefab, VoxelEditor editWindow)
         {
-            _frameObject = new GameObject("Frame_" + frameIndex.ToString("00")).transform;
-            _frameObject.parent = parent;
-            _frameObject.localPosition = Vector3.zero;
+            FrameObject = new GameObject("Frame_" + frameIndex.ToString("00")).transform;
+            FrameObject.parent = parent;
+            FrameObject.localPosition = Vector3.zero;
             _voxelPrefab = voxelPrefab;
             _editWindow = editWindow;
 
@@ -42,7 +42,7 @@ namespace FoxEdit
 
         internal VoxelEditorFrame GetCopy(int newFrameIndex, int paletteIndex)
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_frameObject.parent, newFrameIndex, _voxelPrefab, _editWindow);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(FrameObject.parent, newFrameIndex, _voxelPrefab, _editWindow);
             Grid3D otherGrid = new Grid3D();
 
             foreach (Vector3Int gridPosition in _grid.Keys)
@@ -65,12 +65,12 @@ namespace FoxEdit
 
         internal void Show()
         {
-            _frameObject.gameObject.SetActive(true);
+            FrameObject.gameObject.SetActive(true);
         }
 
         internal void Hide()
         {
-            _frameObject.gameObject.SetActive(false);
+            FrameObject.gameObject.SetActive(false);
         }
 
         public bool TryAddVoxelNextTo(Vector3Int gridPosition, Vector3Int direction, int paletteIndex, int colorIndex)
@@ -400,7 +400,7 @@ namespace FoxEdit
 
         private VoxelEditorObject CreateVoxelObject(Vector3Int gridPosition)
         {
-            MeshRenderer voxelRenderer = GameObject.Instantiate(_voxelPrefab, _frameObject);
+            MeshRenderer voxelRenderer = GameObject.Instantiate(_voxelPrefab, FrameObject);
             voxelRenderer.name = "EditorVoxel";
 
             Vector3 localPosition = GridToLocalPosition(gridPosition);
@@ -437,7 +437,7 @@ namespace FoxEdit
         internal void Destroy()
         {
             _grid.Clear();
-            GameObject.DestroyImmediate(_frameObject.gameObject);
+            GameObject.DestroyImmediate(FrameObject.gameObject);
         }
 
         #endregion Editing
@@ -451,14 +451,14 @@ namespace FoxEdit
 
         public Vector3Int WorldToGridPosition(Vector3 worldPosition)
         {
-            Vector3 localPosition = _frameObject.InverseTransformPoint(worldPosition);
+            Vector3 localPosition = FrameObject.InverseTransformPoint(worldPosition);
             localPosition *= 10.0f;
             return new Vector3Int(Mathf.RoundToInt(localPosition.x), Mathf.RoundToInt(localPosition.y), Mathf.RoundToInt(localPosition.z));
         }
 
         public Vector3Int NormalToDirection(Vector3 normal)
         {
-            Quaternion inverseRotation = Quaternion.Inverse(_frameObject.rotation);
+            Quaternion inverseRotation = Quaternion.Inverse(FrameObject.rotation);
             normal = inverseRotation * normal;
 
             return new Vector3Int(Mathf.RoundToInt(normal.x), Mathf.RoundToInt(normal.y), Mathf.RoundToInt(normal.z));

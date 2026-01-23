@@ -5,11 +5,13 @@ using UnityEngine;
 using FoxEdit.VoxelTools;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 
 namespace FoxEdit
 {
     internal class VoxelEditor : IDisposable
     {
+        #region STATIC_FIELDS
         public static event Action<vxTool> OnChangeTool;
         public static event Action<vxAction> OnChangeAction;
         public static event Action<int> OnChangeColor;
@@ -70,6 +72,11 @@ namespace FoxEdit
         }
 
         public static VoxelPalette CurrentPalette => VoxelSharedData.GetPalette(PaletteIndex);
+        #endregion
+
+        //Thumbnails
+        public event Action<int, Texture2D> OnFramesThumbnailsUpdated;
+        private List<Texture2D> _framesThumbnails;
 
         //Flags
         private bool _edit = false;
@@ -90,11 +97,11 @@ namespace FoxEdit
         private MeshRenderer _voxelPrefab = null;
         private Transform _voxelParent = null;
         private List<VoxelEditorFrame> _frameList;
-        private Transform _selectedVoxel = null;
 
         //Save
         private ComputeShader _computeStaticMesh = null;
         private FoxEditSettings _foxEditSettings = null;
+
 
         #region Init
         public VoxelEditor(VoxelRenderer voxelRenderer)
@@ -110,6 +117,25 @@ namespace FoxEdit
 
             if (!_edit)
                 EnableEditing();
+            SetFramesVoxel();
+        }
+
+        private void SetFramesVoxel()
+        {
+            _framesThumbnails = GetFramesVoxels();
+            for (int i = 0; i < _framesThumbnails.Count; i++)
+            {
+                int tmp_i = i;
+                OnFramesThumbnailsUpdated?.Invoke(tmp_i, _framesThumbnails[i]);
+            }
+        }
+
+        private List<Texture2D> GetFramesVoxels()
+        {
+            List<Texture2D> frameList = new List<Texture2D>();
+            List<GameObject> framesGOList = _frameList.Select(f => f.FrameObject.gameObject).ToList();
+
+            return ThumbnailsTaker.GetThumbnails(framesGOList);
         }
 
 
@@ -316,13 +342,40 @@ namespace FoxEdit
         public void ChangeFrame(int index)
         {
             index = Mathf.Clamp(index, 0, _frameList.Count - 1);
-            _frameList[_selectedFrame].Hide();
+            if (_selectedFrame >= 0 || _selectedFrame < _frameList.Count)
+                _frameList[_selectedFrame].Hide();
             _selectedFrame = index;
             _frameList[_selectedFrame].Show();
+            UpdateFrameThumbnail(index);
             UpdateColors();
         }
+
         #endregion
 
+        #region Frames Thumbnails
+        private void UpdateFrameThumbnail(int index)
+        {
+            if (_framesThumbnails == null)
+                return;
+            if (index >= 0 && index < _framesThumbnails.Count && _framesThumbnails[index] != null)
+            {
+                int tmp_index = index;
+                GameObject.DestroyImmediate(_framesThumbnails[index]);
+                VoxelEditorFrame voxelEditorFrame = _frameList[index];
+                _framesThumbnails[index] = ThumbnailsTaker.GetThumbnail(voxelEditorFrame.FrameObject.gameObject);
+                OnFramesThumbnailsUpdated?.Invoke(index, _framesThumbnails[index]);
+            }
+        }
+
+        public List<Texture2D> GetFrameThumbnails() => new List<Texture2D>(_framesThumbnails);
+
+        public Texture2D GetFrameThumbnail(int index)
+        {
+            if (index < 0 || index >= _framesThumbnails.Count)
+                return null;
+            return _framesThumbnails[index];
+        }
+        #endregion
         private void UpdateColors()
         {
             if (_frameList == null || _selectedFrame < 0 || _selectedFrame >= _frameList.Count)

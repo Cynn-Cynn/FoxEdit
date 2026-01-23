@@ -21,6 +21,7 @@ namespace FoxEdit.WindowComponents
             {
                 _index = value;
                 label.text = string.Format("#{0}", value);
+                name = string.Format("frame-{0}" , _index);
             }
         }
 
@@ -37,7 +38,6 @@ namespace FoxEdit.WindowComponents
             thumbnail = new VisualElement();
             thumbnail.AddToClassList(FRAME_SELECTOR_ITEM_THUMBNAIL_CLASS_NAME);
             thumbnail.name = "thumbnail";
-            thumbnail.style.display = DisplayStyle.None;
 
             Add(thumbnail);
             Add(label);
@@ -50,7 +50,7 @@ namespace FoxEdit.WindowComponents
 
         public void SetSelected(bool isSelected)
         {
-            EnableInClassList(FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME, false);
+            EnableInClassList(FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME, isSelected);
         }
     }
 }

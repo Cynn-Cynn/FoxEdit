@@ -2,6 +2,7 @@ using System.Linq;
 using FoxEdit.WindowComponents;
 using UnityEngine.UIElements;
 using UnityEngine;
+using System;
 
 namespace FoxEdit.WindowPanels
 {
@@ -18,6 +19,7 @@ namespace FoxEdit.WindowPanels
 
         private VoxelObject voxelObject;
         private VoxelRenderer voxelRenderer;
+        private VoxelEditor voxelEditor;
 
         public VoxelObjectEditorPanel(VisualElement root)
         {
@@ -40,7 +42,6 @@ namespace FoxEdit.WindowPanels
             toolToolbar.SelectTool((int)VoxelEditor.Tool, false);
             actionToolbar.SelectTool((int)VoxelEditor.Action, false);
 
-            UpdateFrameSelector();
             UpdateColorSelector();
         }
 
@@ -85,6 +86,11 @@ namespace FoxEdit.WindowPanels
             FoxEditManager.OnStopEditVoxelObject += OnStopEditVoxelObject;
         }
 
+        private void OnFrameThumnbailUpdated(int index, Texture2D texture)
+        {
+            frameSelector.SetFrameThumbnail(index, texture);
+        }
+
         private void OnSelectFrame(int newFrame)
         {
             if (FoxEditManager.VoxelEditor != null)
@@ -95,14 +101,21 @@ namespace FoxEdit.WindowPanels
         {
             voxelObject = null;
             voxelRenderer = null;
+            voxelEditor.OnFramesThumbnailsUpdated -= OnFrameThumnbailUpdated;
+            voxelEditor = null;
         }
 
-        private void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer)
+        private void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer, VoxelEditor voxelEditor)
         {
             this.voxelObject = voxelObject;
             this.voxelRenderer = voxelRenderer;
+            this.voxelEditor = voxelEditor;
+            voxelEditor.OnFramesThumbnailsUpdated += OnFrameThumnbailUpdated;
+
+            frameSelector.SetFramesThumbnails(voxelEditor.GetFrameThumbnails());
 
             SetupFields();
+            UpdateFrameSelector();
         }
 
         private void UnregisterCallbacks()
