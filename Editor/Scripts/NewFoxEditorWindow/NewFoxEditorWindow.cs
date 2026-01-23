@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class NewFoxEditorWindow : EditorWindow
+internal class NewFoxEditorWindow : EditorWindow
 {
     private enum EPanel
     {
@@ -84,7 +84,7 @@ public class NewFoxEditorWindow : EditorWindow
         voxelRendererSelectorElement.UpdateVoxelObjectList(voxelObjects);
     }
 
-    public void ShowVoxelEditor(VoxelObject voxelObject, VoxelRenderer voxelRenderer)
+    public void ShowVoxelEditor(VoxelObject voxelObject, VoxelRenderer voxelRenderer, VoxelEditor voxelEditor)
     {
         SetActivePanel(EPanel.Editor);
     }

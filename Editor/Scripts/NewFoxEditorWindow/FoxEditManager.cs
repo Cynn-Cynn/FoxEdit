@@ -13,7 +13,7 @@ namespace FoxEdit
 {
     public static class FoxEditManager
     {
-        public static event Action<VoxelObject, VoxelRenderer> OnStartEditVoxelObject;
+        internal static event Action<VoxelObject, VoxelRenderer, VoxelEditor> OnStartEditVoxelObject;
         public static event Action OnStopEditVoxelObject;
         internal static VoxelEditor VoxelEditor { get; private set; }
 
@@ -48,7 +48,7 @@ namespace FoxEdit
             Selection.activeGameObject = _voxelRenderer.gameObject;
             FocusGameObject(FoxEditManager._voxelRenderer.gameObject);
             VoxelEditor = new VoxelEditor(voxelRenderer);
-            OnStartEditVoxelObject?.Invoke(voxelObject, voxelRenderer);
+            OnStartEditVoxelObject?.Invoke(voxelObject, voxelRenderer, VoxelEditor);
             return VoxelEditor;
         }
 
