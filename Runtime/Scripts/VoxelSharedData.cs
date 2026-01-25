@@ -231,7 +231,7 @@ namespace FoxEdit
             }).ToArray();
         }
 
-        internal static GraphicsBuffer GetColorBuffer(int index)
+        /*internal*/public static GraphicsBuffer GetColorBuffer(int index)
         {
             if (_colorsBuffers == null || index >= _colorsBuffers.Count)
                 return null;
