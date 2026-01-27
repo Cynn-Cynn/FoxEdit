@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using FoxEdit.VoxelTools;
 using UnityEditor;
 using UnityEditor.EditorTools;
 using UnityEngine;
@@ -15,6 +18,7 @@ namespace FoxEdit
         private Vector3 _worldNormal;
         private bool _repaint = false;
         private bool _previousShowGizmos = false;
+        private Vector3 editedVoxels;
 
         #region Initialize
         private void OnEnable()
@@ -67,15 +71,92 @@ namespace FoxEdit
                 e.Use();
             }
 
-            Handles.color = Color.green;
-            Vector3 offsetedCubePosition = _cubePosition + new Vector3(0f, 0.05f, 0f);
-            Handles.DrawWireCube(offsetedCubePosition, Vector3.one * 0.1f);
-            Handles.DrawLine(offsetedCubePosition, offsetedCubePosition + _worldNormal * 0.1f);
+            if (!_isMouseOnVoxel)
+                return;
+            DrawChangePreview();
             if (_repaint)
             {
                 window.Repaint();
                 _repaint = false;
             }
+        }
+
+        private void DrawChangePreview()
+        {
+            VoxelEditorFrame voxelEditorFrame = _voxelEditor.CurrentFrame;
+
+            if (voxelEditorFrame == null)
+                return;
+
+            Handles.color = GetChangePreviewColor();
+            List<Vector3Int> editedVoxelsGridPositions = GetChangePreviewList(voxelEditorFrame);
+
+            if (editedVoxels == null)
+                return;
+
+            Vector3 worldPosition = Vector3.zero;
+            Vector3 offsetedCubePosition = Vector3.zero;
+
+            foreach (Vector3Int editedVoxelGridPosition in editedVoxelsGridPositions)
+            {
+                worldPosition = voxelEditorFrame.GridToWorldPosition(editedVoxelGridPosition);
+                offsetedCubePosition = worldPosition + new Vector3(0f, 0.05f, 0f);
+                Handles.DrawWireCube(offsetedCubePosition, Vector3.one * 0.1f);
+            }
+        }
+
+        private List<Vector3Int> GetChangePreviewList(VoxelEditorFrame voxelEditorFrame)
+        {
+            Vector3Int gridPosition = voxelEditorFrame.WorldToGridPosition(_cubePosition);
+            Vector3Int direction = voxelEditorFrame.NormalToDirection(_worldNormal);
+            List<Vector3Int> editedVoxels = new List<Vector3Int>();
+
+            if (VoxelEditor.Action == vxAction.Paint)
+            {
+                if (VoxelEditor.Tool == vxTool.Fill)
+                {
+                    if (voxelEditorFrame.TryGetDiffAddLayer(out editedVoxels, gridPosition, direction))
+                        return editedVoxels;
+                }
+                else if (VoxelEditor.Tool == vxTool.Brush)
+                {
+                    if (voxelEditorFrame.TryGetDiffAddVoxelNextTo(out Vector3Int newVoxel, gridPosition, direction))
+                        return new List<Vector3Int>() {newVoxel};
+                }
+            }
+            else if (VoxelEditor.Action == vxAction.Erase)
+            {
+                if (VoxelEditor.Tool == vxTool.Fill)
+                {
+                    if (voxelEditorFrame.TryGetDiffRemoveLayer(out editedVoxels, gridPosition, direction))
+                        return editedVoxels;
+                }
+            }
+            else if (VoxelEditor.Action == vxAction.Color)
+            {
+                if (VoxelEditor.Tool == vxTool.Fill)
+                {
+                    if (voxelEditorFrame.TryGetDeltaFillColor(out editedVoxels, gridPosition, VoxelEditor.ColorIndex))
+                        return editedVoxels;
+                }
+            }
+
+            return new List<Vector3Int>() { gridPosition };
+        }
+
+        private Color GetChangePreviewColor()
+        {
+            switch (VoxelEditor.Action)
+            {
+                case vxAction.Color:
+                    return Color.blue;
+                case vxAction.Erase:
+                    return Color.red;
+                case vxAction.Paint:
+                    return Color.green;
+            }
+
+            return Color.magenta;
         }
 
         private void OnMouseMove(Event e)
@@ -102,6 +183,7 @@ namespace FoxEdit
             if (!_isMouseOnVoxel) return;
             OnMouseMove(e);
             _voxelEditor.UseTool(_cubePosition, _worldNormal);
+            _isMouseOnVoxel = false;
         }
 
         private void OnMiddleClick(Event e)

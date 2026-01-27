@@ -93,7 +93,7 @@ namespace FoxEdit
         {
             get
             {
-                if (_frameList == null  || _frameList.Count == 0 || _selectedFrame < 0 || _selectedFrame >= _frameList.Count)
+                if (_frameList == null || _frameList.Count == 0 || _selectedFrame < 0 || _selectedFrame >= _frameList.Count)
                     return null;
                 return _frameList[_selectedFrame];
             }
