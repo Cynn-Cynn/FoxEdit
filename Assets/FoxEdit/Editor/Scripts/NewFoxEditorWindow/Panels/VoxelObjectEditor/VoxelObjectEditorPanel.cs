@@ -59,7 +59,7 @@ namespace FoxEdit.WindowPanels
             colorSelector.ClearPaletteItems();
             for (int i = 0; i < selectedPalette.Colors.Length; i++)
                 colorSelector.AddPaletteItem(selectedPalette.Colors[i]);
-            colorSelector.SetIndexValue(VoxelEditor.ColorIndex ,false);
+            colorSelector.SetIndexValue(VoxelEditor.ColorIndex, false);
         }
 
         private void GetElements()
@@ -72,7 +72,7 @@ namespace FoxEdit.WindowPanels
             frameSelector = root.Q<FrameSelectorElement>();
         }
 
-#region Callbacks
+        #region Callbacks
         private void RegisterCallbacks()
         {
             stopButton.clicked += OnClickStopEdit;
@@ -81,9 +81,30 @@ namespace FoxEdit.WindowPanels
             paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             colorSelector.OnIndexChanged += OnColorSelectorValueChanged;
             frameSelector.onFrameChanged += OnSelectFrame;
+            frameSelector.OnMoveFrame += OnMoveFrame;
 
+            VoxelEditor.OnChangeColor += OnChangeColor;
             FoxEditManager.OnStartEditVoxelObject += OnStartEditVoxelObject;
             FoxEditManager.OnStopEditVoxelObject += OnStopEditVoxelObject;
+        }
+
+        private void UnregisterCallbacks()
+        {
+            stopButton.clicked -= OnClickStopEdit;
+            toolToolbar.OnToolSelected -= OnToolSelected;
+            actionToolbar.OnToolSelected -= OnActionSelected;
+            paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
+            colorSelector.OnIndexChanged -= OnColorSelectorValueChanged;
+            frameSelector.onFrameChanged -= OnSelectFrame;
+            frameSelector.OnMoveFrame -= OnMoveFrame;
+
+            VoxelEditor.OnChangeColor -= OnChangeColor;
+            FoxEditManager.OnStartEditVoxelObject -= OnStartEditVoxelObject;
+            FoxEditManager.OnStopEditVoxelObject -= OnStopEditVoxelObject;
+        }
+        private void OnMoveFrame(int oldIndex, int newIndex)
+        {
+            voxelEditor.MoveFrame(oldIndex, newIndex);
         }
 
         private void OnFrameThumnbailUpdated(int index, Texture2D texture)
@@ -118,20 +139,18 @@ namespace FoxEdit.WindowPanels
             UpdateFrameSelector();
         }
 
-        private void UnregisterCallbacks()
-        {
-            stopButton.clicked -= OnClickStopEdit;
-            toolToolbar.OnToolSelected += OnToolSelected;
-            actionToolbar.OnToolSelected += OnActionSelected;
-            paletteDropdown.UnregisterValueChangedCallback<string>(OnPaletteValueChanged);
-            colorSelector.OnIndexChanged -= OnColorSelectorValueChanged;
-        }
-#endregion
 
-#region Callbacks
+        #endregion
+
+        #region Callbacks
         private void OnColorSelectorValueChanged(int colorIndex)
         {
             VoxelEditor.ColorIndex = colorIndex;
+        }
+
+        private void OnChangeColor(int colorIndex)
+        {
+            colorSelector.SetIndexValue(colorIndex, false);
         }
 
         private void OnPaletteValueChanged(ChangeEvent<string> evt)
@@ -159,7 +178,7 @@ namespace FoxEdit.WindowPanels
         {
             FoxEditManager.StopEditVoxelObject();
         }
-#endregion
+        #endregion
 
         public void SetVisibility(bool visible)
         {

@@ -50,8 +50,6 @@ namespace FoxEdit
             get => _colorIndex;
             set
             {
-                if (_colorIndex == value)
-                    return;
                 _colorIndex = Mathf.Clamp(value, 0, CurrentPalette.Colors.Length - 1);
                 OnChangeColor?.Invoke(_colorIndex);
             }
@@ -91,7 +89,15 @@ namespace FoxEdit
         private Material[][] _editorMaterials = null;
 
         private int _selectedFrame = 0;
-        private string[] _frameIndices = null;
+        public VoxelEditorFrame CurrentFrame
+        {
+            get
+            {
+                if (_frameList == null  || _frameList.Count == 0 || _selectedFrame < 0 || _selectedFrame >= _frameList.Count)
+                    return null;
+                return _frameList[_selectedFrame];
+            }
+        }
 
         //Scene editor voxels
         private MeshRenderer _voxelPrefab = null;
@@ -207,6 +213,7 @@ namespace FoxEdit
                     frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, PaletteIndex, voxelObject.EditorVoxelPositions[i].ColorIndices);
                     if (i != _selectedFrame)
                         frame.Hide();
+                    frame.FrameObject.name = string.Format("Frame {0}", i);
                     _frameList.Add(frame);
                 }
             }
@@ -214,8 +221,6 @@ namespace FoxEdit
             {
                 NewFrame();
             }
-
-            CreateFrameIndices(_frameList.Count);
 
             _voxelRenderer.enabled = false;
             _edit = true;
@@ -285,18 +290,16 @@ namespace FoxEdit
             worldNormal = Vector3.zero;
             return false;
         }
+
+        public VoxelEditorObject GetVoxelEditorObject(Vector3Int gridPosition)
+        {
+            if (CurrentFrame != null)
+                return CurrentFrame.GetVoxelEditorObject(gridPosition);
+            return null;
+        }
         #endregion
 
         #region Frames
-        private void CreateFrameIndices(int frameCount)
-        {
-            _frameIndices = new string[frameCount];
-            for (int i = 0; i < _frameIndices.Length; i++)
-            {
-                _frameIndices[i] = $"{i}";
-            }
-        }
-
         private void NewFrame()
         {
             VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
@@ -305,8 +308,6 @@ namespace FoxEdit
 
             if (_frameList.Count != 1)
                 ChangeFrame(_frameList.Count - 1);
-
-            CreateFrameIndices(_frameList.Count);
 
             _needToSave = true;
         }
@@ -323,7 +324,6 @@ namespace FoxEdit
 
             _selectedFrame -= 1;
             _frameList[_selectedFrame].Show();
-            CreateFrameIndices(_frameList.Count);
 
             _needToSave = true;
         }
@@ -334,7 +334,6 @@ namespace FoxEdit
             _frameList.Add(newFrame);
 
             ChangeFrame(_frameList.Count - 1);
-            CreateFrameIndices(_frameList.Count);
 
             _needToSave = true;
         }
@@ -342,12 +341,23 @@ namespace FoxEdit
         public void ChangeFrame(int index)
         {
             index = Mathf.Clamp(index, 0, _frameList.Count - 1);
+            UpdateFrameThumbnail(_selectedFrame);
             if (_selectedFrame >= 0 || _selectedFrame < _frameList.Count)
                 _frameList[_selectedFrame].Hide();
             _selectedFrame = index;
             _frameList[_selectedFrame].Show();
-            UpdateFrameThumbnail(index);
             UpdateColors();
+        }
+
+        public void MoveFrame(int oldIndex, int newIndex)
+        {
+            VoxelEditorFrame movedFrame = _frameList.Move(oldIndex, newIndex);
+            for (int i = 0; i < _frameList.Count; i++)
+                _frameList[i].FrameObject.name = string.Format("Frame {0}", i);
+            movedFrame.FrameObject.SetSiblingIndex(newIndex);
+            if (oldIndex == _selectedFrame)
+                _selectedFrame = _frameList.IndexOf(movedFrame);
+            _framesThumbnails.Move(oldIndex, newIndex);
         }
 
         #endregion

@@ -364,6 +364,11 @@ namespace FoxEdit
             return gridCopy;
         }
 
+        public VoxelEditorObject GetVoxelEditorObject(Vector3Int cubePosition)
+        {
+            return _grid.Get(cubePosition);
+        }
+
         private Vector3Int DividePosition(Vector3Int position, int divide)
         {
             return new Vector3Int(Mathf.FloorToInt(position.x / (float)divide), Mathf.FloorToInt(position.y / (float)divide), Mathf.FloorToInt(position.z / (float)divide));
