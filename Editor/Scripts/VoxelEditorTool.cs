@@ -61,9 +61,10 @@ namespace FoxEdit
                 e.Use();
             }
 
-            if (e.type == EventType.MouseDown && e.button == 3)
+            if (e.type == EventType.MouseDown && e.button == 2)
             {
-
+                OnMiddleClick(e);
+                e.Use();
             }
 
             Handles.color = Color.green;
@@ -103,9 +104,15 @@ namespace FoxEdit
             _voxelEditor.UseTool(_cubePosition, _worldNormal);
         }
 
-        private void OnMiddleClick()
+        private void OnMiddleClick(Event e)
         {
-            //todo set color from voxel under mouse
+            if (_voxelEditor.TryGetCubePosition(out Vector3 cubePosition, out Vector3 worldNormal, HandleUtility.GUIPointToWorldRay(e.mousePosition)))
+            {
+                Vector3Int gridPosition = _voxelEditor.CurrentFrame.WorldToGridPosition(cubePosition);
+                VoxelEditorObject voxelEditorObject = _voxelEditor.GetVoxelEditorObject(gridPosition);
+
+                VoxelEditor.ColorIndex = voxelEditorObject.ColorIndex;
+            }
         }
 
         private bool TryGetVoxelEditor(out VoxelEditor voxelEditor)

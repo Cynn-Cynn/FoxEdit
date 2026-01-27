@@ -10,8 +10,19 @@ namespace FoxEdit.WindowComponents
         public const string FRAME_SELECTOR_ITEM_LABEL_CLASS_NAME = "frameselector-item-label";
         public const string FRAME_SELECTOR_ITEM_THUMBNAIL_CLASS_NAME = "frameselector-item-thumbnail";
 
-        private VisualElement thumbnail;
-        private Label label;
+        private VisualElement _thumbnail;
+        private Label _label;
+
+        private Texture2D _thumbnailImage;
+        public Texture2D ThumbnailImage
+        {
+            get => _thumbnailImage;
+            set
+            {
+                _thumbnailImage = value;
+                _thumbnail.style.backgroundImage = value;
+            }
+        }
 
         private int _index = -1;
         public int Index
@@ -20,9 +31,15 @@ namespace FoxEdit.WindowComponents
             set
             {
                 _index = value;
-                label.text = string.Format("#{0}", value);
+                _label.text = string.Format("#{0}", value);
                 name = string.Format("frame-{0}" , _index);
             }
+        }
+
+        public bool IsSelelected
+        {
+            get => ClassListContains(FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME);
+            set => EnableInClassList(FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME, value);
         }
 
         public FrameButton()
@@ -31,26 +48,16 @@ namespace FoxEdit.WindowComponents
             name = "frame";
             AddToClassList(FRAME_SELECTOR_ITEM_CLASS_NAME);
 
-            label = new Label();
-            label.AddToClassList(FRAME_SELECTOR_ITEM_LABEL_CLASS_NAME);
+            _label = new Label();
+            _label.AddToClassList(FRAME_SELECTOR_ITEM_LABEL_CLASS_NAME);
             Index = 0;
 
-            thumbnail = new VisualElement();
-            thumbnail.AddToClassList(FRAME_SELECTOR_ITEM_THUMBNAIL_CLASS_NAME);
-            thumbnail.name = "thumbnail";
+            _thumbnail = new VisualElement();
+            _thumbnail.AddToClassList(FRAME_SELECTOR_ITEM_THUMBNAIL_CLASS_NAME);
+            _thumbnail.name = "thumbnail";
 
-            Add(thumbnail);
-            Add(label);
-        }
-
-        public void SetTexture(Texture2D texture)
-        {
-            thumbnail.style.backgroundImage = texture;
-        }
-
-        public void SetSelected(bool isSelected)
-        {
-            EnableInClassList(FRAME_SELECTOR_ITEM_SELECTED_CLASS_NAME, isSelected);
+            Add(_thumbnail);
+            Add(_label);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace FoxEdit.WindowComponents
         public const string FRAME_SELECTOR_ADD_BUTTON_CLASS_NAME = "frameselector-add-button";
         public const string FRAME_SELECTOR_ADD_BUTTON_CONTAINER_CLASS_NAME = "frameselector-add-button-container";
         public const string FRAME_SELECTOR_GHOSTICON_CLASS_NAME = "frameselector-ghost-icon";
-        public const int GHOST_ICON_SIZE = 30;
+        public const int GHOST_ICON_SIZE = 60;
         #endregion
         public new class UxmlFactory : UxmlFactory<FrameSelectorElement, UxmlTraits> { }
         public new class UxmlTraits : VisualElement.UxmlTraits
@@ -67,7 +67,7 @@ namespace FoxEdit.WindowComponents
         }
 
         private VisualElement framesContainer = null;
-        private Dictionary<int, FrameButton> frameItems = new Dictionary<int, FrameButton>();
+        private List<FrameButton> frameButtons = new List<FrameButton>();
         private Button addButton = null;
         private VisualElement ghostIcon;
         private DragInsertionMarker dragInsertionMarker;
@@ -144,16 +144,16 @@ namespace FoxEdit.WindowComponents
 
         private void UpdateFrameButtons()
         {
-            if (_framesCount == frameItems.Count || _framesCount < 0)
+            if (_framesCount == frameButtons.Count || _framesCount < 0)
             {
                 return;
             }
-            else if (frameItems.Count < _framesCount)
+            else if (frameButtons.Count < _framesCount)
             {
-                int diff = _framesCount - frameItems.Count;
+                int diff = _framesCount - frameButtons.Count;
 
                 for (int i = 0; i < diff; i++)
-                    AddFrameElement(frameItems.Count);
+                    AddFrameElement(frameButtons.Count);
             }
             else
             {
@@ -167,9 +167,9 @@ namespace FoxEdit.WindowComponents
 
         private void ClearFrameItems()
         {
-            foreach (var item in frameItems)
-                item.Value.RemoveFromHierarchy();
-            frameItems.Clear();
+            foreach (FrameButton item in frameButtons)
+                item.RemoveFromHierarchy();
+            frameButtons.Clear();
         }
 
         private void AddFrameElement(int frameIndex)
@@ -178,9 +178,9 @@ namespace FoxEdit.WindowComponents
 
             frameButton.Index = frameIndex;
             framesContainer.Add(frameButton);
-            frameItems.Add(frameIndex, frameButton);
+            frameButtons.Add(frameButton);
 
-            frameButton.clicked += () => SelectFrame(frameIndex);
+            frameButton.clicked += () => SelectFrame(frameButton.Index);
 
             ContextualMenuManipulator contextualMenuManipulator = new ContextualMenuManipulator(FrameMenuManipulator);
             contextualMenuManipulator.target = frameButton;
@@ -195,9 +195,9 @@ namespace FoxEdit.WindowComponents
             frameButton.RegisterCallback<PointerDownEvent>(evt =>
             {
                 dragButton = frameButton;
-                ChangeDragInsertionMakerPosition(frameButton.Index);
                 lastDropIndex = frameButton.Index;
                 frameButton.CapturePointer(evt.pointerId);
+                ghostIcon.style.backgroundImage = frameButton.ThumbnailImage;
                 hoveredFrameButton = null;
 
             }, TrickleDown.TrickleDown);
@@ -221,6 +221,7 @@ namespace FoxEdit.WindowComponents
                 ghostIcon.style.display = DisplayStyle.Flex;
                 ghostIcon.style.left = mousePos.x - GHOST_ICON_SIZE / 2;
                 ghostIcon.style.top = mousePos.y - GHOST_ICON_SIZE / 2;
+                ChangeDragInsertionMakerPosition(frameButton.Index);
 
                 if (hoveredFrameButton != null)
                 {
@@ -271,18 +272,34 @@ namespace FoxEdit.WindowComponents
         {
             if (oldFrameIndex == newFrameIndex)
                 return;
-            Debug.LogFormat("Frame #{0} move at #{1}", oldFrameIndex, newFrameIndex);
+
+            //frames button positions
+            FrameButton frameButtonToMove = frameButtons[oldFrameIndex];
+            framesContainer.Remove(frameButtonToMove);
+            framesContainer.Insert(newFrameIndex, frameButtonToMove);
+            //Update frame buttons list
+            frameButtons.Move(oldFrameIndex, newFrameIndex);
+            //Update buttons label
+            for (int i = 0; i < frameButtons.Count; i++)
+                frameButtons[i].Index = i;
+
+
             OnMoveFrame?.Invoke(oldFrameIndex, newFrameIndex);
+
+            if (frameButtonToMove.IsSelelected)
+                SelectFrame(frameButtons.IndexOf(frameButtonToMove));
         }
 
         private void SelectFrame(int index)
         {
-            index = Mathf.Clamp(index, 0, frameItems.Count - 1);
-            if (frameItems.TryGetValue(index, out FrameButton oldFrameButton))
-                oldFrameButton.SetSelected(false);
+            index = Mathf.Clamp(index, 0, frameButtons.Count - 1);
+
+            if (_frameIndex >= 0 && _frameIndex < frameButtons.Count)
+                frameButtons[_frameIndex].IsSelelected = false;
+            if (index >= 0 && index < frameButtons.Count)
+                frameButtons[index].IsSelelected = true;
             _frameIndex = index;
-            if (frameItems.TryGetValue(index, out FrameButton newFrameButton))
-                newFrameButton.SetSelected(true);
+
             onFrameChanged?.Invoke(index);
         }
 
@@ -296,11 +313,8 @@ namespace FoxEdit.WindowComponents
 
         public void SetFrameThumbnail(int index, Texture2D texture)
         {
-            FrameButton frameButton = null;
-            if (frameItems.TryGetValue(index, out frameButton))
-            {
-                frameButton.SetTexture(texture);
-            }
+            if (index >= 0 && index < frameButtons.Count)
+                frameButtons[index].ThumbnailImage = texture;
         }
     }
 }

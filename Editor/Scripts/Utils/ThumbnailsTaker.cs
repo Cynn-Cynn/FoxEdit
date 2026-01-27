@@ -31,7 +31,6 @@ namespace FoxEdit
 
         public static Texture2D GetThumbnail(GameObject gameObject)
         {
-            Debug.LogFormat("Get thumbnail for {0}", gameObject);
             if (!_previewScene.HasValue)
                 _previewScene = CreatePreviewScene();
             GameObject gameobjectCopy = GameObject.Instantiate(gameObject);
