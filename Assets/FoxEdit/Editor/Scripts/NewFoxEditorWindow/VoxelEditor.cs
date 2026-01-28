@@ -123,7 +123,7 @@ namespace FoxEdit
 
             if (!_edit)
                 EnableEditing();
-            SetFramesVoxel();
+            EditorApplication.delayCall += SetFramesVoxel;
         }
 
         private void SetFramesVoxel()
@@ -376,8 +376,6 @@ namespace FoxEdit
                 OnFramesThumbnailsUpdated?.Invoke(index, _framesThumbnails[index]);
             }
         }
-
-        public List<Texture2D> GetFrameThumbnails() => new List<Texture2D>(_framesThumbnails);
 
         public Texture2D GetFrameThumbnail(int index)
         {

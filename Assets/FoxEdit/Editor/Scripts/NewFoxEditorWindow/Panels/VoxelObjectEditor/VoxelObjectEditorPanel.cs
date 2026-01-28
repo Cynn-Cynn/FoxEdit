@@ -133,8 +133,6 @@ namespace FoxEdit.WindowPanels
             this.voxelEditor = voxelEditor;
             voxelEditor.OnFramesThumbnailsUpdated += OnFrameThumnbailUpdated;
 
-            frameSelector.SetFramesThumbnails(voxelEditor.GetFrameThumbnails());
-
             SetupFields();
             UpdateFrameSelector();
         }
