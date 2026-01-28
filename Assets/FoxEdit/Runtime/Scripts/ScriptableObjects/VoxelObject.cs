@@ -31,5 +31,7 @@ namespace FoxEdit
 
         public EditorFrameVoxels[] EditorVoxelPositions = null;
         public Mesh StaticMesh = null;
+
+        public Vector4[] Vertices = null;
     }
 }
