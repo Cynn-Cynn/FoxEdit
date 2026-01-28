@@ -41,7 +41,7 @@ namespace FoxEdit
         private static int[] _faceTriangles =
         {
             0, 1, 2,
-            0, 2, 3
+            1, 3, 2
         };
 
         private static Matrix4x4[] _rotationMatrices = null;
@@ -231,7 +231,7 @@ namespace FoxEdit
             }).ToArray();
         }
 
-        /*internal*/public static GraphicsBuffer GetColorBuffer(int index)
+        internal static GraphicsBuffer GetColorBuffer(int index)
         {
             if (_colorsBuffers == null || index >= _colorsBuffers.Count)
                 return null;

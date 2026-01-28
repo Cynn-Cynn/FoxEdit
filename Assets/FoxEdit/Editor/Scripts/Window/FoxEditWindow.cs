@@ -45,12 +45,13 @@ namespace FoxEdit
         private Color[] _colors = null;
 
         private int _selectedFrame = 0;
+        private int _selectedAnimation = 0;
         private string[] _frameIndices = null;
 
         //Scene editor voxels
         private MeshRenderer _voxelPrefab = null;
         private Transform _voxelParent = null;
-        private List<VoxelEditorFrame> _frameList;
+        private List<List<VoxelEditorFrame>> _frameList;
         private Transform _selectedVoxel = null;
 
         //Save
@@ -105,7 +106,7 @@ namespace FoxEdit
 
             string computeShaderPath = AssetDatabase.GUIDToAssetPath("2cb62f122b08a144ba5d96639b73bd19");
             _computeStaticMesh = AssetDatabase.LoadAssetAtPath(computeShaderPath, typeof(ComputeShader)) as ComputeShader;
-            _frameList = new List<VoxelEditorFrame>();
+            _frameList = new List<List<VoxelEditorFrame>>();
 
             _isOpen = true;
 
@@ -392,13 +393,18 @@ namespace FoxEdit
 
             if (voxelObject != null)
             {
-                for (int i = 0; i < voxelObject.EditorVoxelPositions.Length; i++)
+                for (int animation = 0; animation < voxelObject.AnimationIndices.Length; animation++)
                 {
-                    VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, this);
-                    frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
-                    if (i != _selectedFrame)
-                        frame.Hide();
-                    _frameList.Add(frame);
+                    _frameList.Add(new List<VoxelEditorFrame>());
+                    int startIndex = voxelObject.AnimationIndices[animation].StartIndex;
+                    for (int i = startIndex; i < voxelObject.AnimationIndices[animation].FrameCount; i++)
+                    {
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i - startIndex, _voxelPrefab, this);
+                        frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
+                        if (i - startIndex != _selectedFrame)
+                            frame.Hide();
+                        _frameList[animation].Add(frame);
+                    }
                 }
             }
             else
@@ -406,7 +412,7 @@ namespace FoxEdit
                 NewFrame();
             }
 
-            CreateFrameIndices(_frameList.Count);
+            CreateFrameIndices(_frameList.Count > 0 ? _frameList[0].Count : 1);
 
             _voxelRenderer.enabled = false;
             _edit = true;
@@ -531,7 +537,7 @@ namespace FoxEdit
         {
             VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, _selectedPalette, 0);
-            _frameList.Add(newFrame);
+            _frameList[_selectedAnimation].Add(newFrame);
 
             if (_frameList.Count != 1)
                 ChangeFrame(_frameList.Count - 1);
@@ -543,8 +549,8 @@ namespace FoxEdit
 
         private void DuplicateFrame()
         {
-            VoxelEditorFrame newFrame = _frameList[_selectedFrame].GetCopy(_frameList.Count, _selectedPalette);
-            _frameList.Add(newFrame);
+            VoxelEditorFrame newFrame = _frameList[_selectedAnimation][_selectedFrame].GetCopy(_frameList[_selectedAnimation].Count, _selectedPalette);
+            _frameList[_selectedAnimation].Add(newFrame);
 
             ChangeFrame(_frameList.Count - 1);
             CreateFrameIndices(_frameList.Count);
@@ -554,11 +560,11 @@ namespace FoxEdit
 
         private void DeleteFrame()
         {
-            _frameList[_selectedFrame].Destroy();
+            _frameList[_selectedAnimation][_selectedFrame].Destroy();
             _frameList.RemoveAt(_selectedFrame);
 
             _selectedFrame -= 1;
-            _frameList[_selectedFrame].Show();
+            _frameList[_selectedAnimation][_selectedFrame].Show();
             CreateFrameIndices(_frameList.Count);
 
             _needToSave = true;
@@ -566,9 +572,9 @@ namespace FoxEdit
 
         private void ChangeFrame(int index)
         {
-            _frameList[_selectedFrame].Hide();
+            _frameList[_selectedAnimation][_selectedFrame].Hide();
             _selectedFrame = index;
-            _frameList[_selectedFrame].Show();
+            _frameList[_selectedAnimation][_selectedFrame].Show();
         }
 
         private void ToolSelection()
@@ -660,7 +666,7 @@ namespace FoxEdit
                 }
                 else
                 {
-                    _frameList[_selectedFrame].ApplyVoxelTransform(_selectedPalette);
+                    _frameList[_selectedAnimation][_selectedFrame].ApplyVoxelTransform(_selectedPalette);
                     if (Selection.gameObjects.Length == 0)
                         _drag = false;
                     _needToSave = true;
@@ -709,7 +715,7 @@ namespace FoxEdit
 
             if (TryGetCubePosition(out worldPosition, out worldNormal, mouseRay))
             {
-                VoxelEditorFrame currentFrame = _frameList[_selectedFrame];
+                VoxelEditorFrame currentFrame = _frameList[_selectedAnimation][_selectedFrame];
                 Vector3Int gridPosition = currentFrame.WorldToGridPosition(worldPosition);
                 Vector3Int direction = currentFrame.NormalToDirection(worldNormal);
 
