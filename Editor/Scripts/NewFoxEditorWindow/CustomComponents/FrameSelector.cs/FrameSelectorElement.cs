@@ -72,7 +72,7 @@ namespace FoxEdit.WindowComponents
         private VisualElement ghostIcon;
         private DragInsertionMarker dragInsertionMarker;
         public delegate void OnMoveFrameDelegate(int oldIndex, int newIndex);
-        public event Action<int> onFrameChanged;
+        public event Action<int> OnFrameChanged;
         public event OnMoveFrameDelegate OnMoveFrame;
 
         //Drag
@@ -290,7 +290,7 @@ namespace FoxEdit.WindowComponents
                 SelectFrame(frameButtons.IndexOf(frameButtonToMove));
         }
 
-        private void SelectFrame(int index)
+        public void SelectFrame(int index, bool notify = true)
         {
             index = Mathf.Clamp(index, 0, frameButtons.Count - 1);
 
@@ -300,7 +300,8 @@ namespace FoxEdit.WindowComponents
                 frameButtons[index].IsSelelected = true;
             _frameIndex = index;
 
-            onFrameChanged?.Invoke(index);
+            if (notify)
+                OnFrameChanged?.Invoke(index);
         }
 
         public void SetFramesThumbnails(List<Texture2D> textures)

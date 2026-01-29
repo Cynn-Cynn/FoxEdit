@@ -28,7 +28,7 @@ namespace FoxEdit.WindowPanels
 
         private List<VoxelObject> voxelRenderers;
         private List<Button> voxelRendererButtons = new List<Button>();
-        public event Action<VoxelObject> onSelectVoxelObject;
+        public event Action<VoxelObject> OnSelectVoxelObject;
 
         public VoxelRendererSelectorElement()
         {
@@ -84,7 +84,7 @@ namespace FoxEdit.WindowPanels
 
         private void SelectVoxelRenderer(VoxelObject voxelObject)
         {
-            onSelectVoxelObject?.Invoke(voxelObject);
+            OnSelectVoxelObject?.Invoke(voxelObject);
         }
 
         private async void SetIcon(VoxelObject voxelRenderer, VisualElement visualElement)

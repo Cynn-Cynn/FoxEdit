@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FoxEdit
 {
-    public static class ColorUtility
+    public static class FoxEditColorUtility
     {
         public static Color GetRandomColor()
         {

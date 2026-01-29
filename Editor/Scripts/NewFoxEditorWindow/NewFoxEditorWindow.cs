@@ -41,7 +41,7 @@ internal class NewFoxEditorWindow : EditorWindow
 
         voxelRendererSelectorContainer = root.Q("voxel-renderer-selector");
         voxelRendererSelectorElement = voxelRendererSelectorContainer.Q<VoxelRendererSelectorElement>();
-        voxelRendererSelectorElement.onSelectVoxelObject += OnSelectVoxelObject;
+        voxelRendererSelectorElement.OnSelectVoxelObject += OnSelectVoxelObject;
 
         ShowVoxelObjectSelector();
     }
@@ -67,7 +67,7 @@ internal class NewFoxEditorWindow : EditorWindow
     {
         FoxEditManager.OnStartEditVoxelObject -= ShowVoxelEditor;
         FoxEditManager.OnStopEditVoxelObject -= ShowVoxelObjectSelector;
-        voxelRendererSelectorElement.onSelectVoxelObject += OnSelectVoxelObject;
+        voxelRendererSelectorElement.OnSelectVoxelObject += OnSelectVoxelObject;
     }
 
     private void OnSelectVoxelObject(VoxelObject voxelObject)

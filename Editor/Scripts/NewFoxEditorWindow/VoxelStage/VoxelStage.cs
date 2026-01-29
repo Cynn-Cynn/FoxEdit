@@ -24,33 +24,34 @@ namespace FoxEdit.EditorUtils
 
         protected override bool OnOpenStage()
         {
-            bool success = base.OnOpenStage();
+            base.OnOpenStage();
 
             Light light = new GameObject("Light").AddComponent<Light>();
             light.type = UnityEngine.LightType.Directional;
-            light.gameObject.hideFlags = HideFlags.NotEditable;
+            //light.gameObject.hideFlags = HideFlags.NotEditable;
             light.transform.rotation = Quaternion.Euler(45f, 45f, 0f);
             light.transform.position = new Vector3(0f, 10f, 0f);
 
-            GameObject voxelGO = new GameObject(voxelObject.name, typeof(MeshFilter), typeof(MeshRenderer));
-            VoxelRenderer voxelRenderer = voxelGO.AddComponent<VoxelRenderer>();
-            voxelRenderer.SetVoxelObject(voxelObject);
-            voxelRenderer.Setup();
-            voxelRenderer.RenderSwap();
+            GameObject voxelGO = new GameObject(string.Format("{0} (Preview)", voxelObject.name), typeof(MeshFilter), typeof(MeshRenderer));
+            VoxelRenderer = voxelGO.AddComponent<VoxelRenderer>();
+            VoxelRenderer.SetVoxelObject(voxelObject);
+            VoxelRenderer.Setup();
+            VoxelRenderer.RenderSwap();
+
+            GameObject backgroundGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            MeshRenderer backgroundMeshRenderer = backgroundGO.GetComponent<MeshRenderer>();
+            Material material = Instantiate(FoxEditEditorSettings.Instance.VoxelStageBackgroundMaterial.Asset);
+            material.color = FoxEditEditorSettings.Instance.BackgroundColor.Value;
+            backgroundMeshRenderer.material = material;
+            backgroundGO.transform.localScale = Vector3.one * FoxEditEditorSettings.Instance.BackgroundSphereSize.Value;
+
 
 
             SceneManager.MoveGameObjectToScene(light.gameObject, scene);
             SceneManager.MoveGameObjectToScene(voxelGO, scene);
+            SceneManager.MoveGameObjectToScene(backgroundGO, scene);
 
-            SceneView sceneView = SceneView.lastActiveSceneView;
-
-            sceneView.camera.clearFlags = CameraClearFlags.SolidColor;
-            sceneView.camera.backgroundColor = Color.red;
-
-            sceneView.Repaint();
-            this.VoxelRenderer = voxelRenderer;
-
-            return success;
+            return true;
         }
 
         protected override void OnCloseStage()
