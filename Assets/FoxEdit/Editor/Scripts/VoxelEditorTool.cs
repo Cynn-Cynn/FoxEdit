@@ -149,11 +149,11 @@ namespace FoxEdit
             switch (VoxelEditor.Action)
             {
                 case vxAction.Color:
-                    return Color.blue;
+                    return FoxEditEditorSettings.Instance.ToolPaintColor.Value;
                 case vxAction.Erase:
-                    return Color.red;
+                    return FoxEditEditorSettings.Instance.ToolRemoveColor.Value;
                 case vxAction.Paint:
-                    return Color.green;
+                    return FoxEditEditorSettings.Instance.ToolAddColor.Value;
             }
 
             return Color.magenta;
@@ -175,7 +175,6 @@ namespace FoxEdit
             {
                 _isMouseOnVoxel = false;
             }
-
         }
 
         private void OnLeftClick(Event e)

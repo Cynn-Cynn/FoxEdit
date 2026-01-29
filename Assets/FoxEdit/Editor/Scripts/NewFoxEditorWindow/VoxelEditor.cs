@@ -147,7 +147,7 @@ namespace FoxEdit
 
         private void CreateMaterials()
         {
-            Material materialPrefab = _foxEditSettings.Materials.baseMaterial;
+            Material materialPrefab = FoxEditEditorSettings.Instance.VoxelEditorCubeMaterial.Asset;
             int paletteCount = VoxelSharedData.GetPaletteCount();
             _editorMaterials = new Material[paletteCount][];
 
@@ -277,9 +277,9 @@ namespace FoxEdit
 
         public bool TryGetCubePosition(out Vector3 cubePosition, out Vector3 worldNormal, Ray ray)
         {
-            RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit, 100.0f))
+
+            if (HandleUtility.RaySnap(ray) is RaycastHit hit)
             {
                 cubePosition = hit.transform.position;
                 worldNormal = hit.normal;

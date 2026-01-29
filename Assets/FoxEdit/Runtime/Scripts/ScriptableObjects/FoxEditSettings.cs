@@ -15,7 +15,6 @@ namespace FoxEdit
         {
             public Material animatedMaterial;
             public Material staticMaterial;
-            public Material baseMaterial;
         }
 
         [SerializeField] private List<VoxelPalette> _palettes;

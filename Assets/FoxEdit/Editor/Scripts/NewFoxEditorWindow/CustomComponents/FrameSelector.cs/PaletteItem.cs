@@ -43,7 +43,7 @@ namespace FoxEdit.WindowComponents
         public PaletteItem()
         {
             this.AddToClassList(PALETTE_ITEM_CLASS_NAME);
-            this.style.backgroundColor = ColorUtility.GetRandomColor();
+            this.style.backgroundColor = FoxEditColorUtility.GetRandomColor();
 
             this.RegisterCallback<ClickEvent>(OnElementClicked);
         }

@@ -50,7 +50,7 @@ namespace FoxEdit.WindowPanels
             if (voxelObject == null)
                 return;
             frameSelector.FramesCount = voxelObject.FrameCount;
-            frameSelector.FramesIndex = 0;
+            frameSelector.SelectFrame(0, false);
         }
 
         private void UpdateColorSelector()
@@ -80,7 +80,7 @@ namespace FoxEdit.WindowPanels
             actionToolbar.OnToolSelected += OnActionSelected;
             paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             colorSelector.OnIndexChanged += OnColorSelectorValueChanged;
-            frameSelector.onFrameChanged += OnSelectFrame;
+            frameSelector.OnFrameChanged += OnSelectFrame;
             frameSelector.OnMoveFrame += OnMoveFrame;
 
             VoxelEditor.OnChangeColor += OnChangeColor;
@@ -95,7 +95,7 @@ namespace FoxEdit.WindowPanels
             actionToolbar.OnToolSelected -= OnActionSelected;
             paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             colorSelector.OnIndexChanged -= OnColorSelectorValueChanged;
-            frameSelector.onFrameChanged -= OnSelectFrame;
+            frameSelector.OnFrameChanged -= OnSelectFrame;
             frameSelector.OnMoveFrame -= OnMoveFrame;
 
             VoxelEditor.OnChangeColor -= OnChangeColor;

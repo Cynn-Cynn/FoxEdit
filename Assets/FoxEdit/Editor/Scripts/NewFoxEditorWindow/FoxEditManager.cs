@@ -47,8 +47,8 @@ namespace FoxEdit
             FoxEditManager._voxelObject = voxelObject;
             Selection.activeGameObject = _voxelRenderer.gameObject;
             FocusGameObject(FoxEditManager._voxelRenderer.gameObject);
-            VoxelEditor = new VoxelEditor(voxelRenderer);
-            OnStartEditVoxelObject?.Invoke(voxelObject, voxelRenderer, VoxelEditor);
+            VoxelEditor = new VoxelEditor(_voxelRenderer);
+            OnStartEditVoxelObject?.Invoke(voxelObject, _voxelRenderer, VoxelEditor);
             return VoxelEditor;
         }
 
