@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 1, g: 1, b: 1, a: 1}
+  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 3
+  m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
@@ -122,197 +122,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!21 &178946543
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: StaticVoxelShader(Clone)
-  m_Shader: {fileID: 4800000, guid: e6b71c272e5279346bf62f6f747856a3, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Ints: []
-    m_Floats: []
-    m_Colors: []
-  m_BuildTextureStacks: []
---- !u!21 &343405896
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: M_Voxel(Clone)
-  m_Shader: {fileID: 4800000, guid: d2124f226eadd02489c451750e2a6e22, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - USE_EMISSION_ON
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 1
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2999
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Ints: []
-    m_Floats:
-    - _EmissionOn: 1
-    - _MetallicStrength: 0
-    - _Smoothness: 1
-    m_Colors:
-    - _BaseColor: {r: 0.5754717, g: 0, b: 0, a: 1}
-  m_BuildTextureStacks: []
---- !u!21 &394357939
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: StaticVoxelShader(Clone)
-  m_Shader: {fileID: 4800000, guid: e6b71c272e5279346bf62f6f747856a3, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Ints: []
-    m_Floats: []
-    m_Colors: []
-  m_BuildTextureStacks: []
---- !u!1 &440807622
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 440807626}
-  - component: {fileID: 440807625}
-  - component: {fileID: 440807624}
-  - component: {fileID: 440807623}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &440807623
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 440807622}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afe67023d36272a47898e62e24bdad23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _voxelObject: {fileID: 11400000, guid: bcadf864770f44944b4019e022bd081e, type: 2}
-  _paletteIndexOverride: 0
-  _staticRender: 0
-  _frameDuration: 0.2
-  _computeShader: {fileID: 1022012392}
-  _meshRenderer: {fileID: 440807624}
-  _meshFilter: {fileID: 440807625}
-  _material: {fileID: 343405896}
-  _staticMaterial: {fileID: 1772873746}
---- !u!23 &440807624
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 440807622}
-  m_Enabled: 0
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 1772873746}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &440807625
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 440807622}
-  m_Mesh: {fileID: 4290455465334558363, guid: 130352272c8cdb24fad6081cad1a74ea, type: 3}
---- !u!4 &440807626
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 440807622}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.63, y: 0.43, z: 3.38}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &553257807
 GameObject:
   m_ObjectHideFlags: 0
@@ -431,174 +240,6 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
---- !u!21 &568126761
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: M_Voxel(Clone)
-  m_Shader: {fileID: 4800000, guid: d2124f226eadd02489c451750e2a6e22, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - USE_EMISSION_ON
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 1
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2999
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Ints: []
-    m_Floats:
-    - _EmissionOn: 1
-    - _MetallicStrength: 0
-    - _Smoothness: 1
-    m_Colors:
-    - _BaseColor: {r: 0.5754717, g: 0, b: 0, a: 1}
-  m_BuildTextureStacks: []
---- !u!72 &655407173
-ComputeShader:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Voxel(Clone)
-  variants:
-  - serializedVersion: 2
-    targetRenderer: 2
-    targetLevel: 0
-    kernels:
-    - serializedVersion: 3
-      name: VoxelGeneration
-      uniqueVariants:
-      - serializedVersion: 2
-        cbVariantIndices: 00000000
-        cbs:
-        - name: $Globals
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        textures: []
-        builtinSamplers: []
-        inBuffers:
-        - name: _VoxelPositions
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _FaceIndices
-          generatedName: 
-          bindPoint: 1
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _VoxelIndices
-          generatedName: 
-          bindPoint: 2
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _RotationMatrices
-          generatedName: 
-          bindPoint: 3
-          samplerBindPoint: -1
-          texDimension: -1
-        outBuffers:
-        - name: _TransformMatrices
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        code: 44584243d687c6a94074cf131702018b4178bd5c01000000040a0000030000002c0000003c0000004c0000004953474e0800000000000000080000004f53474e08000000000000000800000053484558b0090000500005006c0200006a08000159000004468e20000000000005000000a200000400701000000000000c000000a2000004007010000100000004000000a2000004007010000200000004000000a20000040070100003000000400000009e00000400e0110000000000400000005f0000021200020068000002070000009b0000044000000001000000010000005000000712001000000000000a0002001a80200000000000000000001f0004030a001000000000003e000001150000012600000900d0000012001000000000002a80200000000000000000000140000006000000a700008b022300808399190022001000000000000a00100000000000014000000000000006701000010000005000000622001000000000000a0002001a001000000000000100000742001000000000001a0010000000000001400000010000008c00000b1200100000000000014000000100000001400000000000001a001000000000000a00100000000000a700008b022300808399190012001000000000000a00100000000000014000000000000006701000010000005000000612001000000000000a0002000a001000000000000100000712001000000000000a001000000000001a001000000000003700000922001000000000000a0010000000000001400000020000002a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000922001000000000000a0010000000000001400000030000001a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000922001000000000000a0010000000000001400000040000001a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000912001000000000000a0010000000000001400000050000001a001000000000001e00000722001000000000000a0002000a8020000000000000000000a700008b022300808399190022001000000000001a0010000000000001400000000000000670100002000000a700008b0263008083991900e2001000000000001a00100000000000014000000000000006791000000000003800000a7200100001000000960710000000000002400000cdcccc3dcdcccc3dcdcccc3d00000000a700008b0203028083991900f2001000020000000a001000000000000140000000000000467e100003000000a700008b0203028083991900f2001000030000000a001000000000000140000010000000467e100003000000a700008b0203028083991900f2001000040000000a001000000000000140000020000000467e100003000000a700008b0203028083991900f2001000000000000a001000000000000140000030000000467e100003000000360000058200100001000000014000000000803f0f0000071200100002000000360f100001000000c6001000020000000f0000071200100003000000360f100001000000c6001000030000000f0000071200100004000000360f100001000000c6001000040000000f0000071200100000000000360f100001000000c6001000000000000000000a3200100001000000760f1000010000000240000000000000cdcc4c3d00000000000000000f00000722001000020000004600100001000000d6051000020000000f00000722001000030000004600100001000000d6051000030000000f00000722001000040000004600100001000000d6051000040000000f00000722001000000000004600100001000000d6051000000000000f0000071200100001000000b60f100001000000e60a1000020000000f0000072200100001000000b60f100001000000e60a1000030000000f0000074200100002000000b60f100001000000e60a1000040000000f0000074200100000000000b60f100001000000e60a10000000000038000008f2001000050000005605100002000000468e200000000000020000003200000af200100005000000468e200000000000010000000600100002000000460e1000050000003200000af200100005000000468e200000000000030000000600100001000000460e1000050000003200000af200100005000000468e20000000000004000000f60f100002000000460e10000500000038000008f2001000060000005605100003000000468e200000000000020000003200000af200100006000000468e200000000000010000000600100003000000460e1000060000003200000af200100001000000468e200000000000030000005605100001000000460e1000060000003200000af200100001000000468e20000000000004000000f60f100003000000460e10000100000038000008f2001000030000005605100004000000468e200000000000020000003200000af200100003000000468e200000000000010000000600100004000000460e1000030000003200000af200100002000000468e20000000000003000000a60a100002000000460e1000030000003200000af200100002000000468e20000000000004000000f60f100004000000460e10000200000038000008f2001000030000005605100000000000468e200000000000020000003200000af200100003000000468e200000000000010000000600100000000000460e1000030000003200000af200100003000000468e20000000000003000000a60a100000000000460e1000030000003200000af200100000000000468e20000000000004000000f60f100000000000460e100003000000a8000008f2e01100000000000a0002000140000000000000460e100005000000a8000008f2e01100000000000a0002000140000010000000460e100001000000a8000008f2e01100000000000a0002000140000020000000460e100002000000a8000008f2e01100000000000a0002000140000030000000460e1000000000003e000001
-        threadGroupSize: 400000000100000001000000
-        requirements: 16385
-        keywords: []
-        isCompiled: 1
-      variantIndices:
-      - : 0
-      globalKeywords: []
-      localKeywords: []
-      dynamicKeywords: []
-    constantBuffers:
-    - name: $Globals
-      byteSize: 80
-      params:
-      - name: _InstanceStartIndex
-        type: 5
-        offset: 0
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _InstanceCount
-        type: 5
-        offset: 4
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _FrameIndex
-        type: 5
-        offset: 8
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _VoxelToWorldMatrix
-        type: 0
-        offset: 16
-        arraySize: 0
-        rowCount: 4
-        colCount: 4
-    resourcesResolved: 1
-    compilerPlatform: 4
-    needsReflectionData: 0
-  m_CompilationContext:
-    serializedVersion: 2
-    buildTarget:
-      platform: 19
-      subTarget: 0
-      extendedPlatform: 0
-      isEditor: 0
-    platformGroup: 1
-    sourceFileName: Voxel.compute
-    source: "#pragma kernel VoxelGeneration\n\nStructuredBuffer<float3> _VoxelPositions;\nStructuredBuffer<int>
-      _FaceIndices;\nStructuredBuffer<int> _VoxelIndices;\nStructuredBuffer<float4x4>
-      _RotationMatrices;\nRWStructuredBuffer<float4x4> _TransformMatrices;\n\nuniform
-      uint _InstanceStartIndex;\nuniform uint _InstanceCount;\nuniform uint _FrameIndex;\nuniform
-      float4x4 _VoxelToWorldMatrix;\n\n[numthreads(64, 1, 1)]\nvoid VoxelGeneration(uint3
-      id : SV_DispatchThreadID)\n{\n    if (id.x >= _InstanceCount)\n        return;\n   
-      \n    int faceIndex = 0;\n    [unroll(5)]\n    while (id.x >= _FaceIndices[faceIndex
-      + _FrameIndex * 6])\n    {\n        faceIndex += 1;\n    }\n    \n    uint
-      instanceID = _InstanceStartIndex + id.x;\n    float3 pos = _VoxelPositions[_VoxelIndices[instanceID]]
-      * 0.1f;\n\n    float4x4 objectToVoxelMatrix = float4x4\n    (\n        1, 0,
-      0, pos.x,\n        0, 1, 0, pos.y + 0.05,\n        0, 0, 1, pos.z,\n       
-      0, 0, 0, 1\n    );\n    objectToVoxelMatrix = mul(objectToVoxelMatrix, _RotationMatrices[faceIndex]);\n   
-      \n    _TransformMatrices[id.x] = mul(_VoxelToWorldMatrix, objectToVoxelMatrix);\n}"
-    sourceFile: Assets/FoxEdit/Runtime/Shaders/Voxel.compute
-    kernels:
-    - VoxelGeneration
-    kernelMacros:
-    - []
-    compilationFlags: 0
-    supportedAPIs: 4294967295
-    useDxcAPIs: 0
-    neverUseDxcAPIs: 0
-    includeHash0: 1811220761
-    includeHash1: 589760252
-    includeHash2: 3035124167
-    includeHash3: 2339565157
-  errors:
-  - message: signed/unsigned mismatch, unsigned assumed at kernel VoxelGeneration
-    messageDetails: 
-    file: Voxel.compute
-    compilerPlatform: 4
-    line: 22
-    warning: 1
-    runtimeError: 1
 --- !u!1 &922429273
 GameObject:
   m_ObjectHideFlags: 0
@@ -697,149 +338,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 922429273}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.233, z: 3.191}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.23299998, z: 3.191}
   m_LocalScale: {x: 7.4907885, y: 0.40190735, z: 7.4907885}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!72 &1022012392
-ComputeShader:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Voxel(Clone)
-  variants:
-  - serializedVersion: 2
-    targetRenderer: 2
-    targetLevel: 0
-    kernels:
-    - serializedVersion: 3
-      name: VoxelGeneration
-      uniqueVariants:
-      - serializedVersion: 2
-        cbVariantIndices: 00000000
-        cbs:
-        - name: $Globals
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        textures: []
-        builtinSamplers: []
-        inBuffers:
-        - name: _VoxelPositions
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _FaceIndices
-          generatedName: 
-          bindPoint: 1
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _VoxelIndices
-          generatedName: 
-          bindPoint: 2
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _RotationMatrices
-          generatedName: 
-          bindPoint: 3
-          samplerBindPoint: -1
-          texDimension: -1
-        outBuffers:
-        - name: _TransformMatrices
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        code: 44584243d687c6a94074cf131702018b4178bd5c01000000040a0000030000002c0000003c0000004c0000004953474e0800000000000000080000004f53474e08000000000000000800000053484558b0090000500005006c0200006a08000159000004468e20000000000005000000a200000400701000000000000c000000a2000004007010000100000004000000a2000004007010000200000004000000a20000040070100003000000400000009e00000400e0110000000000400000005f0000021200020068000002070000009b0000044000000001000000010000005000000712001000000000000a0002001a80200000000000000000001f0004030a001000000000003e000001150000012600000900d0000012001000000000002a80200000000000000000000140000006000000a700008b022300808399190022001000000000000a00100000000000014000000000000006701000010000005000000622001000000000000a0002001a001000000000000100000742001000000000001a0010000000000001400000010000008c00000b1200100000000000014000000100000001400000000000001a001000000000000a00100000000000a700008b022300808399190012001000000000000a00100000000000014000000000000006701000010000005000000612001000000000000a0002000a001000000000000100000712001000000000000a001000000000001a001000000000003700000922001000000000000a0010000000000001400000020000002a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000922001000000000000a0010000000000001400000030000001a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000922001000000000000a0010000000000001400000040000001a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000912001000000000000a0010000000000001400000050000001a001000000000001e00000722001000000000000a0002000a8020000000000000000000a700008b022300808399190022001000000000001a0010000000000001400000000000000670100002000000a700008b0263008083991900e2001000000000001a00100000000000014000000000000006791000000000003800000a7200100001000000960710000000000002400000cdcccc3dcdcccc3dcdcccc3d00000000a700008b0203028083991900f2001000020000000a001000000000000140000000000000467e100003000000a700008b0203028083991900f2001000030000000a001000000000000140000010000000467e100003000000a700008b0203028083991900f2001000040000000a001000000000000140000020000000467e100003000000a700008b0203028083991900f2001000000000000a001000000000000140000030000000467e100003000000360000058200100001000000014000000000803f0f0000071200100002000000360f100001000000c6001000020000000f0000071200100003000000360f100001000000c6001000030000000f0000071200100004000000360f100001000000c6001000040000000f0000071200100000000000360f100001000000c6001000000000000000000a3200100001000000760f1000010000000240000000000000cdcc4c3d00000000000000000f00000722001000020000004600100001000000d6051000020000000f00000722001000030000004600100001000000d6051000030000000f00000722001000040000004600100001000000d6051000040000000f00000722001000000000004600100001000000d6051000000000000f0000071200100001000000b60f100001000000e60a1000020000000f0000072200100001000000b60f100001000000e60a1000030000000f0000074200100002000000b60f100001000000e60a1000040000000f0000074200100000000000b60f100001000000e60a10000000000038000008f2001000050000005605100002000000468e200000000000020000003200000af200100005000000468e200000000000010000000600100002000000460e1000050000003200000af200100005000000468e200000000000030000000600100001000000460e1000050000003200000af200100005000000468e20000000000004000000f60f100002000000460e10000500000038000008f2001000060000005605100003000000468e200000000000020000003200000af200100006000000468e200000000000010000000600100003000000460e1000060000003200000af200100001000000468e200000000000030000005605100001000000460e1000060000003200000af200100001000000468e20000000000004000000f60f100003000000460e10000100000038000008f2001000030000005605100004000000468e200000000000020000003200000af200100003000000468e200000000000010000000600100004000000460e1000030000003200000af200100002000000468e20000000000003000000a60a100002000000460e1000030000003200000af200100002000000468e20000000000004000000f60f100004000000460e10000200000038000008f2001000030000005605100000000000468e200000000000020000003200000af200100003000000468e200000000000010000000600100000000000460e1000030000003200000af200100003000000468e20000000000003000000a60a100000000000460e1000030000003200000af200100000000000468e20000000000004000000f60f100000000000460e100003000000a8000008f2e01100000000000a0002000140000000000000460e100005000000a8000008f2e01100000000000a0002000140000010000000460e100001000000a8000008f2e01100000000000a0002000140000020000000460e100002000000a8000008f2e01100000000000a0002000140000030000000460e1000000000003e000001
-        threadGroupSize: 400000000100000001000000
-        requirements: 16385
-        keywords: []
-        isCompiled: 1
-      variantIndices:
-      - : 0
-      globalKeywords: []
-      localKeywords: []
-      dynamicKeywords: []
-    constantBuffers:
-    - name: $Globals
-      byteSize: 80
-      params:
-      - name: _InstanceStartIndex
-        type: 5
-        offset: 0
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _InstanceCount
-        type: 5
-        offset: 4
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _FrameIndex
-        type: 5
-        offset: 8
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _VoxelToWorldMatrix
-        type: 0
-        offset: 16
-        arraySize: 0
-        rowCount: 4
-        colCount: 4
-    resourcesResolved: 1
-    compilerPlatform: 4
-    needsReflectionData: 0
-  m_CompilationContext:
-    serializedVersion: 2
-    buildTarget:
-      platform: 19
-      subTarget: 0
-      extendedPlatform: 0
-      isEditor: 0
-    platformGroup: 1
-    sourceFileName: Voxel.compute
-    source: "#pragma kernel VoxelGeneration\n\nStructuredBuffer<float3> _VoxelPositions;\nStructuredBuffer<int>
-      _FaceIndices;\nStructuredBuffer<int> _VoxelIndices;\nStructuredBuffer<float4x4>
-      _RotationMatrices;\nRWStructuredBuffer<float4x4> _TransformMatrices;\n\nuniform
-      uint _InstanceStartIndex;\nuniform uint _InstanceCount;\nuniform uint _FrameIndex;\nuniform
-      float4x4 _VoxelToWorldMatrix;\n\n[numthreads(64, 1, 1)]\nvoid VoxelGeneration(uint3
-      id : SV_DispatchThreadID)\n{\n    if (id.x >= _InstanceCount)\n        return;\n   
-      \n    int faceIndex = 0;\n    [unroll(5)]\n    while (id.x >= _FaceIndices[faceIndex
-      + _FrameIndex * 6])\n    {\n        faceIndex += 1;\n    }\n    \n    uint
-      instanceID = _InstanceStartIndex + id.x;\n    float3 pos = _VoxelPositions[_VoxelIndices[instanceID]]
-      * 0.1f;\n\n    float4x4 objectToVoxelMatrix = float4x4\n    (\n        1, 0,
-      0, pos.x,\n        0, 1, 0, pos.y + 0.05,\n        0, 0, 1, pos.z,\n       
-      0, 0, 0, 1\n    );\n    objectToVoxelMatrix = mul(objectToVoxelMatrix, _RotationMatrices[faceIndex]);\n   
-      \n    _TransformMatrices[id.x] = mul(_VoxelToWorldMatrix, objectToVoxelMatrix);\n}"
-    sourceFile: Assets/FoxEdit/Runtime/Shaders/Voxel.compute
-    kernels:
-    - VoxelGeneration
-    kernelMacros:
-    - []
-    compilationFlags: 0
-    supportedAPIs: 4294967295
-    useDxcAPIs: 0
-    neverUseDxcAPIs: 0
-    includeHash0: 1811220761
-    includeHash1: 589760252
-    includeHash2: 3035124167
-    includeHash3: 2339565157
-  errors:
-  - message: signed/unsigned mismatch, unsigned assumed at kernel VoxelGeneration
-    messageDetails: 
-    file: Voxel.compute
-    compilerPlatform: 4
-    line: 22
-    warning: 1
-    runtimeError: 1
 --- !u!1 &1025929410
 GameObject:
   m_ObjectHideFlags: 0
@@ -1004,34 +509,7 @@ Material:
     m_Floats: []
     m_Colors: []
   m_BuildTextureStacks: []
---- !u!21 &1548771854
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: StaticVoxelShader(Clone)
-  m_Shader: {fileID: 4800000, guid: e6b71c272e5279346bf62f6f747856a3, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Ints: []
-    m_Floats: []
-    m_Colors: []
-  m_BuildTextureStacks: []
---- !u!21 &1668730553
+--- !u!21 &1609626048
 Material:
   serializedVersion: 8
   m_ObjectHideFlags: 0
@@ -1096,13 +574,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _voxelObject: {fileID: 11400000, guid: bcadf864770f44944b4019e022bd081e, type: 2}
   _paletteIndexOverride: 0
-  _staticRender: 0
+  _staticRender: 1
   _frameDuration: 0.2
-  _computeShader: {fileID: 655407173}
-  _meshRenderer: {fileID: 1672596481}
+  _isSetup: 1
   _meshFilter: {fileID: 1672596482}
-  _material: {fileID: 1668730553}
-  _staticMaterial: {fileID: 178946543}
+  _meshRenderer: {fileID: 1672596481}
+  _material: {fileID: 1609626048}
+  _staticMaterial: {fileID: 1170102216}
 --- !u!4 &1672596480
 Transform:
   m_ObjectHideFlags: 0
@@ -1112,7 +590,7 @@ Transform:
   m_GameObject: {fileID: 1672596478}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 4.8}
+  m_LocalPosition: {x: 0, y: 0, z: 5.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -1125,7 +603,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1672596478}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1167,7 +645,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1672596478}
-  m_Mesh: {fileID: 4290455465334558363, guid: 130352272c8cdb24fad6081cad1a74ea, type: 3}
+  m_Mesh: {fileID: -8039384279103502089, guid: 22e8fc5508d87464cb19ead306a9fd82, type: 3}
 --- !u!1 &1756072725
 GameObject:
   m_ObjectHideFlags: 0
@@ -1178,8 +656,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1756072727}
   - component: {fileID: 1756072726}
-  - component: {fileID: 1756072729}
-  - component: {fileID: 1756072728}
   m_Layer: 0
   m_Name: Global Volume
   m_TagString: Untagged
@@ -1204,339 +680,27 @@ MonoBehaviour:
   blendDistance: 0
   weight: 1
   sharedProfile: {fileID: 11400000, guid: 0fb1863c7005b8f429136d519d658219, type: 2}
---- !u!224 &1756072727
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1756072725}
-  m_LocalRotation: {x: 0.0005165887, y: 0.0009982632, z: 0.0017055908, w: 0.9999979}
-  m_LocalPosition: {x: 0, y: 0, z: -1.9475}
-  m_LocalScale: {x: 0.93877643, y: 0.93877643, z: 0.93877643}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0.059, y: 0.114, z: 0.196}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 14.94, y: 0.21213}
-  m_SizeDelta: {x: 100, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1756072728
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1756072725}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1756072729
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1756072725}
-  m_CullTransparentMesh: 1
---- !u!21 &1772873746
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: StaticVoxelShader(Clone)
-  m_Shader: {fileID: 4800000, guid: e6b71c272e5279346bf62f6f747856a3, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs: []
-    m_Ints: []
-    m_Floats: []
-    m_Colors: []
-  m_BuildTextureStacks: []
---- !u!1 &2070197287
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2070197291}
-  - component: {fileID: 2070197290}
-  - component: {fileID: 2070197289}
-  - component: {fileID: 2070197288}
-  m_Layer: 0
-  m_Name: EditTests
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2070197288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2070197287}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afe67023d36272a47898e62e24bdad23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _voxelObject: {fileID: 11400000, guid: afb97842882b48f479a4387b711b6492, type: 2}
-  _paletteIndexOverride: 0
-  _staticRender: 0
-  _frameDuration: 0.2
-  _computeShader: {fileID: 2113384397}
-  _meshRenderer: {fileID: 2070197289}
-  _meshFilter: {fileID: 2070197290}
-  _material: {fileID: 568126761}
-  _staticMaterial: {fileID: 394357939}
---- !u!23 &2070197289
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2070197287}
-  m_Enabled: 0
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 1548771854}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}
---- !u!33 &2070197290
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2070197287}
-  m_Mesh: {fileID: -5226289601263357302, guid: 42487458e3266ec458c2cd3c1cbd895c, type: 3}
---- !u!4 &2070197291
+--- !u!4 &1756072727
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2070197287}
+  m_GameObject: {fileID: 1756072725}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.101}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0.0005165887, y: 0.0009982632, z: 0.0017055908, w: 0.9999979}
+  m_LocalPosition: {x: 14.94, y: 0.21213, z: -1.9475}
+  m_LocalScale: {x: 0.93877643, y: 0.93877643, z: 0.93877643}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!72 &2113384397
-ComputeShader:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Voxel(Clone)
-  variants:
-  - serializedVersion: 2
-    targetRenderer: 2
-    targetLevel: 0
-    kernels:
-    - serializedVersion: 3
-      name: VoxelGeneration
-      uniqueVariants:
-      - serializedVersion: 2
-        cbVariantIndices: 00000000
-        cbs:
-        - name: $Globals
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        textures: []
-        builtinSamplers: []
-        inBuffers:
-        - name: _VoxelPositions
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _FaceIndices
-          generatedName: 
-          bindPoint: 1
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _VoxelIndices
-          generatedName: 
-          bindPoint: 2
-          samplerBindPoint: -1
-          texDimension: -1
-        - name: _RotationMatrices
-          generatedName: 
-          bindPoint: 3
-          samplerBindPoint: -1
-          texDimension: -1
-        outBuffers:
-        - name: _TransformMatrices
-          generatedName: 
-          bindPoint: 0
-          samplerBindPoint: -1
-          texDimension: -1
-        code: 44584243d687c6a94074cf131702018b4178bd5c01000000040a0000030000002c0000003c0000004c0000004953474e0800000000000000080000004f53474e08000000000000000800000053484558b0090000500005006c0200006a08000159000004468e20000000000005000000a200000400701000000000000c000000a2000004007010000100000004000000a2000004007010000200000004000000a20000040070100003000000400000009e00000400e0110000000000400000005f0000021200020068000002070000009b0000044000000001000000010000005000000712001000000000000a0002001a80200000000000000000001f0004030a001000000000003e000001150000012600000900d0000012001000000000002a80200000000000000000000140000006000000a700008b022300808399190022001000000000000a00100000000000014000000000000006701000010000005000000622001000000000000a0002001a001000000000000100000742001000000000001a0010000000000001400000010000008c00000b1200100000000000014000000100000001400000000000001a001000000000000a00100000000000a700008b022300808399190012001000000000000a00100000000000014000000000000006701000010000005000000612001000000000000a0002000a001000000000000100000712001000000000000a001000000000001a001000000000003700000922001000000000000a0010000000000001400000020000002a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000922001000000000000a0010000000000001400000030000001a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000922001000000000000a0010000000000001400000040000001a001000000000002300000a42001000000000002a802000000000000000000001400000060000001a00100000000000a700008b022300808399190042001000000000002a00100000000000014000000000000006701000010000005000000642001000000000000a0002002a001000000000000100000712001000000000002a001000000000000a001000000000003700000912001000000000000a0010000000000001400000050000001a001000000000001e00000722001000000000000a0002000a8020000000000000000000a700008b022300808399190022001000000000001a0010000000000001400000000000000670100002000000a700008b0263008083991900e2001000000000001a00100000000000014000000000000006791000000000003800000a7200100001000000960710000000000002400000cdcccc3dcdcccc3dcdcccc3d00000000a700008b0203028083991900f2001000020000000a001000000000000140000000000000467e100003000000a700008b0203028083991900f2001000030000000a001000000000000140000010000000467e100003000000a700008b0203028083991900f2001000040000000a001000000000000140000020000000467e100003000000a700008b0203028083991900f2001000000000000a001000000000000140000030000000467e100003000000360000058200100001000000014000000000803f0f0000071200100002000000360f100001000000c6001000020000000f0000071200100003000000360f100001000000c6001000030000000f0000071200100004000000360f100001000000c6001000040000000f0000071200100000000000360f100001000000c6001000000000000000000a3200100001000000760f1000010000000240000000000000cdcc4c3d00000000000000000f00000722001000020000004600100001000000d6051000020000000f00000722001000030000004600100001000000d6051000030000000f00000722001000040000004600100001000000d6051000040000000f00000722001000000000004600100001000000d6051000000000000f0000071200100001000000b60f100001000000e60a1000020000000f0000072200100001000000b60f100001000000e60a1000030000000f0000074200100002000000b60f100001000000e60a1000040000000f0000074200100000000000b60f100001000000e60a10000000000038000008f2001000050000005605100002000000468e200000000000020000003200000af200100005000000468e200000000000010000000600100002000000460e1000050000003200000af200100005000000468e200000000000030000000600100001000000460e1000050000003200000af200100005000000468e20000000000004000000f60f100002000000460e10000500000038000008f2001000060000005605100003000000468e200000000000020000003200000af200100006000000468e200000000000010000000600100003000000460e1000060000003200000af200100001000000468e200000000000030000005605100001000000460e1000060000003200000af200100001000000468e20000000000004000000f60f100003000000460e10000100000038000008f2001000030000005605100004000000468e200000000000020000003200000af200100003000000468e200000000000010000000600100004000000460e1000030000003200000af200100002000000468e20000000000003000000a60a100002000000460e1000030000003200000af200100002000000468e20000000000004000000f60f100004000000460e10000200000038000008f2001000030000005605100000000000468e200000000000020000003200000af200100003000000468e200000000000010000000600100000000000460e1000030000003200000af200100003000000468e20000000000003000000a60a100000000000460e1000030000003200000af200100000000000468e20000000000004000000f60f100000000000460e100003000000a8000008f2e01100000000000a0002000140000000000000460e100005000000a8000008f2e01100000000000a0002000140000010000000460e100001000000a8000008f2e01100000000000a0002000140000020000000460e100002000000a8000008f2e01100000000000a0002000140000030000000460e1000000000003e000001
-        threadGroupSize: 400000000100000001000000
-        requirements: 16385
-        keywords: []
-        isCompiled: 1
-      variantIndices:
-      - : 0
-      globalKeywords: []
-      localKeywords: []
-      dynamicKeywords: []
-    constantBuffers:
-    - name: $Globals
-      byteSize: 80
-      params:
-      - name: _InstanceStartIndex
-        type: 5
-        offset: 0
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _InstanceCount
-        type: 5
-        offset: 4
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _FrameIndex
-        type: 5
-        offset: 8
-        arraySize: 0
-        rowCount: 1
-        colCount: 1
-      - name: _VoxelToWorldMatrix
-        type: 0
-        offset: 16
-        arraySize: 0
-        rowCount: 4
-        colCount: 4
-    resourcesResolved: 1
-    compilerPlatform: 4
-    needsReflectionData: 0
-  m_CompilationContext:
-    serializedVersion: 2
-    buildTarget:
-      platform: 19
-      subTarget: 0
-      extendedPlatform: 0
-      isEditor: 0
-    platformGroup: 1
-    sourceFileName: Voxel.compute
-    source: "#pragma kernel VoxelGeneration\n\nStructuredBuffer<float3> _VoxelPositions;\nStructuredBuffer<int>
-      _FaceIndices;\nStructuredBuffer<int> _VoxelIndices;\nStructuredBuffer<float4x4>
-      _RotationMatrices;\nRWStructuredBuffer<float4x4> _TransformMatrices;\n\nuniform
-      uint _InstanceStartIndex;\nuniform uint _InstanceCount;\nuniform uint _FrameIndex;\nuniform
-      float4x4 _VoxelToWorldMatrix;\n\n[numthreads(64, 1, 1)]\nvoid VoxelGeneration(uint3
-      id : SV_DispatchThreadID)\n{\n    if (id.x >= _InstanceCount)\n        return;\n   
-      \n    int faceIndex = 0;\n    [unroll(5)]\n    while (id.x >= _FaceIndices[faceIndex
-      + _FrameIndex * 6])\n    {\n        faceIndex += 1;\n    }\n    \n    uint
-      instanceID = _InstanceStartIndex + id.x;\n    float3 pos = _VoxelPositions[_VoxelIndices[instanceID]]
-      * 0.1f;\n\n    float4x4 objectToVoxelMatrix = float4x4\n    (\n        1, 0,
-      0, pos.x,\n        0, 1, 0, pos.y + 0.05,\n        0, 0, 1, pos.z,\n       
-      0, 0, 0, 1\n    );\n    objectToVoxelMatrix = mul(objectToVoxelMatrix, _RotationMatrices[faceIndex]);\n   
-      \n    _TransformMatrices[id.x] = mul(_VoxelToWorldMatrix, objectToVoxelMatrix);\n}"
-    sourceFile: Assets/FoxEdit/Runtime/Shaders/Voxel.compute
-    kernels:
-    - VoxelGeneration
-    kernelMacros:
-    - []
-    compilationFlags: 0
-    supportedAPIs: 4294967295
-    useDxcAPIs: 0
-    neverUseDxcAPIs: 0
-    includeHash0: 1811220761
-    includeHash1: 589760252
-    includeHash2: 3035124167
-    includeHash3: 2339565157
-  errors:
-  - message: signed/unsigned mismatch, unsigned assumed at kernel VoxelGeneration
-    messageDetails: 
-    file: Voxel.compute
-    compilerPlatform: 4
-    line: 22
-    warning: 1
-    runtimeError: 1
+  m_LocalEulerAnglesHint: {x: 0.059, y: 0.114, z: 0.196}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1025929413}
   - {fileID: 553257809}
+  - {fileID: 1756072727}
   - {fileID: 1672596480}
   - {fileID: 922429277}
-  - {fileID: 2070197291}
-  - {fileID: 1756072727}
-  - {fileID: 440807626}
