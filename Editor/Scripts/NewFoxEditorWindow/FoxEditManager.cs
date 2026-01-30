@@ -88,15 +88,30 @@ namespace FoxEdit
                 "Hold on, little voxel!",
                 "You have unsaved changes. Do you want to save your creation before leaving?",
                 "Save",
-                "Save as...",
-                "Cancel");
+                "Cancel",
+                "Exit without saving");
 
-            switch (dialogue)
+            if (dialogue == 0)
             {
-                case 0:
+                int saveDialogue = EditorUtility.DisplayDialogComplex(
+                    "Save Changes",
+                    "How would you like to save your changes?",
+                    "Save",
+                    "Cancel",
+                    "SaveAs");
+                
+                if (saveDialogue == 0)
                     return Save();
-                case 1:
+                else if (saveDialogue == 2)
                     return SaveAs();
+            }
+            else if (dialogue == 1)
+            {
+                return false;
+            }
+            else if (dialogue == 2)
+            {
+                return true;
             }
 
             return false;
@@ -108,7 +123,7 @@ namespace FoxEdit
             return true;
         }
 
-        private static bool Save()
+        public static bool Save()
         {
             string assetPath = AssetDatabase.GetAssetPath(_voxelObject);
 
@@ -118,7 +133,7 @@ namespace FoxEdit
             return true;
         }
 
-        private static bool SaveAs()
+        public static bool SaveAs()
         {
             string defaultPath = FoxEditEditorSettings.Instance.DefaultSavePath.Value;
             if (!Directory.Exists(defaultPath))
@@ -131,26 +146,9 @@ namespace FoxEdit
                 string.Format("Save {0} voxel object", _voxelObject.name),
                 defaultPath);
 
-            if (path == null)
+            if (string.IsNullOrEmpty(path))
                 return false;
             return Save(path);
-        }
-
-        private static string ProjectRelativeToAbsolute(string projectPath)
-        {
-            if (string.IsNullOrEmpty(projectPath))
-                return null;
-
-            if (!projectPath.StartsWith("Assets/") && !projectPath.StartsWith("Assets\\"))
-            {
-                Debug.LogError("Path must be relative to project: " + projectPath);
-                return null;
-            }
-
-            string relativeToAssets = projectPath.Substring("Assets".Length); // remove "Assets"
-            string absolutePath = Path.Combine(Application.dataPath, relativeToAssets);
-
-            return Path.Join(Application.dataPath, absolutePath);
         }
 
         private static void FocusGameObject(GameObject voxelGO)

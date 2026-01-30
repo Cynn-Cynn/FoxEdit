@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -38,7 +39,7 @@ namespace FoxEdit.WindowComponents
                 FrameSelectorElement frameSelectorElement = ve as FrameSelectorElement;
 
                 frameSelectorElement.FramesCount = FramesCount.GetValueFromBag(bag, cc);
-                frameSelectorElement.FramesIndex = FrameIndex.GetValueFromBag(bag, cc);
+                frameSelectorElement.FrameIndex = FrameIndex.GetValueFromBag(bag, cc);
             }
         }
 
@@ -50,6 +51,7 @@ namespace FoxEdit.WindowComponents
             {
                 _framesCount = Mathf.Max(1, value);
                 UpdateFrameButtons();
+                UpdateButtonsIndex();
 
                 if (_frameIndex >= _framesCount)
                     SelectFrame(_framesCount - 1);
@@ -57,7 +59,7 @@ namespace FoxEdit.WindowComponents
         }
 
         private int _frameIndex = 0;
-        public int FramesIndex
+        public int FrameIndex
         {
             get => _frameIndex;
             set
@@ -74,6 +76,9 @@ namespace FoxEdit.WindowComponents
         public delegate void OnMoveFrameDelegate(int oldIndex, int newIndex);
         public event Action<int> OnFrameChanged;
         public event OnMoveFrameDelegate OnMoveFrame;
+        public event Action OnDuplicateFrame;
+        public event Action OnNewFrame;
+        public event Action OnDeleteFrame;
 
         //Drag
         private FrameButton dragButton;
@@ -115,31 +120,59 @@ namespace FoxEdit.WindowComponents
             addButtonsContainer.AddToClassList(FRAME_SELECTOR_ADD_BUTTON_CONTAINER_CLASS_NAME);
 
             Button duplicateLastFrameButton = new Button();
-            duplicateLastFrameButton.text = "Duplicate last frame";
+            duplicateLastFrameButton.text = "Duplicate frame";
+            duplicateLastFrameButton.name = "duplicate-button";
             duplicateLastFrameButton.AddToClassList(FRAME_SELECTOR_ADD_BUTTON_CLASS_NAME);
-            duplicateLastFrameButton.clicked += DuplicateLastFrame;
+            duplicateLastFrameButton.clicked += DuplicateFrame;
             addButtonsContainer.Add(duplicateLastFrameButton);
+
 
             Button newEmptyFrameButton = new Button();
             newEmptyFrameButton.text = "New empty frame";
+            newEmptyFrameButton.name = "new-empty-frame-button";
             newEmptyFrameButton.AddToClassList(FRAME_SELECTOR_ADD_BUTTON_CLASS_NAME);
             newEmptyFrameButton.clicked += NewEmptyFrame;
             addButtonsContainer.Add(newEmptyFrameButton);
 
+            Button deleteButton = new Button();
+            deleteButton.text = "Delete frame";
+            deleteButton.name = "delete-frame-button";
+            deleteButton.AddToClassList(FRAME_SELECTOR_ADD_BUTTON_CLASS_NAME);
+            deleteButton.clicked += DeleteFrame;
+            addButtonsContainer.Add(deleteButton);
+
             this.Add(addButtonsContainer);
+        }
+
+        private void DeleteFrame()
+        {
+            if (EditorUtility.DisplayDialog("Delete Frame",
+                "Are you sure you want to delete this voxel object frame? This action cannot be undone.",
+                "Delete", "Cancel"))
+            {
+                FrameButton removedFrameButton = frameButtons[FrameIndex];
+                
+                frameButtons.Remove(removedFrameButton);
+                framesContainer.Remove(removedFrameButton);
+                _framesCount--;
+                UpdateButtonsIndex();
+                OnDeleteFrame?.Invoke();
+            }
         }
         #endregion
 
         private void NewEmptyFrame()
         {
             FramesCount++;
-            SelectFrame(FramesCount - 1);
+            OnNewFrame?.Invoke();
         }
 
-        private void DuplicateLastFrame()
+        private void DuplicateFrame()
         {
+            Texture2D fromThumbnail = frameButtons[FrameIndex].ThumbnailImage;
             FramesCount++;
-            SelectFrame(FramesCount - 1);
+            frameButtons[FramesCount - 1].ThumbnailImage = fromThumbnail;
+            OnDuplicateFrame?.Invoke();
         }
 
         private void UpdateFrameButtons()
@@ -181,9 +214,6 @@ namespace FoxEdit.WindowComponents
             frameButtons.Add(frameButton);
 
             frameButton.clicked += () => SelectFrame(frameButton.Index);
-
-            ContextualMenuManipulator contextualMenuManipulator = new ContextualMenuManipulator(FrameMenuManipulator);
-            contextualMenuManipulator.target = frameButton;
 
             RegisterFrameCallbacks(frameButton);
 
@@ -257,17 +287,6 @@ namespace FoxEdit.WindowComponents
             return mousePos.x < center.x;
         }
 
-        private void FrameMenuManipulator(ContextualMenuPopulateEvent evt)
-        {
-            Button target = evt.target as Button;
-            evt.menu.AppendAction("Delete", (DropdownMenuAction) => RemoveFrameItem(target));
-        }
-
-        private void RemoveFrameItem(Button frameItem)
-        {
-            Debug.LogFormat("Remove {0}", frameItem.name);
-        }
-
         private void MoveFrame(int oldFrameIndex, int newFrameIndex)
         {
             if (oldFrameIndex == newFrameIndex)
@@ -279,15 +298,19 @@ namespace FoxEdit.WindowComponents
             framesContainer.Insert(newFrameIndex, frameButtonToMove);
             //Update frame buttons list
             frameButtons.Move(oldFrameIndex, newFrameIndex);
-            //Update buttons label
-            for (int i = 0; i < frameButtons.Count; i++)
-                frameButtons[i].Index = i;
+            UpdateButtonsIndex();
 
 
             OnMoveFrame?.Invoke(oldFrameIndex, newFrameIndex);
 
             if (frameButtonToMove.IsSelelected)
                 SelectFrame(frameButtons.IndexOf(frameButtonToMove));
+        }
+
+        private void UpdateButtonsIndex()
+        {
+            for (int i = 0; i < frameButtons.Count; i++)
+                frameButtons[i].Index = i;
         }
 
         public void SelectFrame(int index, bool notify = true)
