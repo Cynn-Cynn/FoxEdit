@@ -766,8 +766,8 @@ namespace FoxEdit
 
         public void Save()
         {
-            VoxelSaveSystem.Save(_meshName, _saveDirectory, _voxelRenderer, _palette, _selectedPalette, _frameList, _computeStaticMesh);
-            _needToSave = false;
+            //VoxelSaveSystem.Save(_meshName, _saveDirectory, _voxelRenderer, _palette, _selectedPalette, _frameList, _computeStaticMesh);
+            //_needToSave = false;
         }
 
         #endregion EditingActions

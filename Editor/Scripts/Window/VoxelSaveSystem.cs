@@ -1,5 +1,6 @@
 using Autodesk.Fbx;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -8,14 +9,15 @@ namespace FoxEdit
 {
     internal class VoxelSaveSystem
     {
-        internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorFrame> frameList, ComputeShader computeStaticMesh)
+        internal static void Save(string savePath, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorFrame> frameList, ComputeShader computeStaticMesh)
         {
-            string assetPath = GetAssetPath(meshName, saveDirectory, "asset");
+            savePath = Path.Join(Path.GetDirectoryName(savePath), Path.GetFileNameWithoutExtension(savePath));
+            string fbxPath = string.Format("{0}.fbx", savePath);
+            string assetPath = string.Format("{0}.asset", savePath);
             VoxelObject voxelObject = GetVoxelObject(voxelRenderer, assetPath);
             FillObject(voxelObject, frameList, palette, paletteIndex);
 
-            string fbxPath = GetAssetPath(meshName, saveDirectory, "fbx");
-            voxelObject.StaticMesh = GetStaticMesh(voxelObject, fbxPath, meshName, computeStaticMesh);
+            voxelObject.StaticMesh = GetStaticMesh(voxelObject, fbxPath, computeStaticMesh);
 
             voxelRenderer.VoxelObject = voxelObject;
             EditorUtility.SetDirty(voxelRenderer);
@@ -27,20 +29,11 @@ namespace FoxEdit
 
         #region AssetManagement
 
-        private static string GetAssetPath(string meshName, string saveDirectory, string extension)
-        {
-            string assetPath = null;
-            if (saveDirectory == null || saveDirectory == "")
-                assetPath = $"Assets/{meshName}.{extension}";
-            else
-                assetPath = $"Assets/{saveDirectory}/{meshName}.{extension}";
-
-            return assetPath;
-        }
-
         private static VoxelObject GetVoxelObject(VoxelRenderer voxelRenderer, string assetPath)
         {
-            VoxelObject voxelObject = voxelRenderer.VoxelObject;
+            VoxelObject voxelObject = null;
+
+            voxelObject = AssetDatabase.LoadAssetAtPath<VoxelObject>(assetPath);
 
             if (voxelObject == null)
             {
@@ -222,9 +215,9 @@ namespace FoxEdit
 
         #region FbxCreation
 
-        private static Mesh GetStaticMesh(VoxelObject voxelObject, string fbxPath, string meshName, ComputeShader computeStaticMesh)
+        private static Mesh GetStaticMesh(VoxelObject voxelObject, string fbxPath, ComputeShader computeStaticMesh)
         {
-            CreateFBX(fbxPath, voxelObject, meshName, computeStaticMesh);
+            CreateFBX(fbxPath, voxelObject, Path.GetFileName(fbxPath), computeStaticMesh);
             AssetDatabase.Refresh();
             GameObject meshGameObject = AssetDatabase.LoadAssetAtPath(fbxPath, typeof(GameObject)) as GameObject;
             return meshGameObject.GetComponent<MeshFilter>().sharedMesh;
