@@ -160,9 +160,9 @@ namespace FoxEdit.WindowPanels
             voxelEditor.MoveFrame(oldIndex, newIndex);
         }
 
-        private void OnFrameThumnbailUpdated(int index, Texture2D texture)
+        private void OnFrameThumnbailUpdated(int animIndex, int index, Texture2D texture)
         {
-            frameSelector.SetFrameThumbnail(index, texture);
+            //frameSelector.SetFrameThumbnail(index, texture);
         }
 
         private void OnSelectFrame(int newFrame)
@@ -190,9 +190,15 @@ namespace FoxEdit.WindowPanels
             this.voxelEditor = voxelEditor;
             voxelEditor.OnFramesThumbnailsUpdated += OnFrameThumnbailUpdated;
             voxelEditor.OnFrameIndexChanged += OnFrameIndexChanged;
+            voxelEditor.OnAnimationIndexChanged += OnAnimationIndexChanged;
 
             SetupFields();
             UpdateFrameSelector();
+        }
+
+        private void OnAnimationIndexChanged(int newAnimationIndex)
+        {
+            frameSelector.FramesCount = voxelEditor.CurrentAnimation.Count;
         }
 
         private void OnFrameIndexChanged(int frameIndex)

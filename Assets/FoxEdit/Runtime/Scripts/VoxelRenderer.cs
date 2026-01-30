@@ -19,7 +19,7 @@ namespace FoxEdit
         [SerializeField] private float _frameDuration = 0.2f;
 
         //Setup
-        [SerializeField] private bool _isSetup = false;
+        public bool IsSetup { get; private set; } = false;
         [SerializeField] private MeshFilter _meshFilter = null;
         [SerializeField] private MeshRenderer _meshRenderer = null;
         //[SerializeField] private ComputeShader _computeShader = null;
@@ -50,8 +50,13 @@ namespace FoxEdit
 
         private void Awake()
         {
-            _isSetup = !_isSetup;
-            _isSetup = !_isSetup;
+            if (!IsSetup)
+                Setup();
+        }
+
+        void OnValidate()
+        {
+            Setup();
         }
 
         void Start()
@@ -61,9 +66,31 @@ namespace FoxEdit
             SetBuffers();
         }
 
+        public void Setup()
+        {
+            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
+
+            if (_material == null)
+                _material = Instantiate(foxEditSettings.Materials.animatedMaterial);
+            if (_staticMaterial == null)
+                _staticMaterial = Instantiate(foxEditSettings.Materials.staticMaterial);
+
+            if (_meshFilter == null)
+                _meshFilter = GetComponent<MeshFilter>();
+            if (_meshRenderer == null)
+            {
+                _meshRenderer = GetComponent<MeshRenderer>();
+                _meshRenderer.material = _staticMaterial;
+                _meshRenderer.enabled = _staticRender;
+            }
+            if (VoxelObject != null)
+                SetRenderParams();
+            IsSetup = true;
+        }
+
         #region UserEditable
 
-        private void SetVoxelObject(VoxelObject voxelObject)
+        public void SetVoxelObject(VoxelObject voxelObject)
         {
             if (voxelObject == _voxelObject)
                 return;
@@ -92,6 +119,21 @@ namespace FoxEdit
             _meshRenderer.enabled = _staticRender;
             _timer = 0.0f;
         }
+
+        public void SetAnimatedRender()
+        {
+            _staticRender = false;
+            _meshRenderer.enabled = false;
+            _timer = 0.0f;
+        }
+
+        public void SetStaticRender()
+        {
+            _staticRender = true;
+            _meshRenderer.enabled = true;
+        }
+
+        public bool IsStaticRender => _staticRender;
 
         public void SetPalette(int index)
         {
