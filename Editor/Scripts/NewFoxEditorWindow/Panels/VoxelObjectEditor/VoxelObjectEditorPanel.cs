@@ -50,9 +50,7 @@ namespace FoxEdit.WindowPanels
 
         private void UpdateFrameSelector()
         {
-            if (voxelObject == null)
-                return;
-            frameSelector.FramesCount = voxelObject.FrameCount;
+            frameSelector.FramesCount = voxelEditor.FramesCount;
             frameSelector.SelectFrame(0, false);
         }
 

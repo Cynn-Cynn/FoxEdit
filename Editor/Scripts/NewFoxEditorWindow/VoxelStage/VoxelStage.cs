@@ -32,7 +32,15 @@ namespace FoxEdit.EditorUtils
             Light sideLight = CreateLight("Side light", new Vector3(50, -30, 0));
             Light otherSideLight = CreateLight("Side light light", new Vector3(50, -120, 0));
 
-            GameObject voxelGO = new GameObject(string.Format("{0} (Preview)", voxelObject.name), typeof(MeshFilter), typeof(MeshRenderer));
+            string objectName = null;
+
+            if (voxelObject == null)
+                objectName = "New voxel object";
+            else
+                objectName = voxelObject.name;
+            
+
+            GameObject voxelGO = new GameObject(string.Format("{0} (Preview)", objectName), typeof(MeshFilter), typeof(MeshRenderer));
             VoxelRenderer = voxelGO.AddComponent<VoxelRenderer>();
             VoxelRenderer.SetVoxelObject(voxelObject);
             VoxelRenderer.Setup();

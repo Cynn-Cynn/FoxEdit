@@ -40,6 +40,23 @@ namespace FoxEdit.WindowPanels
             }
         }
 
+        public void RegisterContextualMenu(VisualElement target)
+        {
+            target.RegisterCallback<ContextClickEvent>((evt) =>
+            {
+                GenericDropdownMenu menu = new GenericDropdownMenu();
+
+                menu.AddItem("New empty voxel object", false, NewVoxelObject);
+
+                menu.DropDown(new Rect(evt.mousePosition, Vector2.zero), target);
+            });
+        }
+
+        private void NewVoxelObject()
+        {
+            FoxEditManager.StartEditNewVoxelObject();
+        }
+
         public void UpdateVoxelObjectList(List<VoxelObject> voxelObjects)
         {
             this.voxelRenderers = voxelObjects;

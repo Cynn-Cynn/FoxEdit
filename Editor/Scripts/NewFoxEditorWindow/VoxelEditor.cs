@@ -108,6 +108,7 @@ namespace FoxEdit
         private MeshRenderer _voxelPrefab = null;
         private Transform _voxelParent = null;
         private List<VoxelEditorFrame> _frameList;
+        public int FramesCount => _frameList.Count;
 
         //Save
         private ComputeShader _computeStaticMesh = null;
@@ -203,7 +204,13 @@ namespace FoxEdit
                 _frameList.Clear();
             }
 
-            _voxelParent = new GameObject(string.Format("{0} Editor", voxelObject.name)).transform;
+            string objectName = null;
+            if (voxelObject == null)
+                objectName = "New voxel object";
+            else
+                objectName = voxelObject.name;
+
+            _voxelParent = new GameObject(string.Format("{0} Editor", objectName)).transform;
             _voxelParent.parent = _voxelRenderer.transform;
             _voxelParent.localPosition = Vector3.zero;
 
