@@ -93,3 +93,7 @@
     border-bottom-right-radius: 148px;
     border-bottom-left-radius: 148px;
 }
+
+#delete-frame-button {
+    color: var(--unity-colors-error-text);
+}

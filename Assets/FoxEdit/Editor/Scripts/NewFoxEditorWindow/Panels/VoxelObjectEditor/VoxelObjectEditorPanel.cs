@@ -11,7 +11,9 @@ namespace FoxEdit.WindowPanels
     {
         private VisualElement root;
 
-        private Button stopButton = null;
+        private Button stopButton;
+        private Button saveAsButton;
+        private Button saveButton;
         private ToolbarElement toolToolbar;
         private ToolbarElement actionToolbar;
         private DropdownField paletteDropdown;
@@ -71,18 +73,25 @@ namespace FoxEdit.WindowPanels
             paletteDropdown = root.Q<DropdownField>("palette-selector");
             colorSelector = root.Q<ColorPaletteElement>();
             frameSelector = root.Q<FrameSelectorElement>();
+            saveAsButton = root.Q<Button>("save-as-button");
+            saveButton = root.Q<Button>("save-button");
         }
 
         #region Callbacks
         private void RegisterCallbacks()
         {
             stopButton.clicked += OnClickStopEdit;
+            saveButton.clicked += Save;
+            saveAsButton.clicked += SaveAs;
             toolToolbar.OnToolSelected += OnToolSelected;
             actionToolbar.OnToolSelected += OnActionSelected;
             paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             colorSelector.OnIndexChanged += OnColorSelectorValueChanged;
             frameSelector.OnFrameChanged += OnSelectFrame;
             frameSelector.OnMoveFrame += OnMoveFrame;
+            frameSelector.OnDuplicateFrame += OnDuplicateFrame;
+            frameSelector.OnNewFrame += OnNewFrame;
+            frameSelector.OnDeleteFrame += OnDeleteFrame;
 
             VoxelEditor.OnChangeColor += OnChangeColor;
             VoxelEditor.OnChangeAction += OnChangeAction;
@@ -95,18 +104,47 @@ namespace FoxEdit.WindowPanels
         private void UnregisterCallbacks()
         {
             stopButton.clicked -= OnClickStopEdit;
+            saveButton.clicked -= Save;
+            saveAsButton.clicked -= SaveAs;
             toolToolbar.OnToolSelected -= OnToolSelected;
             actionToolbar.OnToolSelected -= OnActionSelected;
             paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             colorSelector.OnIndexChanged -= OnColorSelectorValueChanged;
             frameSelector.OnFrameChanged -= OnSelectFrame;
             frameSelector.OnMoveFrame -= OnMoveFrame;
+            frameSelector.OnDuplicateFrame -= OnDuplicateFrame;
+            frameSelector.OnNewFrame -= OnNewFrame;
 
             VoxelEditor.OnChangeColor -= OnChangeColor;
             VoxelEditor.OnChangeColor -= OnChangeColor;
             VoxelEditor.OnChangeAction -= OnChangeAction;
             FoxEditManager.OnStartEditVoxelObject -= OnStartEditVoxelObject;
             FoxEditManager.OnStopEditVoxelObject -= OnStopEditVoxelObject;
+        }
+
+        private void OnDeleteFrame()
+        {
+            voxelEditor.DeleteFrame();
+        }
+
+        private void OnNewFrame()
+        {
+            voxelEditor.NewFrame();
+        }
+
+        private void OnDuplicateFrame()
+        {
+            voxelEditor.DuplicateFrame();
+        }
+
+        private void Save()
+        {
+            FoxEditManager.Save();
+        }
+
+        private void SaveAs()
+        {
+            FoxEditManager.SaveAs();
         }
 
         private void OnChangeTool(vxTool tool)
@@ -138,7 +176,10 @@ namespace FoxEdit.WindowPanels
         private void OnStopEditVoxelObject()
         {
             if (voxelEditor != null)
+            {
                 voxelEditor.OnFramesThumbnailsUpdated -= OnFrameThumnbailUpdated;
+                voxelEditor.OnFrameIndexChanged += OnFrameIndexChanged;
+            }
             voxelObject = null;
             voxelRenderer = null;
             voxelEditor = null;
@@ -150,9 +191,15 @@ namespace FoxEdit.WindowPanels
             this.voxelRenderer = voxelRenderer;
             this.voxelEditor = voxelEditor;
             voxelEditor.OnFramesThumbnailsUpdated += OnFrameThumnbailUpdated;
+            voxelEditor.OnFrameIndexChanged += OnFrameIndexChanged;
 
             SetupFields();
             UpdateFrameSelector();
+        }
+
+        private void OnFrameIndexChanged(int frameIndex)
+        {
+            frameSelector.SelectFrame(frameIndex, false);
         }
 
 

@@ -24,7 +24,7 @@
                 <ui:DropdownField label="Animation" name="animation-selector" style="display: none;" />
                 <FoxEdit.WindowComponents.FrameSelectorElement FramesCount="10" />
             </ui:VisualElement>
-            <ui:VisualElement name="transformations" class="window-segment">
+            <ui:VisualElement name="transformations" class="window-segment" style="display: none;">
                 <ui:Label tabindex="-1" text="Transformations" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
                 <ui:VisualElement name="buttons-container" picking-mode="Ignore">
                     <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="translate-transformation" tooltip="Scale voxel object" class="transformation-button">
