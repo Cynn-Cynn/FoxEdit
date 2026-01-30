@@ -74,17 +74,14 @@ namespace FoxEdit
 
         //Thumbnails
         public event Action<int, Texture2D> OnFramesThumbnailsUpdated;
-        private List<Texture2D> _framesThumbnails;
+        public List<Texture2D> FramesThumbnails {get; private set;}
 
         //Flags
         private bool _edit = false;
-        private bool _canClick = true;
-        private bool _needToSave = false;
-        private bool _selection = false;
+        public bool IsDirty {get; private set;}
 
         //Mesh
         private string _meshName = null;
-        private string _saveDirectory = "Meshes";
         private VoxelRenderer _voxelRenderer = null;
         private Material[][] _editorMaterials = null;
 
@@ -128,11 +125,11 @@ namespace FoxEdit
 
         private void SetFramesVoxel()
         {
-            _framesThumbnails = GetFramesVoxels();
-            for (int i = 0; i < _framesThumbnails.Count; i++)
+            FramesThumbnails = GetFramesVoxels();
+            for (int i = 0; i < FramesThumbnails.Count; i++)
             {
                 int tmp_i = i;
-                OnFramesThumbnailsUpdated?.Invoke(tmp_i, _framesThumbnails[i]);
+                OnFramesThumbnailsUpdated?.Invoke(tmp_i, FramesThumbnails[i]);
             }
         }
 
@@ -240,10 +237,10 @@ namespace FoxEdit
                 switch (Tool)
                 {
                     case vxTool.Brush:
-                        _needToSave = currentFrame.TryAddVoxelNextTo(gridPosition, direction, PaletteIndex, ColorIndex);
+                        IsDirty = currentFrame.TryAddVoxelNextTo(gridPosition, direction, PaletteIndex, ColorIndex);
                         break;
                     case vxTool.Fill:
-                        _needToSave = currentFrame.TryAddLayer(gridPosition, direction, PaletteIndex, ColorIndex);
+                        IsDirty = currentFrame.TryAddLayer(gridPosition, direction, PaletteIndex, ColorIndex);
                         break;
                 }
             }
@@ -252,10 +249,10 @@ namespace FoxEdit
                 switch (Tool)
                 {
                     case vxTool.Brush:
-                        _needToSave = currentFrame.TryRemoveVoxel(gridPosition);
+                        IsDirty = currentFrame.TryRemoveVoxel(gridPosition);
                         break;
                     case vxTool.Fill:
-                        _needToSave = currentFrame.TryRemoveLayer(gridPosition, direction);
+                        IsDirty = currentFrame.TryRemoveLayer(gridPosition, direction);
                         break;
                 }
             }
@@ -264,21 +261,21 @@ namespace FoxEdit
                 switch (Tool)
                 {
                     case vxTool.Brush:
-                        _needToSave = currentFrame.TryColorVoxel(gridPosition, PaletteIndex, ColorIndex);
+                        IsDirty = currentFrame.TryColorVoxel(gridPosition, PaletteIndex, ColorIndex);
                         break;
                     case vxTool.Fill:
-                        _needToSave = currentFrame.TryFillColor(gridPosition, PaletteIndex, ColorIndex);
+                        IsDirty = currentFrame.TryFillColor(gridPosition, PaletteIndex, ColorIndex);
                         break;
                 }
             }
+
+            IsDirty = true;
         }
 
         #region Helpers
 
         public bool TryGetCubePosition(out Vector3 cubePosition, out Vector3 worldNormal, Ray ray)
         {
-
-
             if (HandleUtility.RaySnap(ray) is RaycastHit hit)
             {
                 cubePosition = hit.transform.position;
@@ -309,7 +306,7 @@ namespace FoxEdit
             if (_frameList.Count != 1)
                 ChangeFrame(_frameList.Count - 1);
 
-            _needToSave = true;
+            IsDirty = true;
         }
 
         private void OnPaletteChanged(int paletteColor)
@@ -325,7 +322,7 @@ namespace FoxEdit
             _selectedFrame -= 1;
             _frameList[_selectedFrame].Show();
 
-            _needToSave = true;
+            IsDirty = true;
         }
 
         private void DuplicateFrame()
@@ -335,7 +332,7 @@ namespace FoxEdit
 
             ChangeFrame(_frameList.Count - 1);
 
-            _needToSave = true;
+            IsDirty = true;
         }
 
         public void ChangeFrame(int index)
@@ -357,7 +354,7 @@ namespace FoxEdit
             movedFrame.FrameObject.SetSiblingIndex(newIndex);
             if (oldIndex == _selectedFrame)
                 _selectedFrame = _frameList.IndexOf(movedFrame);
-            _framesThumbnails.Move(oldIndex, newIndex);
+            FramesThumbnails.Move(oldIndex, newIndex);
         }
 
         #endregion
@@ -365,23 +362,23 @@ namespace FoxEdit
         #region Frames Thumbnails
         private void UpdateFrameThumbnail(int index)
         {
-            if (_framesThumbnails == null)
+            if (FramesThumbnails == null)
                 return;
-            if (index >= 0 && index < _framesThumbnails.Count && _framesThumbnails[index] != null)
+            if (index >= 0 && index < FramesThumbnails.Count && FramesThumbnails[index] != null)
             {
                 int tmp_index = index;
-                GameObject.DestroyImmediate(_framesThumbnails[index]);
+                GameObject.DestroyImmediate(FramesThumbnails[index]);
                 VoxelEditorFrame voxelEditorFrame = _frameList[index];
-                _framesThumbnails[index] = ThumbnailsTaker.GetThumbnail(voxelEditorFrame.FrameObject.gameObject);
-                OnFramesThumbnailsUpdated?.Invoke(index, _framesThumbnails[index]);
+                FramesThumbnails[index] = ThumbnailsTaker.GetThumbnail(voxelEditorFrame.FrameObject.gameObject);
+                OnFramesThumbnailsUpdated?.Invoke(index, FramesThumbnails[index]);
             }
         }
 
         public Texture2D GetFrameThumbnail(int index)
         {
-            if (index < 0 || index >= _framesThumbnails.Count)
+            if (index < 0 || index >= FramesThumbnails.Count)
                 return null;
-            return _framesThumbnails[index];
+            return FramesThumbnails[index];
         }
         #endregion
         private void UpdateColors()

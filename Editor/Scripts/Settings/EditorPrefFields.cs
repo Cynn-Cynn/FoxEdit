@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -62,6 +64,38 @@ namespace FoxEdit.EditorUtils
         }
     }
 
+    internal class EditorPrefVector3 : EditorPrefField<Vector3>
+    {
+        public EditorPrefVector3(string key, Vector3 defaultValue) : base(key, defaultValue)
+        {
+        }
+
+        public override Vector3 GetEditorPrefValue()
+        {
+            string vectorStr = EditorPrefs.GetString(_key, null);
+            if (vectorStr == null)
+                return _defaultValue;
+            string[] splitted = vectorStr.Split(',');
+
+            if (splitted.Length != 3)
+                return _defaultValue;
+            float[] floats = new float[3];
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (!float.TryParse(splitted[i], out floats[i]))
+                    return _defaultValue;
+            }
+
+            return new Vector3(floats[0], floats[1], floats[2]);
+        }
+
+        public override void SetEditorPrefValue(Vector3 value)
+        {
+            EditorPrefs.SetString(_key, string.Format("{0},{1},{2}", value.x, value.y, value.z));
+        }
+    }
+
     internal class EditorPrefBool : EditorPrefField<bool>
     {
         public EditorPrefBool(string key, bool defaultValue) : base(key, defaultValue)
@@ -107,6 +141,23 @@ namespace FoxEdit.EditorUtils
             if (_max.HasValue)
                 value = Mathf.Min(_max.Value, value);
             return value;
+        }
+    }
+
+    internal class EditorPrefString : EditorPrefField<string>
+    {
+        public EditorPrefString(string key, string defaultValue) : base(key, defaultValue)
+        {
+        }
+
+        public override string GetEditorPrefValue()
+        {
+            return EditorPrefs.GetString(_key, _defaultValue);
+        }
+
+        public override void SetEditorPrefValue(string value)
+        {
+            EditorPrefs.SetString(_key, value);
         }
     }
 }

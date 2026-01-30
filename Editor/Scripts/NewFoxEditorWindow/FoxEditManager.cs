@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using FoxEdit.EditorUtils;
 using FoxEdit.VoxelTools;
 using UnityEditor;
@@ -59,10 +60,17 @@ namespace FoxEdit
 
         public static void StopEditVoxelObject()
         {
-            if (_voxelStage != null)
-                StageUtility.GoToMainStage();
+            if (VoxelEditor == null)
+                return;
+            if (VoxelEditor.IsDirty)
+            {
+                if (!DisplaySaveDialog())
+                    return;
+            }
             _voxelObject = null;
             _voxelRenderer = null;
+            if (_voxelStage != null)
+                StageUtility.GoToMainStage();
             _voxelStage = null;
             if (VoxelEditor != null)
                 VoxelEditor.Dispose();
@@ -74,9 +82,75 @@ namespace FoxEdit
             OnStopEditVoxelObject?.Invoke();
         }
 
-        public static void Save(string path)
+        public static bool DisplaySaveDialog()
         {
+            int dialogue = EditorUtility.DisplayDialogComplex(
+                "Hold on, little voxel!",
+                "You have unsaved changes. Do you want to save your creation before leaving?",
+                "Save",
+                "Save as...",
+                "Cancel");
 
+            switch (dialogue)
+            {
+                case 0:
+                    return Save();
+                case 1:
+                    return SaveAs();
+            }
+
+            return false;
+        }
+
+        private static bool Save(string savePath)
+        {
+            Debug.LogFormat("Save at {0}", savePath);
+            return true;
+        }
+
+        private static bool Save()
+        {
+            string assetPath = AssetDatabase.GetAssetPath(_voxelObject);
+
+            if (string.IsNullOrEmpty(assetPath))
+                return SaveAs();
+            Save(ProjectRelativeToAbsolute(assetPath));
+            return true;
+        }
+
+        private static bool SaveAs()
+        {
+            string defaultPath = FoxEditEditorSettings.Instance.DefaultSavePath.Value;
+            if (!Directory.Exists(defaultPath))
+                Directory.CreateDirectory(defaultPath);
+
+            string path = EditorUtility.SaveFilePanelInProject(
+                string.Format("Save {0} voxel object", _voxelObject.name),
+                _voxelObject.name,
+                "asset",
+                string.Format("Save {0} voxel object", _voxelObject.name),
+                defaultPath);
+
+            if (path == null)
+                return false;
+            return Save(path);
+        }
+
+        private static string ProjectRelativeToAbsolute(string projectPath)
+        {
+            if (string.IsNullOrEmpty(projectPath))
+                return null;
+
+            if (!projectPath.StartsWith("Assets/") && !projectPath.StartsWith("Assets\\"))
+            {
+                Debug.LogError("Path must be relative to project: " + projectPath);
+                return null;
+            }
+
+            string relativeToAssets = projectPath.Substring("Assets".Length); // remove "Assets"
+            string absolutePath = Path.Combine(Application.dataPath, relativeToAssets);
+
+            return Path.Join(Application.dataPath, absolutePath);
         }
 
         private static void FocusGameObject(GameObject voxelGO)

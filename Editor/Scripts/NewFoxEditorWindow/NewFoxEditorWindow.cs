@@ -72,7 +72,6 @@ internal class NewFoxEditorWindow : EditorWindow
 
     private void OnSelectVoxelObject(VoxelObject voxelObject)
     {
-        Debug.Log("Start edit");
         FoxEditManager.StartEditVoxelObject(voxelObject);
     }
 

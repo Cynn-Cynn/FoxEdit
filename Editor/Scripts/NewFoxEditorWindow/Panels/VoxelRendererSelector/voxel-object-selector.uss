@@ -20,7 +20,6 @@
     flex-grow: 0;
     height: 90%;
     width: 90%;
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/foxidle1.png?fileID=2800000&guid=820b241376ceae246875a222e45355f4&type=3#foxidle1");
     -unity-background-scale-mode: scale-to-fit;
     margin-bottom: 14px;
 }
