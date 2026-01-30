@@ -293,7 +293,7 @@ namespace FoxEdit
         #endregion
 
         #region Frames
-        private void NewFrame()
+        public void NewFrame()
         {
             VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, PaletteIndex, 0);
@@ -310,7 +310,7 @@ namespace FoxEdit
             UpdateColors();
         }
 
-        private void DeleteFrame()
+        public void DeleteFrame()
         {
             _frameList[_selectedFrame].Destroy();
             _frameList.RemoveAt(_selectedFrame);
@@ -321,7 +321,7 @@ namespace FoxEdit
             IsDirty = true;
         }
 
-        private void DuplicateFrame()
+        public void DuplicateFrame()
         {
             VoxelEditorFrame newFrame = _frameList[_selectedFrame].GetCopy(_frameList.Count, PaletteIndex);
             _frameList.Add(newFrame);

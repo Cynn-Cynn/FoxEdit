@@ -3,6 +3,7 @@ using FoxEdit.WindowComponents;
 using UnityEngine.UIElements;
 using UnityEngine;
 using System;
+using FoxEdit.VoxelTools;
 
 namespace FoxEdit.WindowPanels
 {
@@ -84,9 +85,12 @@ namespace FoxEdit.WindowPanels
             frameSelector.OnMoveFrame += OnMoveFrame;
 
             VoxelEditor.OnChangeColor += OnChangeColor;
+            VoxelEditor.OnChangeAction += OnChangeAction;
+            VoxelEditor.OnChangeTool += OnChangeTool;
             FoxEditManager.OnStartEditVoxelObject += OnStartEditVoxelObject;
             FoxEditManager.OnStopEditVoxelObject += OnStopEditVoxelObject;
         }
+
 
         private void UnregisterCallbacks()
         {
@@ -99,9 +103,22 @@ namespace FoxEdit.WindowPanels
             frameSelector.OnMoveFrame -= OnMoveFrame;
 
             VoxelEditor.OnChangeColor -= OnChangeColor;
+            VoxelEditor.OnChangeColor -= OnChangeColor;
+            VoxelEditor.OnChangeAction -= OnChangeAction;
             FoxEditManager.OnStartEditVoxelObject -= OnStartEditVoxelObject;
             FoxEditManager.OnStopEditVoxelObject -= OnStopEditVoxelObject;
         }
+
+        private void OnChangeTool(vxTool tool)
+        {
+            toolToolbar.SelectTool((int)tool, false);
+        }
+
+        private void OnChangeAction(vxAction action)
+        {
+            actionToolbar.SelectTool((int)action, false);
+        }
+
         private void OnMoveFrame(int oldIndex, int newIndex)
         {
             voxelEditor.MoveFrame(oldIndex, newIndex);
