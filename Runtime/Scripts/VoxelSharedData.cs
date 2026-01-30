@@ -41,7 +41,7 @@ namespace FoxEdit
         private static int[] _faceTriangles =
         {
             0, 1, 2,
-            0, 2, 3
+            1, 3, 2
         };
 
         private static Matrix4x4[] _rotationMatrices = null;

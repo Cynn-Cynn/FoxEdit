@@ -19,67 +19,39 @@ namespace FoxEdit
         [SerializeField] private float _frameDuration = 0.2f;
 
         //Setup
-        [SerializeField] private ComputeShader _computeShader = null;
-        [SerializeField] internal MeshRenderer _meshRenderer = null;
-        [SerializeField] internal MeshFilter _meshFilter = null;
-
+        [SerializeField] private bool _isSetup = false;
+        [SerializeField] private MeshFilter _meshFilter = null;
+        [SerializeField] private MeshRenderer _meshRenderer = null;
+        //[SerializeField] private ComputeShader _computeShader = null;
         [SerializeField] private Material _material = null;
         [SerializeField] private Material _staticMaterial = null;
 
         public VoxelObject VoxelObject { get { return _voxelObject; } set { SetVoxelObject(value); } }
 
-        private GraphicsBuffer _voxelPositionBuffer = null;
-        private GraphicsBuffer _faceIndicesBuffer = null;
-        private GraphicsBuffer _transformMatrixBuffer = null;
-        private GraphicsBuffer _voxelIndicesBuffer = null;
-        private GraphicsBuffer _colorIndicesBuffer = null;
+        //private GraphicsBuffer _voxelPositionBuffer = null;
+        //private GraphicsBuffer _faceIndicesBuffer = null;
+        //private GraphicsBuffer _transformMatrixBuffer = null;
+        //private GraphicsBuffer _voxelIndicesBuffer = null;
+        //private GraphicsBuffer _colorIndicesBuffer = null;
+
+        private GraphicsBuffer _verticesBuffer = null;
 
         private Bounds _bounds;
         private Bounds _baseBounds;
 
-        private int _kernel = 0;
-        private uint _threadGroupSize = 0;
+        //private int _kernel = 0;
+        //private uint _threadGroupSize = 0;
 
         private float _timer = 0.0f;
+        private int _animationIndex = 0;
         private int _frameIndex = 0;
-
-        public bool IsSetup {get; private set;} = false;
 
         RenderParams _renderParams;
 
-        public void Setup()
-        {
-            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
-
-            if (_material == null)
-                _material = Instantiate(foxEditSettings.Materials.animatedMaterial);
-            if (_staticMaterial == null)
-                _staticMaterial = Instantiate(foxEditSettings.Materials.staticMaterial);
-            if (_computeShader == null)
-                _computeShader = Instantiate(foxEditSettings.computeShader);
-
-            if (_meshFilter == null)
-                _meshFilter = GetComponent<MeshFilter>();
-            if (_meshRenderer == null)
-            {
-                _meshRenderer = GetComponent<MeshRenderer>();
-                _meshRenderer.material = _staticMaterial;
-                _meshRenderer.enabled = _staticRender;
-            }
-            if (VoxelObject != null)
-                SetRenderParams();
-            IsSetup = true;
-        }
-
         private void Awake()
         {
-            if (!IsSetup)
-                Setup();
-        }
-
-        void OnValidate()
-        {
-            Setup();
+            _isSetup = !_isSetup;
+            _isSetup = !_isSetup;
         }
 
         void Start()
@@ -89,15 +61,15 @@ namespace FoxEdit
             SetBuffers();
         }
 
-
         #region UserEditable
 
-        public void SetVoxelObject(VoxelObject voxelObject)
+        private void SetVoxelObject(VoxelObject voxelObject)
         {
             if (voxelObject == _voxelObject)
                 return;
 
             _voxelObject = voxelObject;
+            _animationIndex = 0;
             _frameIndex = 0;
 
             if (_voxelObject.StaticMesh != null)
@@ -157,7 +129,8 @@ namespace FoxEdit
         internal void RefreshColors()
         {
             SetPalette(_voxelObject.PaletteIndex);
-            RunComputeShader();
+            SetRenderParams();
+            //RunComputeShader();
         }
 
         private void SetBuffers()
@@ -165,76 +138,85 @@ namespace FoxEdit
             if (_voxelObject == null)
                 return;
 
-            _kernel = _computeShader.FindKernel("VoxelGeneration");
+            //_kernel = _computeShader.FindKernel("VoxelGeneration");
 
             SetVoxelBuffers();
-            SetColorBuffer();
-            SetMatrixBuffer();
+            //SetColorBuffer();
+            //SetMatrixBuffer();
             SetRenderParams();
 
             _bounds = _voxelObject.Bounds;
             _baseBounds = _voxelObject.Bounds;
             _bounds.center += transform.position;
 
-            RunComputeShader();
+            //RunComputeShader();
         }
 
         private void SetVoxelBuffers()
         {
-            if (_voxelPositionBuffer != null && _voxelPositionBuffer.count != _voxelObject.VoxelPositions.Length)
+            if (_verticesBuffer != null && _verticesBuffer.count != _voxelObject.Vertices.Length)
             {
-                _voxelPositionBuffer.Dispose();
-                _voxelPositionBuffer = null;
+                _verticesBuffer.Dispose();
+                _verticesBuffer = null;
             }
-            if (_voxelPositionBuffer == null)
-                _voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelPositions.Length, sizeof(float) * 3);
-            _voxelPositionBuffer.SetData(_voxelObject.VoxelPositions);
-            _computeShader.SetBuffer(_kernel, "_VoxelPositions", _voxelPositionBuffer);
+            if (_verticesBuffer == null)
+                _verticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Vertices.Length, sizeof(float) * 4);
+            _verticesBuffer.SetData(_voxelObject.Vertices);
 
-            if (_faceIndicesBuffer != null && _faceIndicesBuffer.count != _voxelObject.FaceIndices.Length)
-            {
-                _faceIndicesBuffer.Dispose();
-                _faceIndicesBuffer = null;
-            }
-            if (_faceIndicesBuffer == null)
-                _faceIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.FaceIndices.Length, sizeof(int));
-            _faceIndicesBuffer.SetData(_voxelObject.FaceIndices);
-            _computeShader.SetBuffer(_kernel, "_FaceIndices", _faceIndicesBuffer);
+            //if (_voxelPositionBuffer != null && _voxelPositionBuffer.count != _voxelObject.VoxelPositions.Length)
+            //{
+            //    _voxelPositionBuffer.Dispose();
+            //    _voxelPositionBuffer = null;
+            //}
+            //if (_voxelPositionBuffer == null)
+            //    _voxelPositionBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelPositions.Length, sizeof(float) * 3);
+            //_voxelPositionBuffer.SetData(_voxelObject.VoxelPositions);
+            //_computeShader.SetBuffer(_kernel, "_VoxelPositions", _voxelPositionBuffer);
 
-            if (_voxelIndicesBuffer != null && _voxelIndicesBuffer.count != _voxelObject.VoxelIndices.Length)
-            {
-                _voxelIndicesBuffer.Dispose();
-                _voxelIndicesBuffer = null;
-            }
-            if (_voxelIndicesBuffer == null)
-                _voxelIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelIndices.Length, sizeof(int));
-            _voxelIndicesBuffer.SetData(_voxelObject.VoxelIndices);
-            _computeShader.SetBuffer(_kernel, "_VoxelIndices", _voxelIndicesBuffer);
+            //if (_faceIndicesBuffer != null && _faceIndicesBuffer.count != _voxelObject.FaceIndices.Length)
+            //{
+            //    _faceIndicesBuffer.Dispose();
+            //    _faceIndicesBuffer = null;
+            //}
+            //if (_faceIndicesBuffer == null)
+            //    _faceIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.FaceIndices.Length, sizeof(int));
+            //_faceIndicesBuffer.SetData(_voxelObject.FaceIndices);
+            //_computeShader.SetBuffer(_kernel, "_FaceIndices", _faceIndicesBuffer);
+
+            //if (_voxelIndicesBuffer != null && _voxelIndicesBuffer.count != _voxelObject.VoxelIndices.Length)
+            //{
+            //    _voxelIndicesBuffer.Dispose();
+            //    _voxelIndicesBuffer = null;
+            //}
+            //if (_voxelIndicesBuffer == null)
+            //    _voxelIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.VoxelIndices.Length, sizeof(int));
+            //_voxelIndicesBuffer.SetData(_voxelObject.VoxelIndices);
+            //_computeShader.SetBuffer(_kernel, "_VoxelIndices", _voxelIndicesBuffer);
         }
 
-        private void SetMatrixBuffer()
-        {
-            if (_transformMatrixBuffer != null && _transformMatrixBuffer.count != _voxelObject.MaxInstanceCount)
-            {
-                _transformMatrixBuffer.Dispose();
-                _transformMatrixBuffer = null;
-            }
-            if (_transformMatrixBuffer == null)
-                _transformMatrixBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxInstanceCount, sizeof(float) * 16);
-            _computeShader.SetBuffer(_kernel, "_TransformMatrices", _transformMatrixBuffer);
-        }
+        //private void SetMatrixBuffer()
+        //{
+        //    if (_transformMatrixBuffer != null && _transformMatrixBuffer.count != _voxelObject.MaxInstanceCount)
+        //    {
+        //        _transformMatrixBuffer.Dispose();
+        //        _transformMatrixBuffer = null;
+        //    }
+        //    if (_transformMatrixBuffer == null)
+        //        _transformMatrixBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxInstanceCount, sizeof(float) * 16);
+        //    _computeShader.SetBuffer(_kernel, "_TransformMatrices", _transformMatrixBuffer);
+        //}
 
-        private void SetColorBuffer()
-        {
-            if (_colorIndicesBuffer != null && _colorIndicesBuffer.count != _voxelObject.ColorIndices.Length)
-            {
-                _colorIndicesBuffer.Dispose();
-                _colorIndicesBuffer = null;
-            }
-            if (_colorIndicesBuffer == null)
-                _colorIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.ColorIndices.Length, sizeof(int));
-            _colorIndicesBuffer.SetData(_voxelObject.ColorIndices);
-        }
+        //private void SetColorBuffer()
+        //{
+        //    if (_colorIndicesBuffer != null && _colorIndicesBuffer.count != _voxelObject.ColorIndices.Length)
+        //    {
+        //        _colorIndicesBuffer.Dispose();
+        //        _colorIndicesBuffer = null;
+        //    }
+        //    if (_colorIndicesBuffer == null)
+        //        _colorIndicesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.ColorIndices.Length, sizeof(int));
+        //    _colorIndicesBuffer.SetData(_voxelObject.ColorIndices);
+        //}
 
         internal void SetRenderParams()
         {
@@ -242,13 +224,18 @@ namespace FoxEdit
             _renderParams.worldBounds = _bounds;
             _renderParams.matProps = new MaterialPropertyBlock();
 
-            _renderParams.matProps.SetBuffer("_TransformMatrices", _transformMatrixBuffer);
-            _renderParams.matProps.SetBuffer("_ColorIndices", _colorIndicesBuffer);
-            _renderParams.matProps.SetBuffer("_VoxelIndices", _voxelIndicesBuffer);
+            //_renderParams.matProps.SetBuffer("_TransformMatrices", _transformMatrixBuffer);
+            //_renderParams.matProps.SetBuffer("_ColorIndices", _colorIndicesBuffer);
+            //_renderParams.matProps.SetBuffer("_VoxelIndices", _voxelIndicesBuffer);
+
+            int linearFrameIndex = _voxelObject.AnimationIndices[_animationIndex].StartIndex + _frameIndex;
+            _renderParams.matProps.SetBuffer("_Vertices", _verticesBuffer);
+            _renderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer); ;
+            _renderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.InstanceStartIndices[linearFrameIndex]);
+            _renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0.0f, 180.0f, 0.0f)));
             _renderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
 
-            _renderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer); ;
-            _computeShader.SetBuffer(_kernel, "_RotationMatrices", VoxelSharedData.RotationMatricesBuffer);
+            //_computeShader.SetBuffer(_kernel, "_RotationMatrices", VoxelSharedData.RotationMatricesBuffer);
 
 
             SetPalette(_voxelObject.PaletteIndex);
@@ -256,18 +243,21 @@ namespace FoxEdit
 
         private void DisposeBuffers()
         {
-            _voxelPositionBuffer?.Dispose();
-            _voxelPositionBuffer = null;
-            _voxelIndicesBuffer?.Dispose();
-            _voxelIndicesBuffer = null;
-            _faceIndicesBuffer?.Dispose();
-            _faceIndicesBuffer = null;
+            _verticesBuffer?.Dispose();
+            _verticesBuffer = null;
 
-            _transformMatrixBuffer?.Dispose();
-            _transformMatrixBuffer = null;
+            //_voxelPositionBuffer?.Dispose();
+            //_voxelPositionBuffer = null;
+            //_voxelIndicesBuffer?.Dispose();
+            //_voxelIndicesBuffer = null;
+            //_faceIndicesBuffer?.Dispose();
+            //_faceIndicesBuffer = null;
 
-            _colorIndicesBuffer?.Dispose();
-            _colorIndicesBuffer = null;
+            //_transformMatrixBuffer?.Dispose();
+            //_transformMatrixBuffer = null;
+
+            //_colorIndicesBuffer?.Dispose();
+            //_colorIndicesBuffer = null;
         }
 
         #endregion Buffers
@@ -285,8 +275,6 @@ namespace FoxEdit
 
         private void StaticRender()
         {
-            if (_staticMaterial == null)
-                return;
             _staticMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(_voxelObject.PaletteIndex));
         }
 
@@ -295,9 +283,10 @@ namespace FoxEdit
             _timer += Time.deltaTime;
             if (_timer >= _frameDuration)
             {
-                _frameIndex = (_frameIndex + 1) % _voxelObject.FrameCount;
+                _frameIndex = (_frameIndex + 1) % _voxelObject.AnimationIndices[_animationIndex].FrameCount;
                 _timer -= _frameDuration;
-                RunComputeShader();
+                //RunComputeShader();
+                SetRenderParams();
             }
 
             if (transform.hasChanged)
@@ -306,29 +295,29 @@ namespace FoxEdit
                 _bounds = _baseBounds;
                 _bounds.center += transform.position;
                 _renderParams.worldBounds = _bounds;
-                RunComputeShader();
+                //RunComputeShader();
+                SetRenderParams();
             }
 
-            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, VoxelSharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[_frameIndex]);
+            int linearFrameIndex = _voxelObject.AnimationIndices[_animationIndex].StartIndex + _frameIndex;
+            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, VoxelSharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[linearFrameIndex]);
         }
 
-        private void RunComputeShader()
-        {
-            if (_renderParams.matProps == null)
-                SetRenderParams();
-            int instanceStartIndex = _voxelObject.InstanceStartIndices[_frameIndex];
-            int instanceCount = _voxelObject.InstanceCount[_frameIndex];
-            _computeShader.SetInt("_InstanceStartIndex", instanceStartIndex);
-            _computeShader.SetInt("_InstanceCount", instanceCount);
-            _computeShader.SetInt("_FrameIndex", _frameIndex);
-            _computeShader.SetMatrix("_VoxelToWorldMatrix", transform.localToWorldMatrix);
+        //private void RunComputeShader()
+        //{
+        //    int instanceStartIndex = _voxelObject.InstanceStartIndices[_frameIndex];
+        //    int instanceCount = _voxelObject.InstanceCount[_frameIndex];
+        //    _computeShader.SetInt("_InstanceStartIndex", instanceStartIndex);
+        //    _computeShader.SetInt("_InstanceCount", instanceCount);
+        //    _computeShader.SetInt("_FrameIndex", _frameIndex);
+        //    _computeShader.SetMatrix("_VoxelToWorldMatrix", transform.localToWorldMatrix);
 
-            _computeShader.GetKernelThreadGroupSizes(_kernel, out _threadGroupSize, out _, out _);
-            int threadGroups = Mathf.CeilToInt((float)instanceCount / _threadGroupSize);
-            _computeShader.Dispatch(_kernel, threadGroups, 1, 1);
+        //    _computeShader.GetKernelThreadGroupSizes(_kernel, out _threadGroupSize, out _, out _);
+        //    int threadGroups = Mathf.CeilToInt((float)instanceCount / _threadGroupSize);
+        //    _computeShader.Dispatch(_kernel, threadGroups, 1, 1);
 
-            _renderParams.matProps.SetInteger("_InstanceStartIndex", instanceStartIndex);
-            _renderParams.matProps.SetVector("_Scale", transform.localScale);
-        }
+        //    _renderParams.matProps.SetInteger("_InstanceStartIndex", instanceStartIndex);
+        //    _renderParams.matProps.SetVector("_Scale", transform.localScale);
+        //}
     }
 }

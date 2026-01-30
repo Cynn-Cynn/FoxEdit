@@ -56,7 +56,8 @@ Shader "Voxel/VoxelShader"
             struct v2f
             {
                 float4 positionCS : SV_POSITION;
-                uint voxelID : TEXCOORD0;
+                //uint voxelID : TEXCOORD0;
+                uint faceID : TEXCOORD0;
                 float3 positionWS : TEXCOORD1;
                 float3 normalWS : TEXCOORD2;
                 float4 tangentWS : TEXCOORD3;
@@ -64,6 +65,7 @@ Shader "Voxel/VoxelShader"
                 float4 shadowCoord : TEXCOORD5;
                 DECLARE_LIGHTMAP_OR_SH(staticLightmapUV, vertexSH, 6);
                 float2 dynamicLightmapUV : TEXCOORD7;
+                int colorIndex : TEXCOORD8;
             };
 
             struct ColorData
@@ -76,67 +78,104 @@ Shader "Voxel/VoxelShader"
 
             UNITY_INSTANCING_BUFFER_START(Props)
                 uint _InstanceStartIndex;
-                float3 _Scale;
+                //float3 _Scale;
+                float4x4 _ObjectToWorld;
             UNITY_INSTANCING_BUFFER_END(Props)
 
-            StructuredBuffer<float3> _VertexPositions;
-            StructuredBuffer<float4x4> _TransformMatrices;
+            StructuredBuffer<float4> _Vertices;
             StructuredBuffer<ColorData> _Colors;
-            StructuredBuffer<int> _ColorIndices;
-            StructuredBuffer<int> _VoxelIndices;
 
-            float4x4 GetNormalObjectToWorldMatrix(float4x4 objectToWorldMatrix)
-            {
-                float4x4 normalObjectToWorld = objectToWorldMatrix;
+            //StructuredBuffer<float3> _VertexPositions;
+            // StructuredBuffer<float4x4> _TransformMatrices;
+            // StructuredBuffer<int> _ColorIndices;
+            // StructuredBuffer<int> _VoxelIndices;
 
-                normalObjectToWorld[0][3] = 0;
-                normalObjectToWorld[1][3] = 0;
-                normalObjectToWorld[2][3] = 0;
+            // float4x4 GetNormalObjectToWorldMatrix(float4x4 objectToWorldMatrix)
+            // {
+            //     float4x4 normalObjectToWorld = objectToWorldMatrix;
 
-                normalObjectToWorld[0][0] /= _Scale.x;
-                normalObjectToWorld[1][0] /= _Scale.x;
-                normalObjectToWorld[2][0] /= _Scale.x;
+            //     normalObjectToWorld[0][3] = 0;
+            //     normalObjectToWorld[1][3] = 0;
+            //     normalObjectToWorld[2][3] = 0;
 
-                normalObjectToWorld[0][1] /= _Scale.y;
-                normalObjectToWorld[1][1] /= _Scale.y;
-                normalObjectToWorld[2][1] /= _Scale.y;
+            //     normalObjectToWorld[0][0] /= _Scale.x;
+            //     normalObjectToWorld[1][0] /= _Scale.x;
+            //     normalObjectToWorld[2][0] /= _Scale.x;
 
-                normalObjectToWorld[0][2] /= _Scale.z;
-                normalObjectToWorld[1][2] /= _Scale.z;
-                normalObjectToWorld[2][2] /= _Scale.z;
+            //     normalObjectToWorld[0][1] /= _Scale.y;
+            //     normalObjectToWorld[1][1] /= _Scale.y;
+            //     normalObjectToWorld[2][1] /= _Scale.y;
 
-                return normalObjectToWorld;
-            }
+            //     normalObjectToWorld[0][2] /= _Scale.z;
+            //     normalObjectToWorld[1][2] /= _Scale.z;
+            //     normalObjectToWorld[2][2] /= _Scale.z;
+
+            //     return normalObjectToWorld;
+            // }
 
             v2f vert(appdata v, uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
             {
                 UNITY_SETUP_INSTANCE_ID(v);
-
-                uint voxelID = _InstanceStartIndex + instanceID;
-                float4x4 objectToVoxelMatrix = _TransformMatrices[instanceID];
-                float4x4 normalObjectToVoxelMatrix = GetNormalObjectToWorldMatrix(objectToVoxelMatrix);
-
-                float4 positionOS = float4(_VertexPositions[vertexID], 1.0);
-                float4 normalOS = float4(0.0, 1.0, 0.0, 1.0);
-                float4 tangeantOS = float4(-1.0, 0.0, 0.0, 1.0);
-
-                float4 positionWS = mul(objectToVoxelMatrix, positionOS);
-                float3 normalWS =  mul(normalObjectToVoxelMatrix, normalOS).xyz;
-                float4 tangentWS = float4(mul(normalObjectToVoxelMatrix, tangeantOS).xyz, -1.0);
-
                 v2f o;
 
-                o.positionWS = positionWS.xyz;
-                o.positionCS = TransformWorldToHClip(positionWS.xyz);
+                uint faceID = _InstanceStartIndex + instanceID;
+                // uint voxelID = _InstanceStartIndex + instanceID;
+                // float4x4 objectToVoxelMatrix = _TransformMatrices[instanceID];
+                // float4x4 normalObjectToVoxelMatrix = GetNormalObjectToWorldMatrix(objectToVoxelMatrix);
 
-                o.normalWS = normalWS;
+                uint localVertexID = vertexID % 4;
+                uint nextVertexID = 0;
+                uint nextNextVertexID = 0;
 
-                float sign = tangentWS.w;
-                o.tangentWS = float4(tangentWS.xyz, sign);
+                if (localVertexID == 0)
+                {
+                    nextVertexID = 1;
+                    nextNextVertexID = 3;
+                }
+                else if (localVertexID == 1)
+                {
+                    nextVertexID = 2;
+                    nextNextVertexID = 0;
+                }
+                else if (localVertexID == 2)
+                {
+                    nextVertexID = 1;
+                    nextNextVertexID = 3;
+                }
+                else
+                {
+                    nextVertexID = 2;
+                    nextNextVertexID = 0;
+                }
 
-                o.viewDirWS = GetWorldSpaceNormalizeViewDir(positionWS.xyz);
+                float4 positionOS = float4(_Vertices[faceID * 4 + localVertexID].xyz, 1.0f);
+                float4 nextPositionOS = float4(_Vertices[faceID * 4 + nextVertexID].xyz, 1.0f);
+                float4 nextNextPositionOS = float4(_Vertices[faceID * 4 + nextNextVertexID].xyz, 1.0f);
 
-                o.shadowCoord = TransformWorldToShadowCoord(positionWS.xyz);
+
+                float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), 1.0f);
+                float3 bitangeantOS = normalize(nextNextPositionOS.xyz - positionOS.xyz);
+
+                float3 normalOS = cross(tangeantOS.xyz, bitangeantOS);
+
+                o.positionWS = mul(_ObjectToWorld, positionOS);
+
+                // float4 positionWS = mul(objectToVoxelMatrix, positionOS);
+                // float3 normalWS =  mul(normalObjectToVoxelMatrix, normalOS).xyz;
+                // float4 tangentWS = float4(mul(normalObjectToVoxelMatrix, tangeantOS).xyz, -1.0);
+
+
+                //o.positionWS = positionWS.xyz;
+                o.positionCS = TransformWorldToHClip(o.positionWS.xyz);
+
+                o.normalWS = mul(_ObjectToWorld, normalOS).xyz;
+
+                float sign = tangeantOS.w;
+                o.tangentWS = mul(_ObjectToWorld, tangeantOS);
+
+                o.viewDirWS = GetWorldSpaceNormalizeViewDir(o.positionWS.xyz);
+
+                o.shadowCoord = TransformWorldToShadowCoord(o.positionWS.xyz);
 
                 OUTPUT_LIGHTMAP_UV(v.staticLightmapUV, unity_LightmapST, o.staticLightmapUV);
 // #ifdef DYNAMICLIGHTMAP_ON
@@ -144,7 +183,8 @@ Shader "Voxel/VoxelShader"
 // #endif
                 OUTPUT_SH(o.normalWS.xyz, o.vertexSH);
 
-                o.voxelID = voxelID;
+                o.faceID = faceID;
+                o.colorIndex = _Vertices[faceID * 4 + localVertexID].w;
 
                 return o;
             }
@@ -182,8 +222,10 @@ Shader "Voxel/VoxelShader"
 
                 inputData.positionWS = i.positionWS;
 
-                float3 bitangent = i.tangentWS.w * cross(i.normalWS, i.tangentWS.xyz);
-                inputData.tangentToWorld = float3x3(i.tangentWS.xyz, bitangent, i.normalWS);
+                float3 normal = normalize(i.normalWS);
+
+                float3 bitangent = i.tangentWS.w * cross(normal, i.tangentWS.xyz);
+                inputData.tangentToWorld = float3x3(i.tangentWS.xyz, bitangent, normal);
                 inputData.normalWS = TransformTangentToWorld(normalTS, inputData.tangentToWorld);
 
                 inputData.viewDirectionWS = SafeNormalize(i.viewDirWS);
@@ -203,9 +245,9 @@ Shader "Voxel/VoxelShader"
 
             float4 frag(v2f i) : SV_TARGET
             {
-                int voxelIndex = _VoxelIndices[i.voxelID];
-                int colorIndex = _ColorIndices[voxelIndex];
-                ColorData color = _Colors[colorIndex];
+                // int voxelIndex = _VoxelIndices[i.voxelID];
+                // int colorIndex = _ColorIndices[voxelIndex];
+                ColorData color = _Colors[i.colorIndex];
 
                 SurfaceData surfaceData = createSurfaceData(i, color);
                 InputData inputData = createInputData(i, surfaceData.normalTS);
@@ -236,10 +278,13 @@ Shader "Voxel/VoxelShader"
                     float4 positionCS : SV_Position;
                 };
 
-                StructuredBuffer<float3> _VertexPositions;
-                StructuredBuffer<float4x4> _TransformMatrices;
+                // StructuredBuffer<float3> _VertexPositions;
+                // StructuredBuffer<float4x4> _TransformMatrices;
+                StructuredBuffer<float4> _Vertices;
 
-                float3 _Scale;
+                uint _InstanceStartIndex;
+                float4x4 _ObjectToWorld;
+                //float3 _Scale;
 
                 float4 GetShadowPositionHClip(float3 positionWS, float3 normalWS)
                 {
@@ -255,40 +300,76 @@ Shader "Voxel/VoxelShader"
                     return positionCS;
                 }
 
-                float4x4 GetNormalObjectToWorldMatrix(float4x4 objectToWorldMatrix)
-                {
-                    float4x4 normalObjectToWorld = objectToWorldMatrix;
+                // float4x4 GetNormalObjectToWorldMatrix(float4x4 objectToWorldMatrix)
+                // {
+                //     float4x4 normalObjectToWorld = objectToWorldMatrix;
 
-                    normalObjectToWorld[0][3] = 0;
-                    normalObjectToWorld[1][3] = 0;
-                    normalObjectToWorld[2][3] = 0;
+                //     normalObjectToWorld[0][3] = 0;
+                //     normalObjectToWorld[1][3] = 0;
+                //     normalObjectToWorld[2][3] = 0;
 
-                    normalObjectToWorld[0][0] /= _Scale.x;
-                    normalObjectToWorld[1][0] /= _Scale.x;
-                    normalObjectToWorld[2][0] /= _Scale.x;
+                //     normalObjectToWorld[0][0] /= _Scale.x;
+                //     normalObjectToWorld[1][0] /= _Scale.x;
+                //     normalObjectToWorld[2][0] /= _Scale.x;
 
-                    normalObjectToWorld[0][1] /= _Scale.y;
-                    normalObjectToWorld[1][1] /= _Scale.y;
-                    normalObjectToWorld[2][1] /= _Scale.y;
+                //     normalObjectToWorld[0][1] /= _Scale.y;
+                //     normalObjectToWorld[1][1] /= _Scale.y;
+                //     normalObjectToWorld[2][1] /= _Scale.y;
 
-                    normalObjectToWorld[0][2] /= _Scale.z;
-                    normalObjectToWorld[1][2] /= _Scale.z;
-                    normalObjectToWorld[2][2] /= _Scale.z;
+                //     normalObjectToWorld[0][2] /= _Scale.z;
+                //     normalObjectToWorld[1][2] /= _Scale.z;
+                //     normalObjectToWorld[2][2] /= _Scale.z;
 
-                    return normalObjectToWorld;
-                }
+                //     return normalObjectToWorld;
+                // }
 
                 v2f vert(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
                 {
-                    float4x4 objectToWorldMatrix = _TransformMatrices[instanceID];
+                    // float4x4 objectToWorldMatrix = _TransformMatrices[instanceID];
+                    // float4 vertexPosition = float4(_VertexPositions[vertexID], 1.0f);
+                    // float3 positionWS = mul(objectToWorldMatrix, vertexPosition).xyz;
+                    // float4x4 normalObjectToWorld = GetNormalObjectToWorldMatrix(objectToWorldMatrix);
+                    // float3 normalWS = mul(normalObjectToWorld, float4(0.0f, 1.0f, 0.0f, 1.0f)).xyz;
 
                     v2f o;
 
-                    float4 vertexPosition = float4(_VertexPositions[vertexID], 1.0f);
-                    float3 positionWS = mul(objectToWorldMatrix, vertexPosition).xyz;
+                    uint faceID = _InstanceStartIndex + instanceID;
+                    uint localVertexID = vertexID % 4;
+                    uint nextVertexID = 0;
+                    uint nextNextVertexID = 0;
 
-                    float4x4 normalObjectToWorld = GetNormalObjectToWorldMatrix(objectToWorldMatrix);
-                    float3 normalWS = mul(normalObjectToWorld, float4(0.0f, 1.0f, 0.0f, 1.0f)).xyz;
+                    if (localVertexID == 0)
+                    {
+                        nextVertexID = 1;
+                        nextNextVertexID = 3;
+                    }
+                    else if (localVertexID == 1)
+                    {
+                        nextVertexID = 2;
+                        nextNextVertexID = 0;
+                    }
+                    else if (localVertexID == 2)
+                    {
+                        nextVertexID = 1;
+                        nextNextVertexID = 3;
+                    }
+                    else
+                    {
+                        nextVertexID = 2;
+                        nextNextVertexID = 0;
+                    }
+
+                    float4 positionOS = float4(_Vertices[faceID * 4 + localVertexID].xyz, 1.0f);
+                    float4 nextPositionOS = float4(_Vertices[faceID * 4 + nextVertexID].xyz, 1.0f);
+                    float4 nextNextPositionOS = float4(_Vertices[faceID * 4 + nextNextVertexID].xyz, 1.0f);
+
+
+                    float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), 1.0f);
+                    float3 bitangeantOS = normalize(nextNextPositionOS.xyz - positionOS.xyz);
+                    float3 normalOS = cross(tangeantOS.xyz, bitangeantOS);
+
+                    float3 positionWS = mul(_ObjectToWorld, positionOS).xyz;
+                    float3 normalWS = mul(_ObjectToWorld, normalOS).xyz;
 
                     o.positionCS = GetShadowPositionHClip(positionWS, normalWS);
 
