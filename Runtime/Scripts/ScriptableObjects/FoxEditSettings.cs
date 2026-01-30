@@ -22,9 +22,6 @@ namespace FoxEdit
         public VoxelPalette[] Palettes { get { return _palettes.ToArray(); } }
         public MaterialsSettings Materials;
         public ComputeShader computeShader;
-        public ComputeShader staticVoxelComputeShader;
-        public MeshRenderer voxelPrefab;
-
 
         public void AddPalette(VoxelPalette palette)
         {
