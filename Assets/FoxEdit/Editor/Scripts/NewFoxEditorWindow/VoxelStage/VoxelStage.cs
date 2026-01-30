@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.SceneManagement;
 
@@ -8,8 +9,9 @@ namespace FoxEdit.EditorUtils
 {
     public class VoxelStage : PreviewSceneStage
     {
+        private FoxEditEditorSettings settings => FoxEditEditorSettings.Instance;
         private VoxelObject voxelObject;
-        public VoxelRenderer VoxelRenderer {get; private set;}
+        public VoxelRenderer VoxelRenderer { get; private set; }
 
 
         public void SetVoxelObject(VoxelObject voxelObject)
@@ -26,11 +28,9 @@ namespace FoxEdit.EditorUtils
         {
             base.OnOpenStage();
 
-            Light light = new GameObject("Light").AddComponent<Light>();
-            light.type = UnityEngine.LightType.Directional;
-            //light.gameObject.hideFlags = HideFlags.NotEditable;
-            light.transform.rotation = Quaternion.Euler(45f, 45f, 0f);
-            light.transform.position = new Vector3(0f, 10f, 0f);
+            Light bottomLight = CreateLight("Bottom Light", new Vector3(-90, 0, 0));
+            Light sideLight = CreateLight("Side light", new Vector3(50, -30, 0));
+            Light otherSideLight = CreateLight("Side light light", new Vector3(50, -120, 0));
 
             GameObject voxelGO = new GameObject(string.Format("{0} (Preview)", voxelObject.name), typeof(MeshFilter), typeof(MeshRenderer));
             VoxelRenderer = voxelGO.AddComponent<VoxelRenderer>();
@@ -40,18 +40,37 @@ namespace FoxEdit.EditorUtils
 
             GameObject backgroundGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             MeshRenderer backgroundMeshRenderer = backgroundGO.GetComponent<MeshRenderer>();
-            Material material = Instantiate(FoxEditEditorSettings.Instance.VoxelStageBackgroundMaterial.Asset);
-            material.color = FoxEditEditorSettings.Instance.BackgroundColor.Value;
+            Material material = Instantiate(settings.VoxelStageBackgroundMaterial.Asset);
+            material.color = settings.StageBackgroundColor.Value;
             backgroundMeshRenderer.material = material;
-            backgroundGO.transform.localScale = Vector3.one * FoxEditEditorSettings.Instance.BackgroundSphereSize.Value;
+            backgroundGO.transform.localScale = Vector3.one * settings.StageBackgroundSphereSize.Value;
+            DestroyImmediate(backgroundGO.GetComponent<Collider>());
+            backgroundGO.hideFlags = HideFlags.NotEditable;
 
 
-
-            SceneManager.MoveGameObjectToScene(light.gameObject, scene);
+            SceneManager.MoveGameObjectToScene(bottomLight.gameObject, scene);
+            SceneManager.MoveGameObjectToScene(sideLight.gameObject, scene);
+            SceneManager.MoveGameObjectToScene(otherSideLight.gameObject, scene);
             SceneManager.MoveGameObjectToScene(voxelGO, scene);
             SceneManager.MoveGameObjectToScene(backgroundGO, scene);
 
             return true;
+        }
+
+        private Light CreateLight(string lightName, Vector3 rotation)
+        {
+            Light light = new GameObject(lightName).AddComponent<Light>();
+            light.type = UnityEngine.LightType.Directional;
+            light.color = settings.StageLightColor.Value;
+            light.intensity = settings.StageLightIntensity.Value;
+            light.bounceIntensity = settings.StageLightIndirectMultiplier.Value;
+            light.transform.position = new Vector3(0f, 3f, 0f);
+            light.color = settings.StageLightColor.Value;
+            light.gameObject.hideFlags = HideFlags.NotEditable;
+            light.shadows = LightShadows.Soft;
+            light.transform.rotation = Quaternion.Euler(rotation);
+
+            return light;
         }
 
         protected override void OnCloseStage()
@@ -59,6 +78,7 @@ namespace FoxEdit.EditorUtils
             FoxEditManager.StopEditVoxelObject();
             base.OnCloseStage();
         }
+
     }
 
     public static class VoxelStageUtility

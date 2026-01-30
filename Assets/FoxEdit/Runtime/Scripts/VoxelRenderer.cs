@@ -285,6 +285,8 @@ namespace FoxEdit
 
         private void StaticRender()
         {
+            if (_staticMaterial == null)
+                return;
             _staticMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(_voxelObject.PaletteIndex));
         }
 

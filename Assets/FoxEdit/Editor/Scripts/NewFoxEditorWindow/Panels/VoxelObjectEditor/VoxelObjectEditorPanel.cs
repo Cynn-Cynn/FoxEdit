@@ -120,9 +120,10 @@ namespace FoxEdit.WindowPanels
 
         private void OnStopEditVoxelObject()
         {
+            if (voxelEditor != null)
+                voxelEditor.OnFramesThumbnailsUpdated -= OnFrameThumnbailUpdated;
             voxelObject = null;
             voxelRenderer = null;
-            voxelEditor.OnFramesThumbnailsUpdated -= OnFrameThumnbailUpdated;
             voxelEditor = null;
         }
 

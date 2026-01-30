@@ -30,8 +30,13 @@ namespace FoxEdit
 
         private void OnStartEditVoxelObject(VoxelObject obj, VoxelRenderer renderer, VoxelEditor voxelEditor)
         {
-            if (ToolManager.activeToolType != typeof(VoxelEditorTool))
-                ToolManager.SetActiveTool<VoxelEditorTool>();
+            Selection.activeGameObject = renderer.gameObject;
+
+            EditorApplication.delayCall += () =>
+            {
+                if (ToolManager.activeToolType != typeof(VoxelEditorTool))
+                    ToolManager.SetActiveTool<VoxelEditorTool>();
+            };
         }
 
         public override void OnActivated()
@@ -71,9 +76,8 @@ namespace FoxEdit
                 e.Use();
             }
 
-            if (!_isMouseOnVoxel)
-                return;
-            DrawChangePreview();
+            if (_isMouseOnVoxel)
+                DrawChangePreview();
             if (_repaint)
             {
                 window.Repaint();
@@ -121,7 +125,7 @@ namespace FoxEdit
                 else if (VoxelEditor.Tool == vxTool.Brush)
                 {
                     if (voxelEditorFrame.TryGetDiffAddVoxelNextTo(out Vector3Int newVoxel, gridPosition, direction))
-                        return new List<Vector3Int>() {newVoxel};
+                        return new List<Vector3Int>() { newVoxel };
                 }
             }
             else if (VoxelEditor.Action == vxAction.Erase)
@@ -174,6 +178,7 @@ namespace FoxEdit
             else
             {
                 _isMouseOnVoxel = false;
+                _repaint = true;
             }
         }
 

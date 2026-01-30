@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEditor;
 using FoxEdit.EditorUtils;
+using System.IO;
+using System;
 
 internal class FoxEditEditorSettings
 {
@@ -21,8 +23,13 @@ internal class FoxEditEditorSettings
     public EditorPrefColor ToolRemoveColor = new EditorPrefColor("foxedit-remove-color", Color.red);
     public EditorPrefColor ToolPaintColor = new EditorPrefColor("foxedit-paint-color", Color.blue);
 
-    public EditorPrefColor BackgroundColor = new EditorPrefColor("foxedit-background-color", Color.gray);
-    public EditorPrefFloat BackgroundSphereSize = new EditorPrefFloat("foxedit-background-size", 100f, 0f, 1000f);
+    public EditorPrefColor StageBackgroundColor = new EditorPrefColor("foxedit-background-color", Color.gray);
+    public EditorPrefFloat StageBackgroundSphereSize = new EditorPrefFloat("foxedit-background-size", 100f, 0f, 1000f);
+    public EditorPrefColor StageLightColor = new EditorPrefColor("foxedit-light-color", new Color(1f, 0.9568627f, 0.8392157f));
+    public EditorPrefFloat StageLightIntensity = new EditorPrefFloat("foxedit-light-intensity", 1f, min: 0f);
+    public EditorPrefFloat StageLightIndirectMultiplier = new EditorPrefFloat("foxedit-light-indirect-multiplier", 1f, min: 0f);
+
+    public EditorPrefString DefaultSavePath = new EditorPrefString("foxedit-save-path", Path.Join(Application.dataPath, "FoxEdit", "Objects"));
 }
 
 internal class FoxEditEditorSettingsProvider : SettingsProvider
@@ -38,7 +45,6 @@ internal class FoxEditEditorSettingsProvider : SettingsProvider
         base.OnGUI(searchContext);
 
         EditorGUILayout.LabelField("References", EditorStyles.boldLabel);
-        EditorGUILayout.Space();
         GUI.enabled = false;
         EditorGUILayout.ObjectField(new GUIContent("Voxel cube material"), settings.VoxelEditorCubeMaterial.Asset, typeof(Material), allowSceneObjects: false);
         EditorGUILayout.ObjectField(new GUIContent("Voxel stage background"), settings.VoxelStageBackgroundMaterial.Asset, typeof(Material), allowSceneObjects: false);
@@ -46,18 +52,47 @@ internal class FoxEditEditorSettingsProvider : SettingsProvider
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Tool colors", EditorStyles.boldLabel);
-        EditorGUILayout.Space();
-
         settings.ToolAddColor.Value = EditorGUILayout.ColorField(new GUIContent("Add"), settings.ToolAddColor.Value);
         settings.ToolPaintColor.Value = EditorGUILayout.ColorField(new GUIContent("Paint"), settings.ToolPaintColor.Value);
         settings.ToolRemoveColor.Value = EditorGUILayout.ColorField(new GUIContent("Remove"), settings.ToolRemoveColor.Value);
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("Stage background", EditorStyles.boldLabel);
-        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Stage", EditorStyles.boldLabel);
+        settings.StageBackgroundColor.Value = EditorGUILayout.ColorField(new GUIContent("Background color"), settings.StageBackgroundColor.Value);
+        settings.StageBackgroundSphereSize.Value = EditorGUILayout.FloatField(new GUIContent("Background sphere size"), settings.StageBackgroundSphereSize.Value);
+        settings.StageLightColor.Value = EditorGUILayout.ColorField(new GUIContent("Light color"), settings.StageLightColor.Value);
+        settings.StageLightIntensity.Value = EditorGUILayout.FloatField(new GUIContent("Light intensity"), settings.StageLightIntensity.Value);
+        settings.StageLightIndirectMultiplier.Value = EditorGUILayout.FloatField(new GUIContent("Light indirect multiplier"), settings.StageLightIndirectMultiplier.Value);
 
-        settings.BackgroundColor.Value = EditorGUILayout.ColorField(new GUIContent("Background color"), settings.BackgroundColor.Value);
-        settings.BackgroundSphereSize.Value = EditorGUILayout.FloatField(new GUIContent("Background sphere size"), settings.BackgroundSphereSize.Value);
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Stage", EditorStyles.boldLabel);
+        GUI.enabled = false;
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.TextField(new GUIContent("Default save path"), settings.DefaultSavePath.Value);
+        GUI.enabled = true;
+        if (GUILayout.Button(EditorGUIUtility.IconContent("FolderOpened On Icon"), GUILayout.Width(25), GUILayout.Height(25)))
+        {
+            string path = EditorUtility.OpenFolderPanel("Default save", Application.dataPath, "VoxelObjects");
+            if (path == null || !IsPathInsideDataPath(path))
+                return;
+            settings.DefaultSavePath.Value = path;
+        }
+        EditorGUILayout.EndHorizontal();
+
+    }
+
+    public static bool IsPathInsideDataPath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        string dataPath = Path.GetFullPath(Application.dataPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        string fullPath = Path.GetFullPath(path)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        return fullPath.StartsWith(dataPath, StringComparison.OrdinalIgnoreCase);
     }
 
     [SettingsProvider]
