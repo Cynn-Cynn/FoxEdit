@@ -78,10 +78,9 @@ namespace FoxEdit
 
         //Flags
         private bool _edit = false;
-        public bool IsDirty {get; private set;}
+        public bool IsDirty {get; private set;} = false;
 
         //Mesh
-        private string _meshName = null;
         private VoxelRenderer _voxelRenderer = null;
         private Material[][] _editorMaterials = null;
 
@@ -108,7 +107,7 @@ namespace FoxEdit
         public VoxelEditor(VoxelRenderer voxelRenderer)
         {
             _voxelRenderer = voxelRenderer;
-            _computeStaticMesh = FoxEditEditorSettings.Instance.StaticVoxelShader.Asset;
+            _computeStaticMesh = FoxEditSettings.GetSettings().staticShader;
             _frameList = new List<VoxelEditorFrame>();
             _voxelPrefab = FoxEditEditorSettings.Instance.VoxelPrefab.Asset;
             VoxelEditor.OnChangePalette += OnPaletteChanged;
@@ -195,7 +194,7 @@ namespace FoxEdit
                 _frameList.Clear();
             }
 
-            _voxelParent = new GameObject($"{_meshName}Editor").transform;
+            _voxelParent = new GameObject(string.Format("{0} Editor", voxelObject.name)).transform;
             _voxelParent.parent = _voxelRenderer.transform;
             _voxelParent.localPosition = Vector3.zero;
 
@@ -411,6 +410,12 @@ namespace FoxEdit
         {
             DisableEditing(false);
             VoxelEditor.OnChangePalette -= OnPaletteChanged;
+        }
+
+        public void Save(string savePath)
+        {
+            VoxelSaveSystem.Save(savePath, _voxelRenderer, CurrentPalette, PaletteIndex, _frameList, _computeStaticMesh);
+            IsDirty = false;
         }
     }
 

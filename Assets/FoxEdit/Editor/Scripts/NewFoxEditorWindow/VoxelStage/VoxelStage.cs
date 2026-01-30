@@ -78,7 +78,6 @@ namespace FoxEdit.EditorUtils
             FoxEditManager.StopEditVoxelObject();
             base.OnCloseStage();
         }
-
     }
 
     public static class VoxelStageUtility

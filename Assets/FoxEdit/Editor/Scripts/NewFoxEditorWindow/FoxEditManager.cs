@@ -104,7 +104,7 @@ namespace FoxEdit
 
         private static bool Save(string savePath)
         {
-            Debug.LogFormat("Save at {0}", savePath);
+            VoxelEditor.Save(savePath);
             return true;
         }
 
@@ -114,7 +114,7 @@ namespace FoxEdit
 
             if (string.IsNullOrEmpty(assetPath))
                 return SaveAs();
-            Save(ProjectRelativeToAbsolute(assetPath));
+            Save(assetPath);
             return true;
         }
 

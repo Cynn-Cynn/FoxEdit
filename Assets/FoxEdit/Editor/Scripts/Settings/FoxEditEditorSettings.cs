@@ -19,7 +19,6 @@ internal class FoxEditEditorSettings
     public GUIDAssetLoader<Material> VoxelStageBackgroundMaterial = new GUIDAssetLoader<Material>("18013ba6d01cea946a3fd252f8d26eea");
     public GUIDAssetLoader<Material> VoxelEditorCubeMaterial = new GUIDAssetLoader<Material>("3ba88c2707cea7843b37c87a3a206258");
     public GUIDAssetLoader<MeshRenderer> VoxelPrefab = new GUIDAssetLoader<MeshRenderer>("b372f3a77bc32ba418920cfa5cab2b28");
-    public GUIDAssetLoader<ComputeShader> StaticVoxelShader = new GUIDAssetLoader<ComputeShader>("d2124f226eadd02489c451750e2a6e22");
 
     public EditorPrefColor ToolAddColor = new EditorPrefColor("foxedit-add-color", Color.green);
     public EditorPrefColor ToolRemoveColor = new EditorPrefColor("foxedit-remove-color", Color.red);
@@ -51,7 +50,6 @@ internal class FoxEditEditorSettingsProvider : SettingsProvider
         EditorGUILayout.ObjectField(new GUIContent("Voxel cube material"), settings.VoxelEditorCubeMaterial.Asset, typeof(Material), allowSceneObjects: false);
         EditorGUILayout.ObjectField(new GUIContent("Voxel stage background"), settings.VoxelStageBackgroundMaterial.Asset, typeof(Material), allowSceneObjects: false);
         EditorGUILayout.ObjectField(new GUIContent("Voxel object prefab"), settings.VoxelPrefab.Asset, typeof(MeshRenderer), allowSceneObjects: false);
-        EditorGUILayout.ObjectField(new GUIContent("Static voxel compute shader"), settings.VoxelPrefab.Asset, typeof(GameObject), allowSceneObjects: false);
         GUI.enabled = true;
 
         EditorGUILayout.Space();
