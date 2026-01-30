@@ -103,17 +103,14 @@ namespace FoxEdit
 
         //Save
         private ComputeShader _computeStaticMesh = null;
-        private FoxEditSettings _foxEditSettings = null;
-
 
         #region Init
         public VoxelEditor(VoxelRenderer voxelRenderer)
         {
-            _foxEditSettings = FoxEditSettings.GetSettings();
             _voxelRenderer = voxelRenderer;
-            _voxelPrefab = _foxEditSettings.voxelPrefab;
-            _computeStaticMesh = _foxEditSettings.staticVoxelComputeShader;
+            _computeStaticMesh = FoxEditEditorSettings.Instance.StaticVoxelShader.Asset;
             _frameList = new List<VoxelEditorFrame>();
+            _voxelPrefab = FoxEditEditorSettings.Instance.VoxelPrefab.Asset;
             VoxelEditor.OnChangePalette += OnPaletteChanged;
 
             CreateMaterials(); ;
