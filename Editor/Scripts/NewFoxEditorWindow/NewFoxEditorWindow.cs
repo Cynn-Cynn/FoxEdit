@@ -24,7 +24,7 @@ internal class NewFoxEditorWindow : EditorWindow
     private VoxelRendererSelectorElement voxelRendererSelectorElement = null;
     public static NewFoxEditorWindow currentWindow {get; private set;}
 
-    [MenuItem("FoxEdit/NewFoxEditorWindow")]
+    [MenuItem("FoxEdit/Voxel Editor")]
     public static void Open()
     {
         currentWindow = GetWindow<NewFoxEditorWindow>();
@@ -68,7 +68,10 @@ internal class NewFoxEditorWindow : EditorWindow
     {
         FoxEditManager.OnStartEditVoxelObject -= ShowVoxelEditor;
         FoxEditManager.OnStopEditVoxelObject -= ShowVoxelObjectSelector;
-        voxelRendererSelectorElement.OnSelectVoxelObject += OnSelectVoxelObject;
+        if (voxelRendererSelectorElement != null)
+        {
+        voxelRendererSelectorElement.OnSelectVoxelObject -= OnSelectVoxelObject;
+        }
     }
 
     private void OnSelectVoxelObject(VoxelObject voxelObject)

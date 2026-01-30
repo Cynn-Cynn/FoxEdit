@@ -43,7 +43,6 @@ namespace FoxEdit.EditorUtils
             GameObject voxelGO = new GameObject(string.Format("{0} (Preview)", objectName), typeof(MeshFilter), typeof(MeshRenderer));
             VoxelRenderer = voxelGO.AddComponent<VoxelRenderer>();
             VoxelRenderer.SetVoxelObject(voxelObject);
-            VoxelRenderer.Setup();
             VoxelRenderer.RenderSwap();
 
             GameObject backgroundGO = GameObject.CreatePrimitive(PrimitiveType.Sphere);

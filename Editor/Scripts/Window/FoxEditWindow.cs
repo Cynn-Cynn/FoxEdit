@@ -65,7 +65,6 @@ namespace FoxEdit
             VoxelSharedData.Initialize();
         }
 
-        [MenuItem("FoxEdit/Voxel editor", false, 0)]
         public static void ShowExample()
         {
             FoxEditWindow window = GetWindow<FoxEditWindow>();
@@ -399,7 +398,7 @@ namespace FoxEdit
                     int startIndex = voxelObject.AnimationIndices[animation].StartIndex;
                     for (int i = startIndex; i < voxelObject.AnimationIndices[animation].FrameCount; i++)
                     {
-                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i - startIndex, _voxelPrefab, this);
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i - startIndex, _voxelPrefab, new VoxelEditor(null));
                         frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
                         if (i - startIndex != _selectedFrame)
                             frame.Hide();
@@ -535,7 +534,7 @@ namespace FoxEdit
 
         private void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, null);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, _selectedPalette, 0);
             _frameList[_selectedAnimation].Add(newFrame);
 

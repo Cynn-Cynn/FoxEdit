@@ -32,18 +32,19 @@ namespace FoxEdit
 
         private static string GetAssetPath(string meshName, string saveDirectory, string extension)
         {
+
             string assetPath = null;
             if (saveDirectory == null || saveDirectory == "")
-                assetPath = $"Assets/{meshName}.{extension}";
+                assetPath = $"{meshName}.{extension}";
             else
-                assetPath = $"Assets/{saveDirectory}/{meshName}.{extension}";
+                assetPath = $"{saveDirectory}/{meshName}.{extension}";
 
             return assetPath;
         }
 
         private static VoxelObject GetVoxelObject(VoxelRenderer voxelRenderer, string assetPath)
         {
-            VoxelObject voxelObject = voxelRenderer.VoxelObject;
+            VoxelObject voxelObject = AssetDatabase.LoadAssetAtPath<VoxelObject>(assetPath);
 
             if (voxelObject == null)
             {
