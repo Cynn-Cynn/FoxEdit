@@ -26,15 +26,10 @@ namespace FoxEdit
 
 
         internal static VoxelEditor StartEditVoxelObject(VoxelRenderer voxelRenderer) => StartEditVoxelObject(voxelRenderer.VoxelObject, voxelRenderer);
-
+        internal static VoxelEditor StartEditNewVoxelObject() => StartEditVoxelObject(null, null);
         internal static VoxelEditor StartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer = null)
         {
             EnsureFoxEditWindowIsOpen();
-            if (voxelObject == null)
-            {
-                Debug.LogError("Cannot edit null voxelObject");
-                return null;
-            }
             if (voxelRenderer == null)
             {
                 _voxelStage = VoxelStageUtility.OpenVoxelStage(voxelObject);

@@ -41,6 +41,7 @@ internal class NewFoxEditorWindow : EditorWindow
 
         voxelRendererSelectorContainer = root.Q("voxel-renderer-selector");
         voxelRendererSelectorElement = voxelRendererSelectorContainer.Q<VoxelRendererSelectorElement>();
+        voxelRendererSelectorElement.RegisterContextualMenu(voxelRendererSelectorContainer);
         voxelRendererSelectorElement.OnSelectVoxelObject += OnSelectVoxelObject;
 
         ShowVoxelObjectSelector();
