@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 using UnityEngine;
 using System;
 using FoxEdit.VoxelTools;
+using FoxEdit.WindowPanels.SubPanels;
 
 namespace FoxEdit.WindowPanels
 {
@@ -19,6 +20,7 @@ namespace FoxEdit.WindowPanels
         private DropdownField paletteDropdown;
         private ColorPaletteElement colorSelector;
         private FrameSelectorElement frameSelector;
+        private AnimationSelectorSubPanel animationSelector;
 
         private VoxelObject voxelObject;
         private VoxelRenderer voxelRenderer;
@@ -50,7 +52,7 @@ namespace FoxEdit.WindowPanels
 
         private void UpdateFrameSelector()
         {
-            frameSelector.FramesCount = voxelEditor.FramesCount;
+            frameSelector.FramesCount = voxelEditor.CurrentAnimation.FramesCount;
             frameSelector.SelectFrame(0, false);
         }
 
@@ -73,6 +75,7 @@ namespace FoxEdit.WindowPanels
             frameSelector = root.Q<FrameSelectorElement>();
             saveAsButton = root.Q<Button>("save-as-button");
             saveButton = root.Q<Button>("save-button");
+            animationSelector = new AnimationSelectorSubPanel(root.Q("animation-selector-container"));
         }
 
         #region Callbacks
@@ -91,6 +94,11 @@ namespace FoxEdit.WindowPanels
             frameSelector.OnNewFrame += OnNewFrame;
             frameSelector.OnDeleteFrame += OnDeleteFrame;
 
+            animationSelector.OnAddAnimation += OnAddAnimationFromAnimSelector;
+            animationSelector.OnDeleteAnimation += OnDeleteAnimationFromAnimSelector;
+            animationSelector.OnRenameAnimation += OnRenameAnimationFromAnimSelector;
+            animationSelector.OnSelectAnimation += OnSelectAnimationFromAnimSelector;
+
             VoxelEditor.OnChangeColor += OnChangeColor;
             VoxelEditor.OnChangeAction += OnChangeAction;
             VoxelEditor.OnChangeTool += OnChangeTool;
@@ -98,6 +106,26 @@ namespace FoxEdit.WindowPanels
             FoxEditManager.OnStopEditVoxelObject += OnStopEditVoxelObject;
         }
 
+        private void OnSelectAnimationFromAnimSelector(int animationIndex)
+        {
+            voxelEditor.SelectedAnimationIndex = animationIndex;
+        }
+
+        private void OnRenameAnimationFromAnimSelector(int animIndex, string newName)
+        {
+            VoxelEditorAnimation voxelEditorAnimation = voxelEditor.GetVoxelEditorAnimation(animIndex);
+            voxelEditorAnimation.Name = newName;
+        }
+
+        private void OnDeleteAnimationFromAnimSelector(int animIndex)
+        {
+            voxelEditor.DeleteAnimation(animIndex);
+        }
+
+        private void OnAddAnimationFromAnimSelector(string obj)
+        {
+            voxelEditor.NewAnimation(obj);
+        }
 
         private void UnregisterCallbacks()
         {
@@ -177,6 +205,7 @@ namespace FoxEdit.WindowPanels
             {
                 voxelEditor.OnFramesThumbnailsUpdated -= OnFrameThumnbailUpdated;
                 voxelEditor.OnFrameIndexChanged += OnFrameIndexChanged;
+                voxelEditor.OnAnimationIndexChanged -= OnAnimationIndexChanged;
             }
             voxelObject = null;
             voxelRenderer = null;
@@ -192,13 +221,17 @@ namespace FoxEdit.WindowPanels
             voxelEditor.OnFrameIndexChanged += OnFrameIndexChanged;
             voxelEditor.OnAnimationIndexChanged += OnAnimationIndexChanged;
 
+            animationSelector.SetAnimationNames(voxelEditor.GetAnimationNames());
+            animationSelector.SetAnimationIndex(0);
+
             SetupFields();
             UpdateFrameSelector();
         }
 
         private void OnAnimationIndexChanged(int newAnimationIndex)
         {
-            frameSelector.FramesCount = voxelEditor.CurrentAnimation.Count;
+            animationSelector.SetAnimationIndex(newAnimationIndex);
+            frameSelector.FramesCount = voxelEditor.CurrentAnimation.FramesCount;
         }
 
         private void OnFrameIndexChanged(int frameIndex)

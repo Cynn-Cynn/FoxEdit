@@ -10,7 +10,7 @@ using System.IO;
 
 namespace FoxEdit
 {
-    internal class VoxelEditor : IDisposable
+    internal partial class VoxelEditor : IDisposable
     {
         #region STATIC_FIELDS
         public static event Action<vxTool> OnChangeTool;
@@ -70,12 +70,10 @@ namespace FoxEdit
         }
 
         public static VoxelPalette CurrentPalette => VoxelSharedData.GetPalette(PaletteIndex);
-        #endregion
 
+        #endregion
         //Thumbnails
         public event Action<int, int, Texture2D> OnFramesThumbnailsUpdated;
-        public List<List<Texture2D>> FramesThumbnails { get; private set; }
-
         //Flags
         private bool _edit = false;
         public bool IsDirty { get; private set; } = false;
@@ -85,6 +83,7 @@ namespace FoxEdit
         private Material[][] _editorMaterials = null;
 
         public event Action<int> OnFrameIndexChanged;
+        private VoxelEditorFrame lastVisibleEditorFrame = null;
         private int _selectedFrameIndex = 0;
         public int SelectedFrameIndex
         {
@@ -113,26 +112,27 @@ namespace FoxEdit
             set
             {
                 _selectedAnimationIndex = value;
+                ChangeFrame(0);
                 OnAnimationIndexChanged?.Invoke(_selectedAnimationIndex);
             }
         }
 
-        public List<VoxelEditorFrame> CurrentAnimation
+        public VoxelEditorAnimation CurrentAnimation
         {
             get
             {
-                if (_frameList == null || _frameList.Count == 0 || SelectedAnimationIndex < 0 || SelectedAnimationIndex >= _frameList.Count)
+                if (_animationList == null || _animationList.Count == 0 || SelectedAnimationIndex < 0 || SelectedAnimationIndex >= _animationList.Count)
                     return null;
-                return _frameList[_selectedAnimationIndex];
+                return _animationList[_selectedAnimationIndex];
             }
         }
 
         //Scene editor voxels
         private MeshRenderer _voxelPrefab = null;
         private Transform _voxelParent = null;
-        private List<List<VoxelEditorFrame>> _frameList;
-        public int FramesCount => _frameList.Count;
+        private List<VoxelEditorAnimation> _animationList;
         private bool wasVoxelRendererStatic = false;
+
 
         //Save
         private ComputeShader _computeStaticMesh = null;
@@ -142,7 +142,7 @@ namespace FoxEdit
         {
             _voxelRenderer = voxelRenderer;
             _computeStaticMesh = FoxEditSettings.GetSettings().staticShader;
-            _frameList = new List<List<VoxelEditorFrame>>();
+            _animationList = new List<VoxelEditorAnimation>();
             _voxelPrefab = FoxEditEditorSettings.Instance.VoxelPrefab.Asset;
             VoxelEditor.OnChangePalette += OnPaletteChanged;
             if (voxelRenderer.IsStaticRender)
@@ -155,33 +155,7 @@ namespace FoxEdit
 
             if (!_edit)
                 EnableEditing();
-            EditorApplication.delayCall += SetFramesVoxel;
         }
-
-        private void SetFramesVoxel()
-        {
-            FramesThumbnails = GetFramesThumbnails();
-            for (int animIndex = 0; animIndex < FramesThumbnails.Count; animIndex++)
-            {
-                for (int frameIndex = 0; frameIndex < FramesThumbnails[animIndex].Count; frameIndex++)
-                {
-                    int tmp_f = frameIndex;
-                    int tmp_a = animIndex;
-                    OnFramesThumbnailsUpdated?.Invoke(tmp_a, tmp_f, FramesThumbnails[animIndex][frameIndex]);
-                }
-            }
-        }
-
-        private List<List<Texture2D>> GetFramesThumbnails()
-        {
-            List<List<Texture2D>> thumbnails = new List<List<Texture2D>>();
-
-            foreach (List<VoxelEditorFrame> animation in _frameList)
-                thumbnails.Add(ThumbnailsTaker.GetThumbnails(animation.Select(f => f.FrameObject.gameObject).ToList()));
-
-            return thumbnails;
-        }
-
 
         private void CreateMaterials()
         {
@@ -224,7 +198,7 @@ namespace FoxEdit
             if (_voxelRenderer == null)
                 return;
 
-            if (_frameList == null || SelectedFrameIndex >= _frameList.Count)
+            if (_animationList == null || SelectedFrameIndex >= _animationList.Count)
                 SelectedFrameIndex = 0;
 
             VoxelObject voxelObject = _voxelRenderer.VoxelObject;
@@ -236,7 +210,7 @@ namespace FoxEdit
             if (_voxelParent != null)
             {
                 GameObject.DestroyImmediate(_voxelParent.gameObject);
-                _frameList.Clear();
+                _animationList.Clear();
             }
 
             string objectName = null;
@@ -248,13 +222,13 @@ namespace FoxEdit
             _voxelParent = new GameObject(string.Format("{0} Editor", objectName)).transform;
             _voxelParent.parent = _voxelRenderer.transform;
             _voxelParent.localPosition = Vector3.zero;
-            _frameList = new List<List<VoxelEditorFrame>>();
+            _animationList = new List<VoxelEditorAnimation>();
 
             if (voxelObject != null)
             {
                 for (int animation = 0; animation < voxelObject.AnimationIndices.Length; animation++)
                 {
-                    _frameList.Add(new List<VoxelEditorFrame>());
+                    _animationList.Add(new VoxelEditorAnimation(voxelObject.AnimationIndices[animation].AnimName));
                     int startIndex = voxelObject.AnimationIndices[animation].StartIndex;
                     for (int i = startIndex; i < voxelObject.AnimationIndices[animation].FrameCount; i++)
                     {
@@ -262,12 +236,13 @@ namespace FoxEdit
                         frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, PaletteIndex, voxelObject.EditorVoxelPositions[i].ColorIndices);
                         if (i - startIndex != _selectedFrameIndex)
                             frame.Hide();
-                        _frameList[animation].Add(frame);
+                        _animationList[animation].AddFrame(frame);
                     }
                 }
             }
             else
             {
+                NewAnimation("Default");
                 NewFrame();
             }
 
@@ -275,9 +250,6 @@ namespace FoxEdit
             _edit = true;
         }
 
-        #region Dispose
-
-        #endregion
         public void UseTool(Vector3 worldPosition, Vector3 worldNormal)
         {
             Vector3Int gridPosition = CurrentFrame.WorldToGridPosition(worldPosition);
@@ -323,6 +295,44 @@ namespace FoxEdit
             IsDirty = true;
         }
 
+#region Animations
+        public VoxelEditorAnimation GetVoxelEditorAnimation(int index)
+        {
+            return _animationList[index];
+        }
+
+        public void DeleteAnimation(int index)
+        {
+            foreach (VoxelEditorFrame voxelEditorFrame in _animationList[index].frames)
+                GameObject.DestroyImmediate(voxelEditorFrame.FrameObject.gameObject);
+
+            if (index <= SelectedAnimationIndex && SelectedAnimationIndex > 0)
+                SelectedAnimationIndex--;
+            else
+                SelectedAnimationIndex = SelectedAnimationIndex;
+            
+            _animationList.RemoveAt(index);
+
+            IsDirty = true;
+        }
+
+        public void NewAnimation(string animationName)
+        {
+            _animationList.Add(new VoxelEditorAnimation(animationName));
+            VoxelEditorFrame newFrame = CurrentAnimation[SelectedFrameIndex].GetCopy(_animationList.Count, PaletteIndex);
+            SelectedAnimationIndex = _animationList.Count - 1;
+            CurrentAnimation.AddFrame(newFrame);
+
+            ChangeFrame(CurrentAnimation.FramesCount - 1);
+
+            IsDirty = true;
+        }
+
+        public List<string> GetAnimationNames()
+        {
+            return _animationList.Select(a => a.Name).ToList();
+        }
+#endregion
         #region Helpers
 
         public bool TryGetCubePosition(out Vector3 cubePosition, out Vector3 worldNormal, Ray ray)
@@ -357,15 +367,14 @@ namespace FoxEdit
         #region Frames
         public void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _animationList.Count, _voxelPrefab, this);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, PaletteIndex, 0);
-            CurrentAnimation.Add(newFrame);
-
-            if (_frameList.Count != 1)
-                ChangeFrame(_frameList.Count - 1);
+            CurrentAnimation.AddFrame(newFrame);
+            ChangeFrame(CurrentAnimation.FramesCount - 1);
 
             IsDirty = true;
         }
+
 
         private void OnPaletteChanged(int paletteColor)
         {
@@ -375,8 +384,7 @@ namespace FoxEdit
         public void DeleteFrame()
         {
             CurrentAnimation[SelectedFrameIndex].Destroy();
-            CurrentAnimation.RemoveAt(SelectedFrameIndex);
-            FramesThumbnails.RemoveAt(SelectedFrameIndex);
+            CurrentAnimation.RemoveFrameAt(SelectedFrameIndex);
 
             if (SelectedFrameIndex > 0)
                 SelectedFrameIndex -= 1;
@@ -389,66 +397,44 @@ namespace FoxEdit
 
         public void DuplicateFrame()
         {
-            VoxelEditorFrame newFrame = CurrentAnimation[SelectedFrameIndex].GetCopy(_frameList.Count, PaletteIndex);
-            FramesThumbnails.Add(FramesThumbnails[SelectedFrameIndex]);
-            CurrentAnimation.Add(newFrame);
+            VoxelEditorFrame newFrame = CurrentAnimation[SelectedFrameIndex].GetCopy(_animationList.Count, PaletteIndex);
+            CurrentAnimation.AddFrame(newFrame);
 
-            ChangeFrame(_frameList.Count - 1);
-            UpdateFrameThumbnail(SelectedFrameIndex);
+            ChangeFrame(_animationList.Count - 1);
 
             IsDirty = true;
         }
 
         public void ChangeFrame(int index)
         {
-            index = Mathf.Clamp(index, 0, _frameList.Count - 1);
-            UpdateFrameThumbnail(SelectedFrameIndex);
-            if (SelectedFrameIndex >= 0 || SelectedFrameIndex < _frameList.Count)
-                CurrentAnimation[SelectedFrameIndex].Hide();
+            if (CurrentAnimation.FramesCount == 0)
+                return;
+            index = Mathf.Clamp(index, 0, CurrentAnimation.FramesCount - 1);
+            if (lastVisibleEditorFrame != null)
+                lastVisibleEditorFrame.Hide();
             SelectedFrameIndex = index;
-            CurrentAnimation[SelectedFrameIndex].Show();
+            lastVisibleEditorFrame = CurrentAnimation[SelectedFrameIndex];
+            lastVisibleEditorFrame.Show();
             UpdateColors();
         }
 
         public void MoveFrame(int oldIndex, int newIndex)
         {
             VoxelEditorFrame movedFrame = CurrentAnimation.Move(oldIndex, newIndex);
-            for (int i = 0; i < _frameList.Count; i++)
+            for (int i = 0; i < _animationList.Count; i++)
                 CurrentAnimation[i].FrameObject.name = string.Format("Frame {0}", i);
             movedFrame.FrameObject.SetSiblingIndex(newIndex);
             if (oldIndex == SelectedFrameIndex)
-                SelectedFrameIndex = _frameList.IndexOf(CurrentAnimation);
-            FramesThumbnails.Move(oldIndex, newIndex);
+                SelectedFrameIndex = _animationList.IndexOf(CurrentAnimation);
         }
 
         #endregion
 
         #region Frames Thumbnails
-        private void UpdateFrameThumbnail(int index)
-        {
-            if (FramesThumbnails == null)
-                return;
-            if (index >= 0 && index < FramesThumbnails.Count)
-            {
-                int tmp_index = index;
-                if (FramesThumbnails[index] != null)
-                    GameObject.DestroyImmediate(FramesThumbnails[SelectedAnimationIndex][index]);
-                VoxelEditorFrame voxelEditorFrame = _frameList[SelectedAnimationIndex][index];
-                FramesThumbnails[SelectedAnimationIndex][index] = ThumbnailsTaker.GetThumbnail(voxelEditorFrame.FrameObject.gameObject);
-                OnFramesThumbnailsUpdated?.Invoke(SelectedAnimationIndex, index, FramesThumbnails[SelectedAnimationIndex][index]);
-            }
-        }
-
-        public Texture2D GetFrameThumbnail(int index)
-        {
-            if (index < 0 || index >= FramesThumbnails.Count)
-                return null;
-            return FramesThumbnails[SelectedAnimationIndex][index];
-        }
         #endregion
         private void UpdateColors()
         {
-            if (CurrentAnimation == null || SelectedFrameIndex < 0 || SelectedFrameIndex >= CurrentAnimation.Count)
+            if (CurrentAnimation == null || SelectedFrameIndex < 0 || SelectedFrameIndex >= CurrentAnimation.FramesCount)
                 return;
             CurrentAnimation[SelectedFrameIndex].UpdatePalette(PaletteIndex);
         }
@@ -468,7 +454,7 @@ namespace FoxEdit
             {
                 GameObject.DestroyImmediate(_voxelParent.gameObject);
                 _voxelParent = null;
-                _frameList.Clear();
+                _animationList.Clear();
             }
 
             if (_voxelRenderer != null && !isFromReload)
@@ -488,7 +474,7 @@ namespace FoxEdit
         {
             string directory = Path.GetDirectoryName(savePath);
             string meshName = Path.GetFileNameWithoutExtension(savePath);
-            VoxelSaveSystem.Save(meshName, directory, _voxelRenderer, CurrentPalette, PaletteIndex, _frameList, _computeStaticMesh);
+            VoxelSaveSystem.Save(meshName, directory, _voxelRenderer, CurrentPalette, PaletteIndex, _animationList, _computeStaticMesh);
             IsDirty = false;
         }
     }
