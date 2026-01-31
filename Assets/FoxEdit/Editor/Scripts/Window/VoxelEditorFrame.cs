@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -12,6 +13,7 @@ namespace FoxEdit
         private MeshRenderer _voxelPrefab = null;
         private VoxelEditor _editWindow = null;
         private Grid3D _grid = null;
+        public Texture2D thumbnail = null;
 
         #region Initialization
 

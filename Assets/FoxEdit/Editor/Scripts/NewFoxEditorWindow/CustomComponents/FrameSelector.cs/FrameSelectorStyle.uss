@@ -97,3 +97,43 @@
 #delete-frame-button {
     color: var(--unity-colors-error-text);
 }
+
+#animation-selector-container {
+    flex-direction: row;
+    flex-grow: 1;
+    align-self: stretch;
+    align-items: stretch;
+}
+
+#animation-selector {
+    flex-grow: 1;
+}
+
+.animationselector-button {
+    width: 25px;
+    height: 25px;
+}
+
+#animation-selector-container #add-button > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/add.png?fileID=2800000&guid=92ca03fbd74a74540bd36ef532ccb682&type=3#add");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#animation-selector-container #rename-button > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/edit.png?fileID=2800000&guid=f45786bbecfc9014a8880a44b20edd88&type=3#edit");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#animation-selector-container #delete-button > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/remove.png?fileID=2800000&guid=16d311a722fb3a84996d4b31c9e008fc&type=3#remove");
+    -unity-background-image-tint-color: var(--unity-colors-error-text);
+}
+
+.animationselector-button > #icon {
+    flex-grow: 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#animation-selector-rename-field {
+    flex-grow: 1;
+}

@@ -21,7 +21,19 @@
             </ui:VisualElement>
             <ui:VisualElement name="frame-selector" class="window-segment">
                 <ui:Label tabindex="-1" text="Frames" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title" />
-                <ui:DropdownField label="Animation" name="animation-selector" style="display: none;" />
+                <ui:VisualElement name="animation-selector-container">
+                    <ui:TextField picking-mode="Ignore" value="filler text" name="animator-selector-rename-field" style="display: none;" />
+                    <ui:DropdownField label="Animation" name="animation-selector" style="display: flex;" />
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="rename-button" class="animationselector-button" style="display: flex;">
+                        <ui:VisualElement name="icon" />
+                    </ui:Button>
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="add-button" class="animationselector-button" style="display: flex;">
+                        <ui:VisualElement name="icon" />
+                    </ui:Button>
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="delete-button" class="animationselector-button" style="display: flex;">
+                        <ui:VisualElement name="icon" />
+                    </ui:Button>
+                </ui:VisualElement>
                 <FoxEdit.WindowComponents.FrameSelectorElement FramesCount="10" />
             </ui:VisualElement>
             <ui:VisualElement name="transformations" class="window-segment" style="display: none;">
