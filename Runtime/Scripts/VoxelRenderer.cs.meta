@@ -9,6 +9,7 @@ MonoImporter:
   - _meshRenderer: {instanceID: 0}
   - _material: {fileID: 2100000, guid: 3f0281ad1cf83de4795cd67224e84cb6, type: 2}
   - _staticMaterial: {fileID: 2100000, guid: 90c432c76eaa99648809ebe571f57d1e, type: 2}
+  - _staticMaterial: {fileID: 2100000, guid: 90c432c76eaa99648809ebe571f57d1e, type: 2}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

@@ -10,10 +10,10 @@ namespace FoxEdit
 {
     internal class VoxelSaveSystem
     {
-        internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<List<VoxelEditorFrame>> frameList, ComputeShader computeStaticMesh)
+        internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorAnimation> animationList, ComputeShader computeStaticMesh)
         {
             VoxelObject voxelObject = GetVoxelObject(voxelRenderer, meshName, saveDirectory);
-            voxelObject = BinaryFillObject(voxelObject, frameList, palette, paletteIndex, saveDirectory, meshName);
+            voxelObject = BinaryFillObject(voxelObject, animationList, palette, paletteIndex, saveDirectory, meshName);
 
             voxelRenderer.VoxelObject = voxelObject;
             EditorUtility.SetDirty(voxelRenderer);
@@ -27,18 +27,19 @@ namespace FoxEdit
 
         private static string GetAssetPath(string meshName, string saveDirectory, string extension)
         {
+
             string assetPath = null;
             if (saveDirectory == null || saveDirectory == "")
-                assetPath = $"Assets/{meshName}.{extension}";
+                assetPath = $"{meshName}.{extension}";
             else
-                assetPath = $"Assets/{saveDirectory}/{meshName}.{extension}";
+                assetPath = $"{saveDirectory}/{meshName}.{extension}";
 
             return assetPath;
         }
 
         private static VoxelObject GetVoxelObject(VoxelRenderer voxelRenderer, string meshName, string saveDirectory)
         {
-            VoxelObject voxelObject = voxelRenderer.VoxelObject;
+            VoxelObject voxelObject = AssetDatabase.LoadAssetAtPath<VoxelObject>(assetPath);
 
             if (voxelObject == null)
             {
@@ -81,7 +82,7 @@ namespace FoxEdit
 
         #endregion AssetManagement
 
-        private static VoxelObject BinaryFillObject(VoxelObject voxelObject, List<List<VoxelEditorFrame>> frameList, VoxelPalette palette, int paletteIndex, string saveDirectory, string meshName)
+        private static VoxelObject BinaryFillObject(VoxelObject voxelObject, List<VoxelEditorAnimation> animationList, VoxelPalette palette, int paletteIndex, string saveDirectory, string meshName)
         {
             List<Vector3Int> minBounds = new List<Vector3Int>();
             List<Vector3Int> maxBounds = new List<Vector3Int>();
@@ -93,18 +94,19 @@ namespace FoxEdit
             List<Vector4> vertices = new List<Vector4>();
             List<int> startIndices = new List<int>();
             List<int> instanceCounts = new List<int>();
-            AnimationFrames[] animationIndices = new AnimationFrames[frameList.Count];
+            AnimationFrames[] animationIndices = new AnimationFrames[animationList.Count];
 
-            for (int animation = 0; animation < frameList.Count; animation++)
+            for (int animation = 0; animation < animationList.Count; animation++)
             {
                 animationIndices[animation] = new AnimationFrames
                 {
+                    AnimName = animationList[animation].Name,
                     StartIndex = animation == 0 ? 0 : animationIndices[animation - 1].StartIndex + animationIndices[animation - 1].FrameCount,
-                    FrameCount = frameList[animation].Count
+                    FrameCount = animationList[animation].FramesCount
                 };
-                for (int frame = 0; frame < frameList[animation].Count; frame++)
+                for (int frame = 0; frame < animationList[animation].FramesCount; frame++)
                 {
-                    VoxelObjectPackedFrameData packedData = frameList[animation][frame].GetPackedData(isColorTransparent);
+                    VoxelObjectPackedFrameData packedData = animationList[animation][frame].GetPackedData(isColorTransparent);
 
                     VoxelData[] voxelData = packedData.Data;
                     EditorFrameVoxels editorVoxel = new VoxelObject.EditorFrameVoxels

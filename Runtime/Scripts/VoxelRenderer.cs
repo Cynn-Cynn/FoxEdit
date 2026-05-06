@@ -44,6 +44,13 @@ namespace FoxEdit
             _renderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _renderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
             SetWorldBounds();
+            if (!IsSetup)
+                Setup();
+        }
+
+        void OnValidate()
+        {
+            Setup();
         }
 
         private void InitializeStaticRenderer()
@@ -78,9 +85,31 @@ namespace FoxEdit
 
         #endregion Initialization
 
+        public void Setup()
+        {
+            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
+
+            if (_material == null)
+                _material = Instantiate(foxEditSettings.Materials.animatedMaterial);
+            if (_staticMaterial == null)
+                _staticMaterial = Instantiate(foxEditSettings.Materials.staticMaterial);
+
+            if (_meshFilter == null)
+                _meshFilter = GetComponent<MeshFilter>();
+            if (_meshRenderer == null)
+            {
+                _meshRenderer = GetComponent<MeshRenderer>();
+                _meshRenderer.material = _staticMaterial;
+                _meshRenderer.enabled = _staticRender;
+            }
+            if (VoxelObject != null)
+                SetRenderParams();
+            IsSetup = true;
+        }
+
         #region UserEditable
 
-        private void SetVoxelObject(VoxelObject voxelObject)
+        public void SetVoxelObject(VoxelObject voxelObject)
         {
             if (voxelObject == _voxelObject)
                 return;
@@ -125,6 +154,21 @@ namespace FoxEdit
 #endif
             _timer = 0.0f;
         }
+
+        public void SetAnimatedRender()
+        {
+            _staticRender = false;
+            _meshRenderer.enabled = false;
+            _timer = 0.0f;
+        }
+
+        public void SetStaticRender()
+        {
+            _staticRender = true;
+            _meshRenderer.enabled = true;
+        }
+
+        public bool IsStaticRender => _staticRender;
 
         public int GetPaletteIndex()
         {
