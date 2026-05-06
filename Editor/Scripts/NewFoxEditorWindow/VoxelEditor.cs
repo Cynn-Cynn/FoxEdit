@@ -131,7 +131,8 @@ namespace FoxEdit
         private MeshRenderer _voxelPrefab = null;
         private Transform _voxelParent = null;
         private List<VoxelEditorAnimation> _animationList;
-        private bool wasVoxelRendererStatic = false;
+        //No editor animated render anymore
+        //private bool wasVoxelRendererStatic = false;
 
 
         //Save
@@ -145,11 +146,12 @@ namespace FoxEdit
             _animationList = new List<VoxelEditorAnimation>();
             _voxelPrefab = FoxEditEditorSettings.Instance.VoxelPrefab.Asset;
             VoxelEditor.OnChangePalette += OnPaletteChanged;
-            if (voxelRenderer.IsStaticRender)
+            //No editor animated render anymore
+            /*if (voxelRenderer.IsStaticRender)
             {
-                //wasVoxelRendererStatic = true;
-                //voxelRenderer.SetAnimatedRender();
-            }
+                wasVoxelRendererStatic = true;
+                voxelRenderer.SetAnimatedRender();
+            }*/
 
             CreateMaterials(); ;
 
@@ -444,6 +446,7 @@ namespace FoxEdit
             _edit = false;
             DestroyEditorFrame(isFromReload);
 
+            //No editor animated render anymore
             //if (wasVoxelRendererStatic)
             //    _voxelRenderer.SetStaticRender();
         }
