@@ -17,13 +17,11 @@ namespace FoxEdit
 
         private static GraphicsBuffer _faceVertexBuffer = null;
         private static GraphicsBuffer _faceTriangleBuffer = null;
-        private static GraphicsBuffer _rotationMatricesBuffer = null;
         private static List<GraphicsBuffer> _colorsBuffers = null;
         private static int _faceTriangleCount = 0;
 
         internal static GraphicsBuffer FaceVertexBuffer { get { return _faceVertexBuffer; } }
         internal static GraphicsBuffer FaceTriangleBuffer { get { return _faceTriangleBuffer; } }
-        internal static GraphicsBuffer RotationMatricesBuffer { get { return _rotationMatricesBuffer; } }
         internal static int FaceTriangleCount { get { return _faceTriangleCount; } }
 
         #endregion Buffers
@@ -43,8 +41,6 @@ namespace FoxEdit
             0, 1, 2,
             1, 3, 2
         };
-
-        private static Matrix4x4[] _rotationMatrices = null;
 
         #endregion Vertices
 
@@ -103,7 +99,7 @@ namespace FoxEdit
             VoxelRenderer[] renderers = GameObject.FindObjectsOfType<VoxelRenderer>();
             for (int i = 0; i < renderers.Length; i++)
             {
-                renderers[i].Refresh();
+                renderers[i].Setup();
             }
         }
 
@@ -120,8 +116,6 @@ namespace FoxEdit
             _faceTriangleBuffer?.Dispose();
             _faceVertexBuffer?.Dispose();
 
-            _rotationMatricesBuffer?.Dispose();
-
             DisposeColorsBuffers();
 
             _isInitialized = false;
@@ -137,51 +131,6 @@ namespace FoxEdit
             _faceTriangleBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _faceTriangles.Length, sizeof(int));
             _faceTriangleBuffer.SetData(_faceTriangles);
             _faceTriangleCount = _faceTriangleBuffer.count;
-
-            SetRotationMatrices();
-            _rotationMatricesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 6, sizeof(float) * 16);
-            _rotationMatricesBuffer.SetData(_rotationMatrices);
-        }
-
-        private static void SetRotationMatrices()
-        {
-            float halfPi = Mathf.PI / 2.0f;
-
-            _rotationMatrices = new Matrix4x4[6];
-            _rotationMatrices[0] = GetRotationMatrixX(0);
-            _rotationMatrices[1] = GetRotationMatrixX(halfPi);
-            _rotationMatrices[2] = GetRotationMatrixX(halfPi * 2);
-            _rotationMatrices[3] = GetRotationMatrixX(halfPi * 3);
-            _rotationMatrices[4] = GetRotationMatrixZ(-halfPi);
-            _rotationMatrices[5] = GetRotationMatrixZ(halfPi);
-        }
-
-        private static Matrix4x4 GetRotationMatrixX(float angle)
-        {
-            float c = Mathf.Cos(angle);
-            float s = Mathf.Sin(angle);
-
-            return new Matrix4x4
-            (
-                new Vector4(1, 0, 0, 0),
-                new Vector4(0, c, -s, 0),
-                new Vector4(0, s, c, 0),
-                new Vector4(0, 0, 0, 1)
-            );
-        }
-
-        private static Matrix4x4 GetRotationMatrixZ(float angle)
-        {
-            float c = Mathf.Cos(angle);
-            float s = Mathf.Sin(angle);
-
-            return new Matrix4x4
-            (
-                new Vector4(c, -s, 0, 0),
-                new Vector4(s, c, 0, 0),
-                new Vector4(0, 0, 1, 0),
-                new Vector4(0, 0, 0, 1)
-            );
         }
 
         #endregion Faces
