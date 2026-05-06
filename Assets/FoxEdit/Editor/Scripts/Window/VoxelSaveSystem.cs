@@ -57,15 +57,13 @@ namespace FoxEdit
             AssetDatabase.CreateAsset(voxelObject, assetPath);
             voxelRenderer.VoxelObject = voxelObject;
 
-            string animatedMaterialPath = AssetDatabase.GUIDToAssetPath("3f0281ad1cf83de4795cd67224e84cb6");
-            Material animatedMaterial = AssetDatabase.LoadAssetAtPath<Material>(animatedMaterialPath);
-            Material animatedMaterialInstance = GameObject.Instantiate(animatedMaterial);
+            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
+
+            Material animatedMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.animatedMaterial);
             AssetDatabase.CreateAsset(animatedMaterialInstance, GetAssetPath($"M_{meshName}_Animated", saveDirectory, "mat"));
             voxelObject.AnimatedMaterial = animatedMaterialInstance;
 
-            string staticMaterialPath = AssetDatabase.GUIDToAssetPath("90c432c76eaa99648809ebe571f57d1e");
-            Material staticMaterial = AssetDatabase.LoadAssetAtPath<Material>(staticMaterialPath);
-            Material staticMaterialInstance = GameObject.Instantiate(staticMaterial);
+            Material staticMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.staticMaterial);
             AssetDatabase.CreateAsset(staticMaterialInstance, GetAssetPath($"M_{meshName}_Static", saveDirectory, "mat"));
             voxelObject.StaticMaterial = staticMaterialInstance;
 

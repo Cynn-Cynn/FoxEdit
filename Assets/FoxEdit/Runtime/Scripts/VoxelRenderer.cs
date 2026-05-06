@@ -62,11 +62,11 @@ namespace FoxEdit
 #endif
         }
 
-        internal void Initialize()
+        internal void Initialize(bool setupForRender = false)
         {
             InitializeStaticRenderer();
 #if UNITY_EDITOR
-            if (Application.isPlaying)
+            if (Application.isPlaying || setupForRender)
             {
 #endif
                 InitializeRenderParams();
@@ -82,28 +82,6 @@ namespace FoxEdit
         }
 
         #endregion Initialization
-
-        /*public void Setup()
-        {
-            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
-
-            if (_material == null)
-                _material = Instantiate(foxEditSettings.Materials.animatedMaterial);
-            if (_staticMaterial == null)
-                _staticMaterial = Instantiate(foxEditSettings.Materials.staticMaterial);
-
-            if (_meshFilter == null)
-                _meshFilter = GetComponent<MeshFilter>();
-            if (_meshRenderer == null)
-            {
-                _meshRenderer = GetComponent<MeshRenderer>();
-                _meshRenderer.material = _staticMaterial;
-                _meshRenderer.enabled = _staticRender;
-            }
-            if (VoxelObject != null)
-                SetRenderParams();
-            IsSetup = true;
-        }*/
 
         #region UserEditable
 
