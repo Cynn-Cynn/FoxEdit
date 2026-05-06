@@ -44,13 +44,6 @@ namespace FoxEdit
             _renderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _renderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
             SetWorldBounds();
-            if (!IsSetup)
-                Setup();
-        }
-
-        void OnValidate()
-        {
-            Setup();
         }
 
         private void InitializeStaticRenderer()
@@ -69,7 +62,7 @@ namespace FoxEdit
 #endif
         }
 
-        void Start()
+        internal void Initialize()
         {
             InitializeStaticRenderer();
 #if UNITY_EDITOR
@@ -83,9 +76,14 @@ namespace FoxEdit
 #endif
         }
 
+        void Start()
+        {
+            Initialize();
+        }
+
         #endregion Initialization
 
-        public void Setup()
+        /*public void Setup()
         {
             FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
 
@@ -105,7 +103,7 @@ namespace FoxEdit
             if (VoxelObject != null)
                 SetRenderParams();
             IsSetup = true;
-        }
+        }*/
 
         #region UserEditable
 
@@ -155,18 +153,18 @@ namespace FoxEdit
             _timer = 0.0f;
         }
 
-        public void SetAnimatedRender()
-        {
-            _staticRender = false;
-            _meshRenderer.enabled = false;
-            _timer = 0.0f;
-        }
+        //public void SetAnimatedRender()
+        //{
+        //    _staticRender = false;
+        //    _meshRenderer.enabled = false;
+        //    _timer = 0.0f;
+        //}
 
-        public void SetStaticRender()
-        {
-            _staticRender = true;
-            _meshRenderer.enabled = true;
-        }
+        //public void SetStaticRender()
+        //{
+        //    _staticRender = true;
+        //    _meshRenderer.enabled = true;
+        //}
 
         public bool IsStaticRender => _staticRender;
 

@@ -147,8 +147,8 @@ namespace FoxEdit
             VoxelEditor.OnChangePalette += OnPaletteChanged;
             if (voxelRenderer.IsStaticRender)
             {
-                wasVoxelRendererStatic = true;
-                voxelRenderer.SetAnimatedRender();
+                //wasVoxelRendererStatic = true;
+                //voxelRenderer.SetAnimatedRender();
             }
 
             CreateMaterials(); ;
@@ -444,8 +444,8 @@ namespace FoxEdit
             _edit = false;
             DestroyEditorFrame(isFromReload);
 
-            if (wasVoxelRendererStatic)
-                _voxelRenderer.SetStaticRender();
+            //if (wasVoxelRendererStatic)
+            //    _voxelRenderer.SetStaticRender();
         }
 
         private void DestroyEditorFrame(bool isFromReload)
@@ -460,7 +460,6 @@ namespace FoxEdit
             if (_voxelRenderer != null && !isFromReload)
             {
                 _voxelRenderer.enabled = true;
-                _voxelRenderer.Refresh();
             }
         }
 
