@@ -17,6 +17,7 @@ namespace FoxEdit
         [Serializable]
         public struct AnimationFrames
         {
+            public string AnimName;
             public int StartIndex;
             public int FrameCount;
         }

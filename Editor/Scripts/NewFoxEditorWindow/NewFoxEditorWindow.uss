@@ -1,0 +1,15 @@
+#window-title {
+    -unity-text-align: middle-center;
+    font-size: 30px;
+    -unity-font-style: bold-and-italic;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--unity-colors-default-background);
+}
+
+.title {
+    -unity-text-align: upper-center;
+    font-size: 25px;
+    -unity-font-style: bold;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
