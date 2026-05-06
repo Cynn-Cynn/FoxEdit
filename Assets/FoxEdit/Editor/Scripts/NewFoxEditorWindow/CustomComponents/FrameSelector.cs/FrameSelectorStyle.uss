@@ -1,0 +1,139 @@
+.frameselector {
+}
+
+.frameselector-items-container {
+    flex-grow: 0;
+    flex-direction: row;
+    align-items: center;
+    align-self: auto;
+    flex-shrink: 1;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+}
+
+.frameselector-item {
+    width: 50px;
+    height: 50px;
+    margin-top: 3px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+    margin-left: 3px;
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-top-color: var(--unity-colors-default-border);
+    border-right-color: var(--unity-colors-default-border);
+    border-bottom-color: var(--unity-colors-default-border);
+    border-left-color: var(--unity-colors-default-border);
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+}
+
+.frameselector-item-selected {
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    scale: 1.1 1.1;
+}
+
+.frameselector-item-label {
+    -unity-text-align: lower-right;
+    flex-grow: 0;
+    font-size: 10px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.frameselector-add-button-container {
+    flex-direction: row;
+    align-items: auto;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.frameselector-add-button {
+    flex-grow: 1;
+}
+
+.frameselector-item-thumbnail {
+    width: 100%;
+    height: 100%;
+}
+
+.frameselector-ghost-icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/foxidle1.png?fileID=2800000&guid=820b241376ceae246875a222e45355f4&type=3#foxidle1");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgba(255, 255, 255, 0.3);
+}
+
+.drag-insertion-marker {
+    background-color: var(--unity-colors-highlight-background);
+    border-top-color: rgba(255, 255, 255, 0);
+    border-left-color: rgba(255, 255, 255, 0);
+    border-right-color: rgba(255, 255, 255, 0);
+    border-bottom-color: rgba(255, 255, 255, 0);
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    border-top-left-radius: 148px;
+    border-top-right-radius: 148px;
+    border-bottom-right-radius: 148px;
+    border-bottom-left-radius: 148px;
+}
+
+#delete-frame-button {
+    color: var(--unity-colors-error-text);
+}
+
+#animation-selector-container {
+    flex-direction: row;
+    flex-grow: 1;
+    align-self: stretch;
+    align-items: stretch;
+}
+
+#animation-selector {
+    flex-grow: 1;
+}
+
+.animationselector-button {
+    width: 25px;
+    height: 25px;
+}
+
+#animation-selector-container #add-button > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/add.png?fileID=2800000&guid=92ca03fbd74a74540bd36ef532ccb682&type=3#add");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#animation-selector-container #rename-button > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/edit.png?fileID=2800000&guid=f45786bbecfc9014a8880a44b20edd88&type=3#edit");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#animation-selector-container #delete-button > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/remove.png?fileID=2800000&guid=16d311a722fb3a84996d4b31c9e008fc&type=3#remove");
+    -unity-background-image-tint-color: var(--unity-colors-error-text);
+}
+
+.animationselector-button > #icon {
+    flex-grow: 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#animation-selector-rename-field {
+    flex-grow: 1;
+}

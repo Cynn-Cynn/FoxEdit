@@ -1,0 +1,26 @@
+.voxel-renderer-selector {
+    flex-direction: row;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
+
+.voxel-renderer-selector-item {
+    width: 150px;
+    height: 150px;
+    -unity-text-align: lower-center;
+    align-items: center;
+    justify-content: center;
+    -unity-font-style: bold;
+}
+
+.voxel-renderer-selector-item-icon {
+    flex-grow: 0;
+    height: 90%;
+    width: 90%;
+    -unity-background-scale-mode: scale-to-fit;
+    margin-bottom: 14px;
+}

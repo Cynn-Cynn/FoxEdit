@@ -65,7 +65,6 @@ namespace FoxEdit
             VoxelSharedData.Initialize();
         }
 
-        [MenuItem("FoxEdit/Voxel editor", false, 0)]
         public static void ShowExample()
         {
             FoxEditWindow window = GetWindow<FoxEditWindow>();
@@ -214,100 +213,6 @@ namespace FoxEdit
             GUI.backgroundColor = baseColor;
         }
 
-        #region Shortcuts
-
-        [MenuItem("FoxEdit/Brush &R", false, 1)]
-        private static void SelectBrushShortcut()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.SelectTool(0);
-        }
-
-        [MenuItem("FoxEdit/Fill &F", false, 2)]
-        private static void SelectFillShortcut()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.SelectTool(1);
-        }
-
-        private void SelectTool(int index)
-        {
-            _selectedTool = index;
-        }
-
-        [MenuItem("FoxEdit/Paint &1", false, 3)]
-        private static void SelectPaint()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.SelectAction(0);
-        }
-
-        [MenuItem("FoxEdit/Erase &2", false, 4)]
-        private static void SelectEraseShortcut()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.SelectAction(1);
-        }
-
-        [MenuItem("FoxEdit/Color &3", false, 5)]
-        private static void SelectColorShortcut()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.SelectAction(2);
-        }
-
-        private void SelectAction(int index)
-        {
-            _selectedAction = index;
-        }
-
-        [MenuItem("FoxEdit/New Frame &N", false, 6)]
-        private static void NewFrameShortcut()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.NewFrame();
-        }
-
-        [MenuItem("FoxEdit/Duplicate Frame &D", false, 7)]
-        private static void DuplicateFrameShortcut()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.DuplicateFrame();
-        }
-
-        [MenuItem("FoxEdit/Delete Frame &X", false, 8)]
-        private static void DeleteFrameShortcut()
-        {
-            if (!_isOpen)
-                return;
-
-            FoxEditWindow window = GetWindow<FoxEditWindow>();
-            window.DeleteFrame();
-        }
-
-        #endregion Shortcuts
-
         #region Data
 
         private void LoadColors()
@@ -399,7 +304,7 @@ namespace FoxEdit
                     int startIndex = voxelObject.AnimationIndices[animation].StartIndex;
                     for (int i = startIndex; i < voxelObject.AnimationIndices[animation].FrameCount; i++)
                     {
-                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i - startIndex, _voxelPrefab, this);
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i - startIndex, _voxelPrefab, new VoxelEditor(null));
                         frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
                         if (i - startIndex != _selectedFrame)
                             frame.Hide();
@@ -535,7 +440,7 @@ namespace FoxEdit
 
         private void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, this);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, _voxelPrefab, null);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, _selectedPalette, 0);
             _frameList[_selectedAnimation].Add(newFrame);
 
@@ -772,7 +677,7 @@ namespace FoxEdit
 
         public void Save()
         {
-            VoxelSaveSystem.Save(_meshName, _saveDirectory, _voxelRenderer, _palette, _selectedPalette, _frameList, _computeStaticMesh);
+            //VoxelSaveSystem.Save(_meshName, _saveDirectory, _voxelRenderer, _palette, _selectedPalette, , _computeStaticMesh);
             _needToSave = false;
         }
 

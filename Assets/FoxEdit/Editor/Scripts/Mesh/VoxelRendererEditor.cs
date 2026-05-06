@@ -26,6 +26,11 @@ namespace FoxEdit
             _frameDurationProperty = serializedObject.FindProperty("_frameDuration");
             _frameDuration = _frameDurationProperty.floatValue;
 
+            PaletteSetup();
+        }
+
+        private void PaletteSetup()
+        {
             _paletteNames = VoxelSharedData.GetPaletteNames();
             _paletteIndexOverride = serializedObject.FindProperty("_paletteIndexOverride").intValue;
         }
@@ -41,6 +46,8 @@ namespace FoxEdit
             StaticRenderDisplay();
             if (!_staticRender)
                 FrameTimeDisplay();
+            if (GUILayout.Button("Edit Voxel"))
+                FoxEditManager.StartEditVoxelObject(_voxelRenderer);
         }
 
         private void VoxelObjectDisplay()
@@ -97,5 +104,6 @@ namespace FoxEdit
             serializedObject.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
         }
+
     }
 }

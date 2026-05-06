@@ -9,9 +9,20 @@ namespace FoxEdit
     [CreateAssetMenu(fileName = "VoxelGlobalData", menuName = "FoxEdit/Global Data")]
     public class FoxEditSettings : ScriptableObject
     {
+        private static FoxEditSettings instance = null;
+        [System.Serializable]
+        public class MaterialsSettings
+        {
+            public Material animatedMaterial;
+            public Material staticMaterial;
+        }
+
         [SerializeField] private List<VoxelPalette> _palettes;
 
         public VoxelPalette[] Palettes { get { return _palettes.ToArray(); } }
+        public MaterialsSettings Materials;
+        public ComputeShader computeShader;
+        public ComputeShader staticShader;
 
         public void AddPalette(VoxelPalette palette)
         {
@@ -32,11 +43,11 @@ namespace FoxEdit
             _palettes[index] = palette;
         }
 
-#if UNITY_EDITOR
         public static FoxEditSettings GetSettings()
         {
-            return Resources.Load<FoxEditSettings>("FoxEditSettings");
+            if (instance == null)
+                instance = Resources.Load<FoxEditSettings>("FoxEditSettings");
+            return instance;
         }
-#endif
     }
 }
