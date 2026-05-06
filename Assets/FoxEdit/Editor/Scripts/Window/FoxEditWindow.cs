@@ -446,7 +446,7 @@ namespace FoxEdit
             if (_voxelRenderer != null && !isFromReload)
             {
                 _voxelRenderer.enabled = true;
-                _voxelRenderer.Refresh();
+                _voxelRenderer.Setup();
             }
         }
 

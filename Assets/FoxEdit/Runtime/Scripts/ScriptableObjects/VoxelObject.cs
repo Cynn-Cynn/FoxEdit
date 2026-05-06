@@ -21,25 +21,19 @@ namespace FoxEdit
             public int FrameCount;
         }
 
+        public EditorFrameVoxels[] EditorVoxelPositions = null;
+
         public Bounds Bounds;
 
         public int PaletteIndex = 0;
-        //public Vector3[] VoxelPositions = null;
-        //public int[] VoxelIndices = null;
-        //public int[] FaceIndices = null;
+        public Material AnimatedMaterial = null;
+        public Material StaticMaterial = null;
 
-        //public int[] ColorIndices = null;
-
-        //public int FrameCount = 0;
+        public Mesh StaticMesh = null;
 
         public int[] InstanceStartIndices;
         public int[] InstanceCount = null;
-        //public int MaxInstanceCount = 0;
-
-        public EditorFrameVoxels[] EditorVoxelPositions = null;
-        public Mesh StaticMesh = null;
-
-        public Vector4[] Vertices = null;
         public AnimationFrames[] AnimationIndices = null;
+        public Vector4[] Vertices = null;
     }
 }
