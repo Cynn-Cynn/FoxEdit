@@ -46,7 +46,7 @@ namespace FoxEdit
             StaticRenderDisplay();
             if (!_staticRender)
                 FrameTimeDisplay();
-            if (GUILayout.Button("Edit Voxel"))
+            if (!Application.isPlaying && GUILayout.Button("Edit Voxel"))
                 FoxEditManager.StartEditVoxelObject(_voxelRenderer);
         }
 

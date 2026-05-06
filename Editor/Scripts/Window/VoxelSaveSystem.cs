@@ -39,7 +39,7 @@ namespace FoxEdit
 
         private static VoxelObject GetVoxelObject(VoxelRenderer voxelRenderer, string meshName, string saveDirectory)
         {
-            VoxelObject voxelObject = AssetDatabase.LoadAssetAtPath<VoxelObject>(assetPath);
+            VoxelObject voxelObject = AssetDatabase.LoadAssetAtPath<VoxelObject>(GetAssetPath(meshName, saveDirectory, "asset"));
 
             if (voxelObject == null)
             {
