@@ -6,6 +6,9 @@ using UnityEditor;
 using UnityEngine;
 using static FoxEdit.VoxelObject;
 
+//TODO:
+//Debug les bounds pour etre sure
+
 namespace FoxEdit
 {
     internal class VoxelSaveSystem
@@ -42,9 +45,7 @@ namespace FoxEdit
             VoxelObject voxelObject = AssetDatabase.LoadAssetAtPath<VoxelObject>(GetAssetPath(meshName, saveDirectory, "asset"));
 
             if (voxelObject == null)
-            {
                 voxelObject = CreateVoxelObject(voxelRenderer, meshName, saveDirectory);
-            }
 
             return voxelObject;
         }
@@ -182,7 +183,7 @@ namespace FoxEdit
             size.y = Mathf.Abs(size.y) + 1;
             size.z = Mathf.Abs(size.z) + 1;
 
-            BitArray[][] binaryMasks = FillBinaryMasks(data, size, data.MinBounds);
+            BitArray[][] binaryMasks = FillBinaryMasks(data, size);
 
             int[] colors = data.ColorIndices.GroupBy(color => color).Select(group => group.Key).ToArray();
             Dictionary<int, BitArray[][][]> greedyPlanes = FillGreedPlanes(data, binaryMasks, colors, size, data.MinBounds);
@@ -347,34 +348,37 @@ namespace FoxEdit
             Debug.Log(result);
         }
 
-        private static BitArray[][] FillBinaryMasks(VoxelObjectPackedFrameData data, Vector3Int size, Vector3Int minBounds)
+        private static BitArray[][] FillBinaryMasks(VoxelObjectPackedFrameData data, Vector3Int size)
         {
             Vector3Int[] positions = data.VoxelPositions;
-
             BitArray[][] binarySlices = new BitArray[3][];
 
-            binarySlices[0] = GetSlices(positions, Vector3Int.right, size.x, Vector3Int.forward, size.z, Vector3Int.up, size.y, minBounds);
-            binarySlices[1] = GetSlices(positions, Vector3Int.up, size.y, Vector3Int.right, size.x, Vector3Int.forward, size.z, minBounds);
-            binarySlices[2] = GetSlices(positions, Vector3Int.forward, size.z, Vector3Int.right, size.x, Vector3Int.up, size.y, minBounds);
+            //TODO: inverser des axes
+            //Vector3Int startPosition = data.MinBounds;
+            //binarySlices[2] = GetSlices(positions, Vector3Int.forward, size.z, Vector3Int.right, size.x, Vector3Int.up, size.y, startPosition);
+            //startPosition.z = data.MaxBounds.z;
+            //binarySlices[0] = GetSlices(positions, Vector3Int.right, size.x, -Vector3Int.forward /*-forward ?*/, size.z, Vector3Int.up, size.y, startPosition);
+            //startPosition.z = data.MinBounds.z;
+            //startPosition.x = data.MaxBounds.x;
+            //binarySlices[1] = GetSlices(positions, Vector3Int.up, size.y, -Vector3Int.right/*-right ?*/, size.x, Vector3Int.forward, size.z, startPosition);
+
+            binarySlices[0] = GetSlices(positions, Vector3Int.right, size.x, Vector3Int.forward, size.z, Vector3Int.up, size.y, data.MinBounds);
+            binarySlices[1] = GetSlices(positions, Vector3Int.up, size.y, Vector3Int.right, size.x, Vector3Int.forward, size.z, data.MinBounds);
+            binarySlices[2] = GetSlices(positions, Vector3Int.forward, size.z, Vector3Int.right, size.x, Vector3Int.up, size.y, data.MinBounds);
 
             BitArray[][] binaryMasks = new BitArray[6][];
 
             for (int axis = 0; axis < 3; axis++)
             {
-                binaryMasks[axis * 2] = new BitArray[binarySlices[axis].Length];
-                binaryMasks[axis * 2 + 1] = new BitArray[binarySlices[axis].Length];
+                int length = binarySlices[axis].Length;
+                binaryMasks[axis * 2] = new BitArray[length];
+                binaryMasks[axis * 2 + 1] = new BitArray[length];
 
-                for (int i = 0; i < binarySlices[axis].Length; i++)
+                for (int i = 0; i < length; i++)
                 {
-                    BitArray slice1 = binarySlices[axis][i].Clone() as BitArray;
-                    BitArray rightSlice = binarySlices[axis][i].Clone() as BitArray;
-                    rightSlice = rightSlice.LeftShift(1).Not();
-
-                    BitArray slice2 = binarySlices[axis][i].Clone() as BitArray;
-                    BitArray leftSlice = binarySlices[axis][i].Clone() as BitArray;
-                    leftSlice = leftSlice.RightShift(1).Not();
-                    binaryMasks[axis * 2][i] = slice1.And(rightSlice).Clone() as BitArray;
-                    binaryMasks[axis * 2 + 1][i] = slice2.And(leftSlice).Clone() as BitArray;
+                    BitArray baseSlice = binarySlices[axis][i];
+                    binaryMasks[axis * 2][i] = (baseSlice.Clone() as BitArray).LeftShift(1).Not().And(baseSlice);
+                    binaryMasks[axis * 2 + 1][i] = (baseSlice.Clone() as BitArray).RightShift(1).Not().And(baseSlice);
                 }
             }
 
@@ -384,6 +388,7 @@ namespace FoxEdit
 
         private static BitArray[] GetSlices(Vector3Int[] voxelPositions, Vector3Int sliceAxis, int axisSize, Vector3Int xAxis, int xSize, Vector3Int yAxis, int ySize, Vector3Int minBounds)
         {
+            //TODO : mettre tout en linéaire puis mettre un seul 0 de padding
             //Padding is added at the start and end of a row
             int sliceSize = xSize * ySize;
             BitArray[] binarySlices = new BitArray[sliceSize];
@@ -396,11 +401,8 @@ namespace FoxEdit
                 for (int axisIndex = 1; axisIndex < axisSize + 1; axisIndex++)
                 {
                     Vector3Int position = sliceAxis * (axisIndex - 1) + xAxis * x + yAxis * y;
-
                     if (voxelPositions.Contains(position + minBounds))
-                    {
                         binarySlices[i].Set(axisIndex, true);
-                    }
                 }
             }
 
@@ -558,58 +560,26 @@ namespace FoxEdit
 
                             Rect rect = quadList[i];
                             int axisPosition = slice;
-                            if (axis == 0 || axis == 1)
-                            {
-                                axisPosition = axisSize - slice - 1;
-                            }
-
-                            int rightPosition = xSize - (int)rect.x - 1;
-                            if (axis == 0 || axis == 1)
-                            {
-                                rightPosition = (int)rect.x;
-                            }
-
+                            int rightPosition = (int)rect.x;
                             int upPosition = (int)rect.y;
 
                             Vector3 voxelPosition = new Vector3
                             (
-                                (axis == 0 || axis == 1) ? axisPosition : (axis == 2 || axis == 3) ? rightPosition : rightPosition,
+                                size.x - ((axis == 0 || axis == 1) ? axisPosition : (axis == 2 || axis == 3) ? rightPosition : rightPosition),
                                 (axis == 0 || axis == 1) ? upPosition : (axis == 2 || axis == 3) ? axisPosition : upPosition,
                                 (axis == 0 || axis == 1) ? rightPosition : (axis == 2 || axis == 3) ? upPosition : axisPosition
-                            ) * 10.0f;
+                            ) + minBounds + new Vector3(axis == 1 ? -1.0f : 0, axis == 3 ? 1.0f : 0, axis == 5 ? 1.0f : 0) + new Vector3(1.5f, 0.0f, -0.5f);
+                            voxelPosition *= 10.0f;
 
-                            if (axis == 5)
-                            {
-                                voxelPosition.z += 10.0f;
-                            }
-
-                            if (axis == 3)
-                            {
-                                voxelPosition.y += 10.0f;
-                            }
-
-                            if (axis == 1)
-                            {
-                                voxelPosition.x -= 10.0f;
-                            }
-
-                            int width = -(int)rect.width;
-                            if (axis == 0 || axis == 1)
-                            {
-                                width = -width;
-                            }
+                            int width = (int)rect.width;
                             Vector3 widthVector = new Vector3
                             (
-                                (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? width : width,
+                                -((axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? width : width),
                                 (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? 0 : 0,
                                 (axis == 0 || axis == 1) ? width : (axis == 2 || axis == 3) ? 0 : 0
                             ) * 10.0f;
 
                             int height = (int)rect.height;
-                            if (axis == 2)
-                            {
-                                height = -height;
-                            }
                             Vector3 heightVector = new Vector3
                             (
                                 (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? 0 : 0,
@@ -617,50 +587,44 @@ namespace FoxEdit
                                 (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? height : 0
                             ) * 10.0f;
 
-                            if (axis == 2)
-                            {
-                                voxelPosition.z -= height * 10.0f;
-                            }
-
-                            voxelPosition += new Vector3(minBounds.x * 10.0f, minBounds.y * 10.0f, minBounds.z * 10.0f);
 
                             //Vertices
-                            if (axis != 2 && axis != 4 && axis != 1 && axis != 3)
+                            if (axis == 0 || axis == 2 || axis == 5)
                             {
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4));
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4));
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4) + 1);
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 1);
 
                                 voxelPosition -= heightVector;
                                 voxelPosition += widthVector;
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4) + 2);
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 2);
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4) + 3);
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 3);
                             }
                             else
                             {
                                 voxelPosition += widthVector;
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4));
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4));
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4) + 1);
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 1);
 
                                 voxelPosition -= widthVector;
                                 voxelPosition -= heightVector;
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4) + 2);
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 2);
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z + 10.0f, 1), vertexIndex + (i * 4) + 3);
+                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 3);
                             }
 
                             //Triangles
