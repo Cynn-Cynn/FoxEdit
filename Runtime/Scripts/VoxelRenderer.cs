@@ -282,6 +282,7 @@ namespace FoxEdit
             if (_timer >= _frameDuration)
             {
                 _frameIndex = (_frameIndex + 1) % _voxelObject.AnimationIndices[_animationIndex].FrameCount;
+                linearFrameIndex = _voxelObject.AnimationIndices[_animationIndex].StartIndex + _frameIndex;
                 _timer -= _frameDuration;
                 _renderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.InstanceStartIndices[linearFrameIndex]);
             }
@@ -290,10 +291,12 @@ namespace FoxEdit
             {
                 transform.hasChanged = false;
                 SetWorldBounds();
-                _renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0.0f, 180.0f, 0.0f)));
+                //TODO: c'est louche par ici
+                //_renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0.0f, 180.0f, 0.0f)));
+                _renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix);
             }
 
-            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, VoxelSharedData.FaceTriangleCount, instanceCount: _voxelObject.InstanceCount[linearFrameIndex]);
+            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.InstanceCount[linearFrameIndex]);
         }
 
         #endregion Rendering

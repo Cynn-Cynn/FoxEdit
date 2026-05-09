@@ -92,56 +92,29 @@ Shader "Voxel/VoxelShader"
                 uint faceID = _InstanceStartIndex + instanceID;
 
                 uint localVertexID = vertexID % 4;
-                uint nextVertexID = 0;
-                uint nextNextVertexID = 0;
-
-                if (localVertexID == 0)
-                {
-                    nextVertexID = 1;
-                    nextNextVertexID = 3;
-                }
-                else if (localVertexID == 1)
-                {
-                    nextVertexID = 2;
-                    nextNextVertexID = 0;
-                }
-                else if (localVertexID == 2)
-                {
-                    nextVertexID = 1;
-                    nextNextVertexID = 3;
-                }
-                else
-                {
-                    nextVertexID = 2;
-                    nextNextVertexID = 0;
-                }
+                uint nextVertexID = (localVertexID % 2 + 3) % 4;
+                uint nextNextVertexID = localVertexID % 2 + 1;
 
                 float4 positionOS = float4(_Vertices[faceID * 4 + localVertexID].xyz, 1.0f);
                 float4 nextPositionOS = float4(_Vertices[faceID * 4 + nextVertexID].xyz, 1.0f);
                 float4 nextNextPositionOS = float4(_Vertices[faceID * 4 + nextNextVertexID].xyz, 1.0f);
 
-
-                float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), 1.0f);
+                float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), -1.0f);
                 float3 bitangeantOS = normalize(nextNextPositionOS.xyz - positionOS.xyz);
 
                 float3 normalOS = cross(tangeantOS.xyz, bitangeantOS);
 
                 o.positionWS = mul(_ObjectToWorld, positionOS);
                 o.positionCS = TransformWorldToHClip(o.positionWS.xyz);
-
                 o.normalWS = mul(_ObjectToWorld, normalOS).xyz;
-
-                float sign = tangeantOS.w;
                 o.tangentWS = mul(_ObjectToWorld, tangeantOS);
-
                 o.viewDirWS = GetWorldSpaceNormalizeViewDir(o.positionWS.xyz);
-
                 o.shadowCoord = TransformWorldToShadowCoord(o.positionWS.xyz);
 
                 OUTPUT_LIGHTMAP_UV(v.staticLightmapUV, unity_LightmapST, o.staticLightmapUV);
-// #ifdef DYNAMICLIGHTMAP_ON
-//                 o.dynamicLightmapUV = v.dynamicLightmapUV.xy * unityDynamicLightmapST.xy + unityDynamicLightmapST.zw;
-// #endif
+ #ifdef DYNAMICLIGHTMAP_ON
+                 o.dynamicLightmapUV = v.dynamicLightmapUV.xy * unityDynamicLightmapST.xy + unityDynamicLightmapST.zw;
+ #endif
                 OUTPUT_SH(o.normalWS.xyz, o.vertexSH);
 
                 o.faceID = faceID;
@@ -193,11 +166,11 @@ Shader "Voxel/VoxelShader"
 
                 inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
 
-// #if defined(DYNAMICLIGHTMAP_ON)
-//                 inputData.bakedGO = SAMPLE_GI(i.staticLightmapUV, i.dynamicLightmapUV, i.vertexSH, inputData.normalWS);
-// #else
+#if defined(DYNAMICLIGHTMAP_ON)
+                inputData.bakedGO = SAMPLE_GI(i.staticLightmapUV, i.dynamicLightmapUV, i.vertexSH, inputData.normalWS);
+#else
                 inputData.bakedGI = SAMPLE_GI(i.staticLightmapUV, i.vertexSH, inputData.normalWS);
-//#endif
+#endif
                 inputData.shadowMask = SAMPLE_SHADOWMASK(i.staticLightmapUV);
                 inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(i.positionCS);
 
@@ -262,34 +235,12 @@ Shader "Voxel/VoxelShader"
 
                     uint faceID = _InstanceStartIndex + instanceID;
                     uint localVertexID = vertexID % 4;
-                    uint nextVertexID = 0;
-                    uint nextNextVertexID = 0;
-
-                    if (localVertexID == 0)
-                    {
-                        nextVertexID = 1;
-                        nextNextVertexID = 3;
-                    }
-                    else if (localVertexID == 1)
-                    {
-                        nextVertexID = 2;
-                        nextNextVertexID = 0;
-                    }
-                    else if (localVertexID == 2)
-                    {
-                        nextVertexID = 1;
-                        nextNextVertexID = 3;
-                    }
-                    else
-                    {
-                        nextVertexID = 2;
-                        nextNextVertexID = 0;
-                    }
+                    uint nextVertexID = (localVertexID % 2 + 3) % 4;
+                    uint nextNextVertexID = localVertexID % 2 + 1;
 
                     float4 positionOS = float4(_Vertices[faceID * 4 + localVertexID].xyz, 1.0f);
                     float4 nextPositionOS = float4(_Vertices[faceID * 4 + nextVertexID].xyz, 1.0f);
                     float4 nextNextPositionOS = float4(_Vertices[faceID * 4 + nextNextVertexID].xyz, 1.0f);
-
 
                     float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), 1.0f);
                     float3 bitangeantOS = normalize(nextNextPositionOS.xyz - positionOS.xyz);
