@@ -18,11 +18,9 @@ namespace FoxEdit
         private static GraphicsBuffer _faceVertexBuffer = null;
         private static GraphicsBuffer _faceTriangleBuffer = null;
         private static List<GraphicsBuffer> _colorsBuffers = null;
-        private static int _faceTriangleCount = 0;
 
         internal static GraphicsBuffer FaceVertexBuffer { get { return _faceVertexBuffer; } }
         internal static GraphicsBuffer FaceTriangleBuffer { get { return _faceTriangleBuffer; } }
-        internal static int FaceTriangleCount { get { return _faceTriangleCount; } }
 
         #endregion Buffers
 
@@ -38,8 +36,8 @@ namespace FoxEdit
 
         private static int[] _faceTriangles =
         {
-            0, 1, 2,
-            1, 3, 2
+            0, 2, 1,
+            1, 2, 3
         };
 
         #endregion Vertices
@@ -130,7 +128,6 @@ namespace FoxEdit
 
             _faceTriangleBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _faceTriangles.Length, sizeof(int));
             _faceTriangleBuffer.SetData(_faceTriangles);
-            _faceTriangleCount = _faceTriangleBuffer.count;
         }
 
         #endregion Faces
