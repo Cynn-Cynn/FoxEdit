@@ -181,7 +181,7 @@ namespace FoxEdit
             size.z = Mathf.Abs(size.z) + 1;
             int[] colors = data.ColorIndices.GroupBy(color => color).Select(group => group.Key).ToArray();
 
-            BitArray[][] binaryMasks = FillBinaryMasks(data, size);
+            BitArray[] binaryMasks = FillBinaryMasks(data, size);
             Dictionary<int, BitArray[][][]> greedyPlanes = FillGreedPlanes(data, binaryMasks, colors, size, data.MinBounds);
             Dictionary<int, List<Rect>[][]> quads = Combine(greedyPlanes, colors);
 
@@ -341,58 +341,53 @@ namespace FoxEdit
             Debug.Log(result);
         }
 
-        private static BitArray[][] FillBinaryMasks(VoxelObjectPackedFrameData data, Vector3Int size)
+        private static BitArray[] FillBinaryMasks(VoxelObjectPackedFrameData data, Vector3Int size)
         {
             Vector3Int[] positions = data.VoxelPositions;
-            BitArray[][] binarySlices = new BitArray[3][];
+            BitArray[] binarySlices = new BitArray[3];
 
-            binarySlices[0] = GetSlices(positions, Vector3Int.right, size.x, Vector3Int.forward, size.z, Vector3Int.up, size.y, data.MinBounds);
-            binarySlices[1] = GetSlices(positions, Vector3Int.up, size.y, Vector3Int.right, size.x, Vector3Int.forward, size.z, data.MinBounds);
-            binarySlices[2] = GetSlices(positions, Vector3Int.forward, size.z, Vector3Int.right, size.x, Vector3Int.up, size.y, data.MinBounds);
+            binarySlices[0] = GetSlice(positions, Vector3Int.right, size.x, Vector3Int.forward, size.z, Vector3Int.up, size.y, data.MinBounds);
+            binarySlices[1] = GetSlice(positions, Vector3Int.up, size.y, Vector3Int.right, size.x, Vector3Int.forward, size.z, data.MinBounds);
+            binarySlices[2] = GetSlice(positions, Vector3Int.forward, size.z, Vector3Int.right, size.x, Vector3Int.up, size.y, data.MinBounds);
 
-            BitArray[][] binaryMasks = new BitArray[6][];
+            BitArray[] binaryMasks = new BitArray[6];
 
             for (int axis = 0; axis < 3; axis++)
             {
                 int length = binarySlices[axis].Length;
-                binaryMasks[axis * 2] = new BitArray[length];
-                binaryMasks[axis * 2 + 1] = new BitArray[length];
-
-                for (int i = 0; i < length; i++)
-                {
-                    BitArray baseSlice = binarySlices[axis][i];
-                    binaryMasks[axis * 2][i] = (baseSlice.Clone() as BitArray).LeftShift(1).Not().And(baseSlice);
-                    binaryMasks[axis * 2 + 1][i] = (baseSlice.Clone() as BitArray).RightShift(1).Not().And(baseSlice);
-                }
+                BitArray baseSlice = binarySlices[axis];
+                binaryMasks[axis * 2] = (baseSlice.Clone() as BitArray).LeftShift(1).Not().And(baseSlice);
+                binaryMasks[axis * 2 + 1] = (baseSlice.Clone() as BitArray).RightShift(1).Not().And(baseSlice);
             }
 
             return binaryMasks;
         }
 
-        private static BitArray[] GetSlices(Vector3Int[] voxelPositions, Vector3Int sliceAxis, int axisSize, Vector3Int xAxis, int xSize, Vector3Int yAxis, int ySize, Vector3Int minBounds)
+        private static BitArray GetSlice(Vector3Int[] voxelPositions, Vector3Int sliceAxis, int axisSize, Vector3Int xAxis, int xSize, Vector3Int yAxis, int ySize, Vector3Int minBounds)
         {
-            //TODO : mettre tout en linéaire puis mettre un seul 0 de padding
-            //Padding is added at the start and end of a row
-            int sliceSize = xSize * ySize;
-            BitArray[] binarySlices = new BitArray[sliceSize];
+            int axisSizeWithPadding = axisSize + 1;
+            int totalSize = xSize * ySize * axisSizeWithPadding;
+            int sliceSize = xSize * axisSizeWithPadding;
+            BitArray binarySlices = new BitArray(totalSize + 1, false);
 
-            for (int i = 0; i < sliceSize; i++)
+            for (int i = 1; i < totalSize; i++)
             {
-                int x = i % xSize;
-                int y = i / xSize;
-                binarySlices[i] = new BitArray(axisSize + 2, false);
-                for (int axisIndex = 1; axisIndex < axisSize + 1; axisIndex++)
-                {
-                    Vector3Int position = sliceAxis * (axisIndex - 1) + xAxis * x + yAxis * y;
-                    if (voxelPositions.Contains(position + minBounds))
-                        binarySlices[i].Set(axisIndex, true);
-                }
+                int sliceIndex = i % axisSizeWithPadding;
+                if (sliceIndex == 0)
+                    continue;
+
+                int x = (i / axisSizeWithPadding) % xSize;
+                int y = i / sliceSize;
+
+                Vector3Int position = sliceAxis * (sliceIndex - 1) + xAxis * x + yAxis * y;
+                if (voxelPositions.Contains(position + minBounds))
+                    binarySlices.Set(i, true);
             }
 
             return binarySlices;
         }
 
-        private static Dictionary<int, BitArray[][][]> FillGreedPlanes(VoxelObjectPackedFrameData data, BitArray[][] binaryMasks, int[] colors, Vector3Int size, Vector3Int minBounds)
+        private static Dictionary<int, BitArray[][][]> FillGreedPlanes(VoxelObjectPackedFrameData data, BitArray[] binaryMasks, int[] colors, Vector3Int size, Vector3Int minBounds)
         {
             Dictionary<int, BitArray[][][]> greedyPlanes = new Dictionary<int, BitArray[][][]>();
 
@@ -413,7 +408,8 @@ namespace FoxEdit
                     greedyPlanes[color][axis] = new BitArray[axisSize][];
                 }
 
-                for (int axisIndex = 0; axisIndex < axisSize; axisIndex++)
+                axisSize += 1;
+                for (int axisIndex = 0; axisIndex < axisSize - 1; axisIndex++)
                 {
                     foreach (int color in colors)
                     {
@@ -426,8 +422,8 @@ namespace FoxEdit
 
                     for (int i = 0; i < sliceSize; i++)
                     {
-                        bool bitValue = binaryMasks[axis][i].Get(axisIndex + 1);
-                        if (!bitValue)
+                        bool hasFace = binaryMasks[axis].Get(i * axisSize + axisIndex + 1);
+                        if (!hasFace)
                             continue;
 
                         int x = i % xSize;
