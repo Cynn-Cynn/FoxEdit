@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.VFX;
 using static FoxEdit.VoxelObject;
-
-//TODO:
-//Debug les bounds pour etre sure
 
 namespace FoxEdit
 {
@@ -16,7 +14,7 @@ namespace FoxEdit
         internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorAnimation> animationList, ComputeShader computeStaticMesh)
         {
             VoxelObject voxelObject = GetVoxelObject(voxelRenderer, meshName, saveDirectory);
-            voxelObject = BinaryFillObject(voxelObject, animationList, palette, paletteIndex, saveDirectory, meshName);
+            voxelObject = FillObject(voxelObject, animationList, palette, paletteIndex, saveDirectory, meshName);
 
             voxelRenderer.VoxelObject = voxelObject;
             EditorUtility.SetDirty(voxelRenderer);
@@ -26,7 +24,7 @@ namespace FoxEdit
             Selection.activeObject = voxelObject;
         }
 
-        #region AssetManagement
+        #region VoxelObjectCreation
 
         private static string GetAssetPath(string meshName, string saveDirectory, string extension)
         {
@@ -79,9 +77,7 @@ namespace FoxEdit
             return voxelObject;
         }
 
-        #endregion AssetManagement
-
-        private static VoxelObject BinaryFillObject(VoxelObject voxelObject, List<VoxelEditorAnimation> animationList, VoxelPalette palette, int paletteIndex, string saveDirectory, string meshName)
+        private static VoxelObject FillObject(VoxelObject voxelObject, List<VoxelEditorAnimation> animationList, VoxelPalette palette, int paletteIndex, string saveDirectory, string meshName)
         {
             List<Vector3Int> minBounds = new List<Vector3Int>();
             List<Vector3Int> maxBounds = new List<Vector3Int>();
@@ -90,7 +86,7 @@ namespace FoxEdit
 
             bool[] isColorTransparent = palette.Colors.Select(material => material.Color.a < 1.0f).ToArray();
 
-            List<Vector4> vertices = new List<Vector4>();
+            IEnumerable<Vector4> vertices = new List<Vector4>();
             List<int> startIndices = new List<int>();
             List<int> instanceCounts = new List<int>();
             AnimationFrames[] animationIndices = new AnimationFrames[animationList.Count];
@@ -117,18 +113,14 @@ namespace FoxEdit
                     minBounds.Add(packedData.MinBounds);
                     maxBounds.Add(packedData.MaxBounds);
 
-                    List<Vector4> frameVertices = new List<Vector4>();
-                    string completeMeshName = $"{meshName}_Animation{animation.ToString("00")}_Frame_{frame.ToString("00")}";
-                    string fbxPath = GetAssetPath("SM_" + completeMeshName, saveDirectory, "fbx");
-                    Mesh greedyMesh = GreedyMeshing(packedData, palette.PaletteSize, isColorTransparent, fbxPath, completeMeshName, out frameVertices);
-                    instanceCounts.Add(frameVertices.Count / 4);
-                    startIndices.Add(vertices.Count / 4);
-                    //TODO: modifier la liste direct pour ne pas append
-                    vertices = vertices.Concat(frameVertices).ToList();
+                    List<Vector4> frameVertices = GreedyMeshing(packedData);
 
-                    //TODO: generer que le static mesh de la frame 0 (ou une option pour choisir la frame ?)
+                    instanceCounts.Add(frameVertices.Count / 4);
+                    startIndices.Add(vertices.Count() / 4);
+                    vertices = vertices.Concat(frameVertices);
+
                     if (frame == 0 && animation == 0)
-                        voxelObject.StaticMesh = greedyMesh;
+                        voxelObject.StaticMesh = CreateBinaryFBX(saveDirectory, $"SM_{meshName}", frameVertices);
                 }
             }
 
@@ -177,24 +169,23 @@ namespace FoxEdit
             return bounds;
         }
 
+        #endregion VoxelObjectCreation
 
-        private static Mesh GreedyMeshing(VoxelObjectPackedFrameData data, int colorCount, bool[] isColorTransparent, string path, string meshName, out List<Vector4> frameVertices)
+        #region GreedyMeshing
+
+        private static List<Vector4> GreedyMeshing(VoxelObjectPackedFrameData data)
         {
             Vector3Int size = data.MinBounds - data.MaxBounds;
             size.x = Mathf.Abs(size.x) + 1;
             size.y = Mathf.Abs(size.y) + 1;
             size.z = Mathf.Abs(size.z) + 1;
+            int[] colors = data.ColorIndices.GroupBy(color => color).Select(group => group.Key).ToArray();
 
             BitArray[][] binaryMasks = FillBinaryMasks(data, size);
-
-            int[] colors = data.ColorIndices.GroupBy(color => color).Select(group => group.Key).ToArray();
             Dictionary<int, BitArray[][][]> greedyPlanes = FillGreedPlanes(data, binaryMasks, colors, size, data.MinBounds);
-
-            //DebugGreedyPlanes(greedyPlanes, colors, palette);
-
             Dictionary<int, List<Rect>[][]> quads = Combine(greedyPlanes, colors);
-            Mesh binaryMesh = GetBinaryStaticMesh(quads, size, data.MinBounds, path, meshName, out frameVertices);
-            return binaryMesh;
+
+            return CreateTriangles(quads, size, data.MinBounds);
         }
 
         private static Dictionary<int, List<Rect>[][]> Combine(Dictionary<int, BitArray[][][]> greedyPlanes, int[] colors)
@@ -378,7 +369,6 @@ namespace FoxEdit
             return binaryMasks;
         }
 
-
         private static BitArray[] GetSlices(Vector3Int[] voxelPositions, Vector3Int sliceAxis, int axisSize, Vector3Int xAxis, int xSize, Vector3Int yAxis, int ySize, Vector3Int minBounds)
         {
             //TODO : mettre tout en linéaire puis mettre un seul 0 de padding
@@ -459,81 +449,9 @@ namespace FoxEdit
             return greedyPlanes;
         }
 
-        #region BinaryFbxCreation
-
-        private static Mesh GetBinaryStaticMesh(Dictionary<int, List<Rect>[][]> quads, Vector3Int size, Vector3Int minBounds, string fbxPath, string meshName, out List<Vector4> frameVertices)
+        private static List<Vector4> CreateTriangles(Dictionary<int, List<Rect>[][]> quads, Vector3Int size, Vector3Int minBounds)
         {
-            CreateBinaryFBX(fbxPath, quads, size, minBounds, meshName, out frameVertices);
-            AssetDatabase.Refresh();
-            GameObject meshGameObject = AssetDatabase.LoadAssetAtPath(fbxPath, typeof(GameObject)) as GameObject;
-            return meshGameObject.GetComponent<MeshFilter>().sharedMesh;
-        }
-
-        private static void CreateBinaryFBX(string fbxPath, Dictionary<int, List<Rect>[][]> quads, Vector3Int size, Vector3Int minBounds, string meshName, out List<Vector4> frameVertices)
-        {
-            using (var fbxManager = FbxManager.Create())
-            {
-                FbxIOSettings fbxIOSettings = FbxIOSettings.Create(fbxManager, Globals.IOSROOT);
-
-                fbxManager.SetIOSettings(fbxIOSettings);
-                FbxExporter fbxExporter = FbxExporter.Create(fbxManager, "Exporter");
-                int fileFormat = fbxManager.GetIOPluginRegistry().FindWriterIDByDescription("FBX ascii (*.fbx)");
-                bool status = fbxExporter.Initialize(fbxPath, fileFormat, fbxIOSettings);
-
-                if (!status)
-                {
-                    Debug.LogError(string.Format("failed to initialize exporter, reason: {0}", fbxExporter.GetStatus().GetErrorString()));
-                    frameVertices = new List<Vector4>();
-                    return;
-                }
-
-                FbxScene fbxScene = FbxScene.Create(fbxManager, "Voxel Scene");
-                FbxDocumentInfo fbxSceneInfo = FbxDocumentInfo.Create(fbxManager, "Voxel Static Mesh");
-                fbxSceneInfo.mTitle = meshName;
-                fbxSceneInfo.mAuthor = "FoxEdit";
-                fbxScene.SetSceneInfo(fbxSceneInfo);
-
-                FbxNode mesh = CreateBinaryStaticMesh(fbxManager, quads, size, minBounds, meshName, out frameVertices);
-                fbxScene.GetRootNode().AddChild(mesh);
-
-                fbxExporter.Export(fbxScene);
-
-                fbxScene.Destroy();
-                fbxExporter.Destroy();
-            }
-        }
-
-        private static FbxNode CreateBinaryStaticMesh(FbxManager fbxManager, Dictionary<int, List<Rect>[][]> quads, Vector3Int size, Vector3Int minBounds, string meshName, out List<Vector4> frameVertices)
-        {
-            FbxMesh fbxMesh = ConvertUnityMeshToBinaryFbxMesh(fbxManager, quads, size, minBounds, meshName, out frameVertices);
-
-            FbxNode meshNode = FbxNode.Create(fbxManager, $"{meshName}");
-            meshNode.LclTranslation.Set(new FbxDouble3(0.0, 0.0, 0.0));
-            meshNode.LclRotation.Set(new FbxDouble3(0.0, 0.0, 0.0));
-            meshNode.LclScaling.Set(new FbxDouble3(1.0, 1.0, 1.0));
-            meshNode.SetNodeAttribute(fbxMesh);
-
-            return meshNode;
-        }
-
-        private static FbxMesh ConvertUnityMeshToBinaryFbxMesh(FbxManager fbxManager, Dictionary<int, List<Rect>[][]> quads, Vector3Int size, Vector3Int minBounds, string meshName, out List<Vector4> frameVertices)
-        {
-            frameVertices = new List<Vector4>();
-
-            FbxMesh fbxMesh = FbxMesh.Create(fbxManager, $"SM_{meshName}");
-            fbxMesh.InitControlPoints(GetTotalQuadCount(quads) * 4);
-
-            var normalElement = FbxLayerElementNormal.Create(fbxMesh, "Normals");
-            normalElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
-            normalElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
-            var normalArray = normalElement.GetDirectArray();
-
-            var uvElement = FbxLayerElementUV.Create(fbxMesh, "UVs");
-            uvElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
-            uvElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
-            var uvArray = uvElement.GetDirectArray();
-
-            int vertexIndex = 0;
+            List<Vector4> frameVertices = new List<Vector4>();
 
             foreach (var color in quads.Keys)
             {
@@ -578,104 +496,151 @@ namespace FoxEdit
                                 (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? height : 0
                             ) * 10.0f;
 
-
-                            //Vertices
                             if (axis == 0 || axis == 2 || axis == 5)
                             {
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4));
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 1);
 
                                 voxelPosition -= heightVector;
                                 voxelPosition += widthVector;
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 2);
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 3);
                             }
                             else
                             {
                                 voxelPosition += widthVector;
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4));
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 1);
 
                                 voxelPosition -= widthVector;
                                 voxelPosition -= heightVector;
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 2);
 
                                 voxelPosition += heightVector;
                                 frameVertices.Add(new Vector4(-voxelPosition.x * 0.01f, voxelPosition.y * 0.01f, voxelPosition.z * 0.01f, color));
-                                fbxMesh.SetControlPointAt(new FbxVector4(voxelPosition.x, voxelPosition.y, voxelPosition.z, 1), vertexIndex + (i * 4) + 3);
                             }
-
-                            //Triangles
-                            fbxMesh.BeginPolygon();
-                            fbxMesh.AddPolygon(vertexIndex + 0 + i * 4);
-                            fbxMesh.AddPolygon(vertexIndex + 1 + i * 4);
-                            fbxMesh.AddPolygon(vertexIndex + 2 + i * 4);
-                            fbxMesh.EndPolygon();
-
-                            fbxMesh.BeginPolygon();
-                            fbxMesh.AddPolygon(vertexIndex + 1 + i * 4);
-                            fbxMesh.AddPolygon(vertexIndex + 3 + i * 4);
-                            fbxMesh.AddPolygon(vertexIndex + 2 + i * 4);
-                            fbxMesh.EndPolygon();
-
-                            //Normals
-                            Vector3 normal = new Vector3(
-                                (axis == 0 || axis == 1) ? 1 : (axis == 2 || axis == 3) ? 0 : 0,
-                                (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? 1 : 0,
-                                (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? 0 : 1
-                            ) * (axis == 1 || axis == 2 || axis == 4 ? -1 : 1);
-
-                            FbxVector4 fbxNormal = new FbxVector4(normal.x, normal.y, normal.z, 0);
-                            normalArray.Add(fbxNormal);
-                            normalArray.Add(fbxNormal);
-                            normalArray.Add(fbxNormal);
-                            normalArray.Add(fbxNormal);
-
-                            //UVs (used for color indices)
-                            uvArray.Add(new FbxVector2(color, 0));
-                            uvArray.Add(new FbxVector2(color, 0));
-                            uvArray.Add(new FbxVector2(color, 0));
-                            uvArray.Add(new FbxVector2(color, 0));
                         }
-
-                        vertexIndex += quadList.Count * 4;
                     }
                 }
             }
-            fbxMesh.GetLayer(0).SetNormals(normalElement);
-            fbxMesh.GetLayer(0).SetUVs(uvElement);
-            return fbxMesh;
+
+            return frameVertices;
         }
 
-        private static int GetTotalQuadCount(Dictionary<int, List<Rect>[][]> quads)
-        {
-            int count = 0;
+        #endregion GreedyMeshing
 
-            foreach (var color in quads.Keys)
+        #region BinaryFbxCreation
+
+        private static Mesh CreateBinaryFBX(string saveDirectory, string meshName, List<Vector4> frameVertices)
+        {
+            string fbxPath = GetAssetPath(meshName, saveDirectory, "fbx");
+
+            using (var fbxManager = FbxManager.Create())
             {
-                for (int axis = 0; axis < 6; axis++)
+                FbxIOSettings fbxIOSettings = FbxIOSettings.Create(fbxManager, Globals.IOSROOT);
+
+                fbxManager.SetIOSettings(fbxIOSettings);
+                FbxExporter fbxExporter = FbxExporter.Create(fbxManager, "Exporter");
+                int fileFormat = fbxManager.GetIOPluginRegistry().FindWriterIDByDescription("FBX ascii (*.fbx)");
+                bool status = fbxExporter.Initialize(fbxPath, fileFormat, fbxIOSettings);
+
+                if (!status)
                 {
-                    for (int slice = 0; slice < quads[color][axis].Length; slice++)
-                    {
-                        count += quads[color][axis][slice].Count;
-                    }
+                    Debug.LogError(string.Format("failed to initialize exporter, reason: {0}", fbxExporter.GetStatus().GetErrorString()));
+                    return null;
                 }
+
+                FbxScene fbxScene = FbxScene.Create(fbxManager, "Voxel Scene");
+                FbxDocumentInfo fbxSceneInfo = FbxDocumentInfo.Create(fbxManager, "Voxel Static Mesh");
+                fbxSceneInfo.mTitle = meshName;
+                fbxSceneInfo.mAuthor = "FoxEdit";
+                fbxScene.SetSceneInfo(fbxSceneInfo);
+
+                FbxNode mesh = CreateFbxMesh(fbxManager, meshName, frameVertices);
+                fbxScene.GetRootNode().AddChild(mesh);
+
+                fbxExporter.Export(fbxScene);
+
+                fbxScene.Destroy();
+                fbxExporter.Destroy();
             }
 
-            return count;
+            AssetDatabase.Refresh();
+            GameObject meshGameObject = AssetDatabase.LoadAssetAtPath(fbxPath, typeof(GameObject)) as GameObject;
+            return meshGameObject.GetComponent<MeshFilter>().sharedMesh;
+        }
+
+        private static FbxNode CreateFbxMesh(FbxManager fbxManager, string meshName, List<Vector4> frameVertices)
+        {
+            FbxMesh fbxMesh = FbxMesh.Create(fbxManager, meshName);
+            fbxMesh.InitControlPoints(frameVertices.Count);
+
+            var normalElement = FbxLayerElementNormal.Create(fbxMesh, "Normals");
+            normalElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
+            normalElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
+            var normalArray = normalElement.GetDirectArray();
+
+            var uvElement = FbxLayerElementUV.Create(fbxMesh, "UVs");
+            uvElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
+            uvElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
+            var uvArray = uvElement.GetDirectArray();
+
+            for (int i = 0; i < frameVertices.Count; i += 4)
+            {
+                FbxVector4 fbxNormal = GetFaceNormal(frameVertices[i], frameVertices[i + 1], frameVertices[i + 2]);
+
+                for (int y = 0; y < 4; y++)
+                {
+                    int vertexIndex = i + y;
+                    Vector4 voxelPosition = frameVertices[vertexIndex];
+                    float color = voxelPosition.w;
+                    voxelPosition *= 100.0f;
+
+                    fbxMesh.SetControlPointAt(new FbxVector4(-voxelPosition.x, voxelPosition.y, voxelPosition.z), vertexIndex);
+                    normalArray.Add(fbxNormal);
+                    uvArray.Add(new FbxVector2(color, 0));
+                }
+
+                //Triangles
+                fbxMesh.BeginPolygon();
+                fbxMesh.AddPolygon(0 + i);
+                fbxMesh.AddPolygon(1 + i);
+                fbxMesh.AddPolygon(2 + i);
+                fbxMesh.EndPolygon();
+
+                fbxMesh.BeginPolygon();
+                fbxMesh.AddPolygon(1 + i);
+                fbxMesh.AddPolygon(3 + i);
+                fbxMesh.AddPolygon(2 + i);
+                fbxMesh.EndPolygon();
+            }
+
+            fbxMesh.GetLayer(0).SetNormals(normalElement);
+            fbxMesh.GetLayer(0).SetUVs(uvElement);
+
+            FbxNode meshNode = FbxNode.Create(fbxManager, meshName);
+            meshNode.LclTranslation.Set(new FbxDouble3(0.0, 0.0, 0.0));
+            meshNode.LclRotation.Set(new FbxDouble3(0.0, 0.0, 0.0));
+            meshNode.LclScaling.Set(new FbxDouble3(1.0, 1.0, 1.0));
+            meshNode.SetNodeAttribute(fbxMesh);
+
+            return meshNode;
+        }
+
+        private static FbxVector4 GetFaceNormal(Vector4 point1, Vector4 point2, Vector4 point3)
+        {
+            Vector3 tangeant = point2 - point1;
+            tangeant.x = -tangeant.x;
+            Vector3 bitangeant = point3 - point1;
+            bitangeant.x = -bitangeant.x;
+            Vector3 normal = Vector3.Normalize(Vector3.Cross(tangeant, bitangeant));
+            return new FbxVector4(normal.x, normal.y, normal.z);
         }
 
         #endregion BinaryFbxCreation
