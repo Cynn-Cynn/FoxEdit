@@ -1581,7 +1581,7 @@ MonoBehaviour:
   PaletteIndex: 0
   AnimatedMaterial: {fileID: 2100000, guid: 6a1bfce4bbd73514bbe5caa2500a30c0, type: 2}
   StaticMaterial: {fileID: 2100000, guid: 29e192c26e4381f4e90c37d523e52386, type: 2}
-  StaticMesh: {fileID: -8039384279103502089, guid: 22e8fc5508d87464cb19ead306a9fd82, type: 3}
+  StaticMesh: {fileID: -3394617356442485732, guid: 6e41e5f9adf880843b77e4213526d416, type: 3}
   InstanceStartIndices: 0000000012010000
   InstanceCount: 120100001f010000
   AnimationIndices:
