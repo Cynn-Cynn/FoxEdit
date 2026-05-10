@@ -59,7 +59,12 @@ namespace FoxEdit
 
         private void PaletteIndexOverrideDisplay()
         {
-            int paletteIndexOverride = EditorGUILayout.Popup("Palette Index", _paletteIndexOverride, _paletteNames);
+            int voxelObjectPaletteIndex = _voxelRenderer.VoxelObject.PaletteIndex;
+            int displayIndex = _paletteIndexOverride != -1 ? _paletteIndexOverride : voxelObjectPaletteIndex;
+            int paletteIndexOverride = EditorGUILayout.Popup("Palette Index", displayIndex, _paletteNames);
+            if (paletteIndexOverride == voxelObjectPaletteIndex)
+                paletteIndexOverride = -1;
+
             if (paletteIndexOverride != _paletteIndexOverride)
             {
                 _voxelRenderer.SetPalette(paletteIndexOverride);
@@ -67,11 +72,11 @@ namespace FoxEdit
                 Save();
             }
 
-            if (paletteIndexOverride != _voxelRenderer.VoxelObject.PaletteIndex)
+            if (paletteIndexOverride != -1)
             {
                 Color baseColor = GUI.contentColor;
                 GUI.contentColor = Color.cyan;
-                EditorGUILayout.LabelField($"Override {_paletteNames[_voxelRenderer.VoxelObject.PaletteIndex]} with {_paletteNames[_paletteIndexOverride]}");
+                EditorGUILayout.LabelField($"Override {_paletteNames[voxelObjectPaletteIndex]} with {_paletteNames[_paletteIndexOverride]}");
                 GUI.contentColor = baseColor;
             }
         }
