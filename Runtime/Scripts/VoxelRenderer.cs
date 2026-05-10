@@ -16,7 +16,7 @@ namespace FoxEdit
     {
         //User editable
         [SerializeField] private VoxelObject _voxelObject = null;
-        [SerializeField] private int _paletteIndexOverride = 0;
+        [SerializeField] private int _paletteIndexOverride = -1;
         [SerializeField] private bool _staticRender = false;
         [SerializeField] private float _frameDuration = 0.2f;
 
@@ -50,8 +50,9 @@ namespace FoxEdit
         {
             _meshFilter = GetComponent<MeshFilter>();
             _meshRenderer = GetComponent<MeshRenderer>();
-            _staticMaterialInstance = new Material(_voxelObject.StaticMaterial);
-            _meshRenderer.material = _staticMaterialInstance;
+
+            if (_paletteIndexOverride != _voxelObject.PaletteIndex)
+                CreateStaticMaterialInstance();
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
@@ -144,7 +145,7 @@ namespace FoxEdit
         //    _meshRenderer.enabled = true;
         //}
 
-        public bool IsStaticRender => _staticRender;
+        //public bool IsStaticRender => _staticRender;
 
         public int GetPaletteIndex()
         {
@@ -155,15 +156,29 @@ namespace FoxEdit
 
         public void SetPalette(int index)
         {
-            GraphicsBuffer colorsBuffer = VoxelSharedData.GetColorBuffer(index);
+            if (index == _paletteIndexOverride || (_paletteIndexOverride == -1 && index == _voxelObject.PaletteIndex))
+                return;
 
+            index = index == -1 ? _voxelObject.PaletteIndex : index;
+            GraphicsBuffer colorsBuffer = VoxelSharedData.GetColorBuffer(index);
             if (colorsBuffer != null)
             {
 #if UNITY_EDITOR
                 if (Application.isPlaying)
 #endif
                     _renderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-                _paletteIndexOverride = index;
+
+                if (_paletteIndexOverride == -1 && index != -1)
+                {
+                    CreateStaticMaterialInstance();
+                    _paletteIndexOverride = index;
+                }
+                else if (index == _voxelObject.PaletteIndex)
+                {
+                    _meshRenderer.material = _voxelObject.StaticMaterial;
+                    _staticMaterialInstance = null;
+                    _paletteIndexOverride = -1;
+                }
             }
 
 #if UNITY_EDITOR
@@ -174,6 +189,13 @@ namespace FoxEdit
                 AssetDatabase.SaveAssets();
             }
 #endif
+        }
+
+        private void CreateStaticMaterialInstance()
+        {
+            _staticMaterialInstance = new Material(_voxelObject.StaticMaterial);
+            _staticMaterialInstance.name = _voxelObject.StaticMaterial.name + "_Instance";
+            _meshRenderer.material = _staticMaterialInstance;
         }
 
         #endregion UserEditable
@@ -271,7 +293,10 @@ namespace FoxEdit
 
         private void StaticRender()
         {
-            _staticMaterialInstance.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+            if (_staticMaterialInstance != null)
+                _staticMaterialInstance.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+            else
+                _voxelObject.StaticMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
         }
 
         private void AnimationRender()
@@ -291,8 +316,6 @@ namespace FoxEdit
             {
                 transform.hasChanged = false;
                 SetWorldBounds();
-                //TODO: c'est louche par ici
-                //_renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0.0f, 180.0f, 0.0f)));
                 _renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix);
             }
 

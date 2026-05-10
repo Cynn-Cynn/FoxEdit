@@ -549,8 +549,6 @@ namespace FoxEdit
 
                         for (int i = 0; i < quadList.Count; i++)
                         {
-                            bool baseAxis = axis % 2 == 0;
-
                             Rect rect = quadList[i];
                             int axisPosition = slice;
                             int rightPosition = (int)rect.x;

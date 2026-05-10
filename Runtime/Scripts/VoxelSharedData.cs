@@ -94,7 +94,7 @@ namespace FoxEdit
 
         private static void Refresh()
         {
-            VoxelRenderer[] renderers = GameObject.FindObjectsOfType<VoxelRenderer>();
+            VoxelRenderer[] renderers = Object.FindObjectsByType<VoxelRenderer>(FindObjectsSortMode.None);
             for (int i = 0; i < renderers.Length; i++)
             {
                 renderers[i].Setup();
