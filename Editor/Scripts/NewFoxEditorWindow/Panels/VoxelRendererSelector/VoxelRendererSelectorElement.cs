@@ -48,7 +48,8 @@ namespace FoxEdit.WindowPanels
 
                 menu.AddItem("New empty voxel object", false, NewVoxelObject);
 
-                menu.DropDown(new Rect(evt.mousePosition, Vector2.zero), target);
+                //Kebab c'est deprecated ici
+                menu.DropDown(new Rect(evt.mousePosition, Vector2.zero), target, false);
             });
         }
 
