@@ -35,6 +35,7 @@ namespace FoxEdit
         public int[] InstanceStartIndices;
         public int[] InstanceCount = null;
         public AnimationFrames[] AnimationIndices = null;
-        public Vector4[] Vertices = null;
+        public Vector3[] Vertices = null;
+        public int[] Quads = null;
     }
 }

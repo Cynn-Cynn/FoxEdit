@@ -27,6 +27,7 @@ namespace FoxEdit
         public VoxelObject VoxelObject { get { return _voxelObject; } set { SetVoxelObject(value); } }
 
         private GraphicsBuffer _verticesBuffer = null;
+        private GraphicsBuffer _quadsBuffer = null;
         private Material _staticMaterialInstance = null;
 
         private float _timer = 0.0f;
@@ -231,14 +232,18 @@ namespace FoxEdit
         private void SetVoxelBuffers()
         {
             if (_verticesBuffer != null && _verticesBuffer.count != _voxelObject.Vertices.Length)
-            {
-                _verticesBuffer.Dispose();
-                _verticesBuffer = null;
-            }
+                DisposeBuffers();
+            
             if (_verticesBuffer == null)
-                _verticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Vertices.Length, sizeof(float) * 4);
+            {
+                _verticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Vertices.Length, sizeof(float) * 3);
+                _quadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Quads.Length, sizeof(int));
+            }
+
             _verticesBuffer.SetData(_voxelObject.Vertices);
+            _quadsBuffer.SetData(_voxelObject.Quads);
             _renderParams.matProps.SetBuffer("_Vertices", _verticesBuffer);
+            _renderParams.matProps.SetBuffer("_Quads", _quadsBuffer);
         }
 
         private void SetWorldBounds()
@@ -267,6 +272,9 @@ namespace FoxEdit
         {
             _verticesBuffer?.Dispose();
             _verticesBuffer = null;
+
+            _quadsBuffer?.Dispose();
+            _quadsBuffer = null;
         }
 
         #endregion Buffers
