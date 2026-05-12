@@ -57,7 +57,6 @@ Shader "Voxel/VoxelShader"
             struct v2f
             {
                 float4 positionCS : SV_POSITION;
-                uint faceID : TEXCOORD0;
                 float3 positionWS : TEXCOORD1;
                 float3 normalWS : TEXCOORD2;
                 float4 tangentWS : TEXCOORD3;
@@ -81,9 +80,10 @@ Shader "Voxel/VoxelShader"
                 float4x4 _ObjectToWorld;
             UNITY_INSTANCING_BUFFER_END(Props)
 
-            StructuredBuffer<float4> _Vertices;
+            StructuredBuffer<float3> _Vertices;
+            StructuredBuffer<int> _Quads;
             StructuredBuffer<ColorData> _Colors;
-
+            
             v2f vert(appdata v, uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
             {
                 UNITY_SETUP_INSTANCE_ID(v);
@@ -91,13 +91,17 @@ Shader "Voxel/VoxelShader"
 
                 uint faceID = _InstanceStartIndex + instanceID;
 
-                uint localVertexID = vertexID % 4;
+                uint localVertexID = vertexID;
                 uint nextVertexID = (localVertexID % 2 + 3) % 4;
                 uint nextNextVertexID = localVertexID % 2 + 1;
+                
+                localVertexID = _Quads[faceID * 5 + localVertexID];
+                nextVertexID = _Quads[faceID * 5 + nextVertexID];
+                nextNextVertexID = _Quads[faceID * 5 + nextNextVertexID];
 
-                float4 positionOS = float4(_Vertices[faceID * 4 + localVertexID].xyz, 1.0f);
-                float4 nextPositionOS = float4(_Vertices[faceID * 4 + nextVertexID].xyz, 1.0f);
-                float4 nextNextPositionOS = float4(_Vertices[faceID * 4 + nextNextVertexID].xyz, 1.0f);
+                float4 positionOS = float4(_Vertices[localVertexID], 1.0f);
+                float4 nextPositionOS = float4(_Vertices[nextVertexID], 1.0f);
+                float4 nextNextPositionOS = float4(_Vertices[nextNextVertexID], 1.0f);
 
                 float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), -1.0f);
                 float3 bitangeantOS = normalize(nextNextPositionOS.xyz - positionOS.xyz);
@@ -116,9 +120,8 @@ Shader "Voxel/VoxelShader"
                  o.dynamicLightmapUV = v.dynamicLightmapUV.xy * unityDynamicLightmapST.xy + unityDynamicLightmapST.zw;
  #endif
                 OUTPUT_SH(o.normalWS.xyz, o.vertexSH);
-
-                o.faceID = faceID;
-                o.colorIndex = _Vertices[faceID * 4 + localVertexID].w;
+                
+                o.colorIndex = _Quads[faceID * 5 + 4];
 
                 return o;
             }
@@ -210,7 +213,8 @@ Shader "Voxel/VoxelShader"
                     float4 positionCS : SV_Position;
                 };
 
-                StructuredBuffer<float4> _Vertices;
+                StructuredBuffer<float3> _Vertices;
+                StructuredBuffer<int> _Quads;
 
                 uint _InstanceStartIndex;
                 float4x4 _ObjectToWorld;
@@ -234,13 +238,18 @@ Shader "Voxel/VoxelShader"
                     v2f o;
 
                     uint faceID = _InstanceStartIndex + instanceID;
-                    uint localVertexID = vertexID % 4;
+
+                    uint localVertexID = vertexID;
                     uint nextVertexID = (localVertexID % 2 + 3) % 4;
                     uint nextNextVertexID = localVertexID % 2 + 1;
+                
+                    localVertexID = _Quads[faceID * 5 + localVertexID];
+                    nextVertexID = _Quads[faceID * 5 + nextVertexID];
+                    nextNextVertexID = _Quads[faceID * 5 + nextNextVertexID];
 
-                    float4 positionOS = float4(_Vertices[faceID * 4 + localVertexID].xyz, 1.0f);
-                    float4 nextPositionOS = float4(_Vertices[faceID * 4 + nextVertexID].xyz, 1.0f);
-                    float4 nextNextPositionOS = float4(_Vertices[faceID * 4 + nextNextVertexID].xyz, 1.0f);
+                    float4 positionOS = float4(_Vertices[localVertexID], 1.0f);
+                    float4 nextPositionOS = float4(_Vertices[nextVertexID], 1.0f);
+                    float4 nextNextPositionOS = float4(_Vertices[nextNextVertexID], 1.0f);
 
                     float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), 1.0f);
                     float3 bitangeantOS = normalize(nextNextPositionOS.xyz - positionOS.xyz);
