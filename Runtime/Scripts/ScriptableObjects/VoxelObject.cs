@@ -18,24 +18,20 @@ namespace FoxEdit
         public struct AnimationFrames
         {
             public string AnimName;
-            public int StartIndex;
             public int FrameCount;
+            public int[] InstanceStartIndices;
+            public int[] InstanceCount;
+            public Vector3[] Vertices;
+            public int[] Quads;
+            public Bounds Bounds;
         }
-
-        public EditorFrameVoxels[] EditorVoxelPositions = null;
-
-        public Bounds Bounds;
 
         public int PaletteIndex = 0;
         public Material AnimatedMaterial = null;
         public Material StaticMaterial = null;
-
         public Mesh StaticMesh = null;
 
-        public int[] InstanceStartIndices;
-        public int[] InstanceCount = null;
-        public AnimationFrames[] AnimationIndices = null;
-        public Vector3[] Vertices = null;
-        public int[] Quads = null;
+        public AnimationFrames[] Animations = null;
+        public EditorFrameVoxels[] EditorVoxelPositions = null;
     }
 }

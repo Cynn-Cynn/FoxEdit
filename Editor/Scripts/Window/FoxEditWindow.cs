@@ -298,15 +298,14 @@ namespace FoxEdit
 
             if (voxelObject != null)
             {
-                for (int animation = 0; animation < voxelObject.AnimationIndices.Length; animation++)
+                for (int animation = 0; animation < voxelObject.Animations.Length; animation++)
                 {
                     _frameList.Add(new List<VoxelEditorFrame>());
-                    int startIndex = voxelObject.AnimationIndices[animation].StartIndex;
-                    for (int i = startIndex; i < voxelObject.AnimationIndices[animation].FrameCount; i++)
+                    for (int i = 0; i < voxelObject.Animations[animation].FrameCount; i++)
                     {
-                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i - startIndex, _voxelPrefab, new VoxelEditor(null));
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, new VoxelEditor(null));
                         frame.LoadFromSave(voxelObject.EditorVoxelPositions[i].VoxelPositions, _selectedPalette, voxelObject.EditorVoxelPositions[i].ColorIndices);
-                        if (i - startIndex != _selectedFrame)
+                        if (i != _selectedFrame)
                             frame.Hide();
                         _frameList[animation].Add(frame);
                     }
