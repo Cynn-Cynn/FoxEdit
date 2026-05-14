@@ -199,6 +199,16 @@ namespace FoxEdit
             _meshRenderer.material = _staticMaterialInstance;
         }
 
+        public void SetAnimation(int animationIndex)
+        {
+            if (animationIndex == _animationIndex || animationIndex >= _voxelObject.Animations.Length)
+                return;
+
+            _animationIndex = animationIndex;
+            SetVoxelBuffers();
+            SetWorldBounds();
+        }
+
         #endregion UserEditable
 
         #region Buffers
@@ -231,17 +241,17 @@ namespace FoxEdit
 
         private void SetVoxelBuffers()
         {
-            if (_verticesBuffer != null && _verticesBuffer.count != _voxelObject.Vertices.Length)
+            if (_verticesBuffer != null && _verticesBuffer.count != _voxelObject.Animations[_animationIndex].Vertices.Length)
                 DisposeBuffers();
             
             if (_verticesBuffer == null)
             {
-                _verticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Vertices.Length, sizeof(float) * 3);
-                _quadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Quads.Length, sizeof(int));
+                _verticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Animations[_animationIndex].Vertices.Length, sizeof(float) * 3);
+                _quadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Animations[_animationIndex].Quads.Length, sizeof(int));
             }
 
-            _verticesBuffer.SetData(_voxelObject.Vertices);
-            _quadsBuffer.SetData(_voxelObject.Quads);
+            _verticesBuffer.SetData(_voxelObject.Animations[_animationIndex].Vertices);
+            _quadsBuffer.SetData(_voxelObject.Animations[_animationIndex].Quads);
             _renderParams.matProps.SetBuffer("_Vertices", _verticesBuffer);
             _renderParams.matProps.SetBuffer("_Quads", _quadsBuffer);
         }
@@ -252,7 +262,7 @@ namespace FoxEdit
             if (Application.isPlaying)
             {
 #endif
-                Bounds bounds = _voxelObject.Bounds;
+                Bounds bounds = _voxelObject.Animations[_animationIndex].Bounds;
                 bounds.center += transform.position;
                 _renderParams.worldBounds = bounds;
 #if UNITY_EDITOR
@@ -310,14 +320,12 @@ namespace FoxEdit
         private void AnimationRender()
         {
             _timer += Time.deltaTime;
-            int linearFrameIndex = _voxelObject.AnimationIndices[_animationIndex].StartIndex + _frameIndex;
 
             if (_timer >= _frameDuration)
             {
-                _frameIndex = (_frameIndex + 1) % _voxelObject.AnimationIndices[_animationIndex].FrameCount;
-                linearFrameIndex = _voxelObject.AnimationIndices[_animationIndex].StartIndex + _frameIndex;
+                _frameIndex = (_frameIndex + 1) % _voxelObject.Animations[_animationIndex].FrameCount;
                 _timer -= _frameDuration;
-                _renderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.InstanceStartIndices[linearFrameIndex]);
+                _renderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].InstanceStartIndices[_frameIndex]);
             }
 
             if (transform.hasChanged)
@@ -327,7 +335,7 @@ namespace FoxEdit
                 _renderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix);
             }
 
-            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.InstanceCount[linearFrameIndex]);
+            Graphics.RenderPrimitivesIndexed(_renderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].InstanceCount[_frameIndex]);
         }
 
         #endregion Rendering
