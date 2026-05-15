@@ -489,8 +489,6 @@ namespace FoxEdit
 
         private static int ParseVertices(ref List<Vector3>[] vertices, ref List<int>[] quads, List<Rect> quadList, int axis, bool isXAxis, bool isYAxis, int slice, int color, Vector3Int minBounds, int opacity)
         {
-            int quadsCount = 0;
-
             for (int i = 0; i < quadList.Count; i++)
             {
                 Rect rect = quadList[i];
@@ -553,10 +551,9 @@ namespace FoxEdit
                 }
 
                 quads[opacity].Add(color);
-                quadsCount += 1;
             }
 
-            return quadsCount;
+            return quadList.Count;
         }
 
         private static void AddVertex(Vector3 vertex, ref List<Vector3>[] vertices, ref List<int>[] quads, int opacity)
