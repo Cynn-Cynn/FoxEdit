@@ -8,13 +8,14 @@ Shader "Voxel/StaticVoxelShader"
     {
         Tags
         {
-            "RenderType" = "Transparent"
-            "Queue" = "Transparent-1"
+            "RenderType" = "Opaque"
+            "Queue" = "Geometry-1"
             "RenderPipeline" = "UniversalPipeline"
         }
 
         Pass
         {
+            Cull Back
             Blend SrcAlpha OneMinusSrcAlpha
 
             Tags{

@@ -84,8 +84,12 @@ namespace FoxEdit
 
             bool[] isColorTransparent = palette.Colors.Select(material => material.Color.a < 1.0f).ToArray();
 
-            List<int> startIndices = new List<int>();
-            List<int> instanceCounts = new List<int>();
+            List<int>[] startIndices = new List<int>[2];
+            startIndices[0] = new List<int>(); //opaque
+            startIndices[1] = new List<int>(); //transparent
+            List<int>[] instanceCounts = new List<int>[2];
+            instanceCounts[0] = new List<int>(); //opaque
+            instanceCounts[1] = new List<int>(); //transparent
             AnimationFrames[] animations = new AnimationFrames[editorAnimations.Count];
 
             for (int animationIndex = 0; animationIndex < editorAnimations.Count; animationIndex++)
@@ -94,12 +98,20 @@ namespace FoxEdit
                 {
                     AnimName = editorAnimations[animationIndex].Name,
                     FrameCount = editorAnimations[animationIndex].FramesCount,
+                    OpaqueMesh = new MeshData(),
+                    HasOpaqueFaces = false,
+                    TransparentMesh = new MeshData(),
+                    HasTransparentFaces = false
                 };
 
                 List<Vector3Int> minBounds = new List<Vector3Int>();
                 List<Vector3Int> maxBounds = new List<Vector3Int>();
-                List<Vector3> animationVertices = new List<Vector3>();
-                List<int> animationQuads = new List<int>();
+                List<Vector3>[] animationVertices = new List<Vector3>[2];
+                animationVertices[0] = new List<Vector3>(); //opaque
+                animationVertices[1] = new List<Vector3>(); //transparent
+                List<int>[] animationQuads = new List<int>[2];
+                animationQuads[0] = new List<int>(); //opaque
+                animationQuads[1] = new List<int>(); //transparent
 
                 for (int frame = 0; frame < editorAnimations[animationIndex].FramesCount; frame++)
                 {
@@ -115,18 +127,48 @@ namespace FoxEdit
                     minBounds.Add(packedData.MinBounds);
                     maxBounds.Add(packedData.MaxBounds);
 
-                    startIndices.Add(animationQuads.Count() / 5);
-                    int newQuadsCount = GreedyMeshing(packedData, isColorTransparent, ref animationVertices, ref animationQuads);
-                    instanceCounts.Add(newQuadsCount);
+                    startIndices[0].Add(animationQuads[0].Count() / 5);
+                    startIndices[1].Add(animationQuads[1].Count() / 5);
+                    (int, int) newQuadsCount = GreedyMeshing(packedData, isColorTransparent, ref animationVertices, ref animationQuads);
+                    instanceCounts[0].Add(newQuadsCount.Item1);
+                    instanceCounts[1].Add(newQuadsCount.Item2);
 
                     if (frame == 0 && animationIndex == 0)
-                        voxelObject.StaticMesh = CreateBinaryFBX(saveDirectory, $"SM_{meshName}", animationVertices, animationQuads);
+                        voxelObject.StaticMesh = CreateBinaryFBX(saveDirectory, $"SM_{meshName}", animationVertices[0], animationQuads[0]);
                 }
 
-                animations[animationIndex].InstanceStartIndices = startIndices.ToArray();
-                animations[animationIndex].InstanceCount = instanceCounts.ToArray();
-                animations[animationIndex].Vertices = animationVertices.ToArray();
-                animations[animationIndex].Quads = animationQuads.ToArray();
+                if (animationVertices[0].Count > 0)
+                {
+                    animations[animationIndex].HasOpaqueFaces = true;
+                    animations[animationIndex].OpaqueMesh.InstanceStartIndices = startIndices[0].ToArray();
+                    animations[animationIndex].OpaqueMesh.InstanceCount = instanceCounts[0].ToArray();
+                    animations[animationIndex].OpaqueMesh.Vertices = animationVertices[0].ToArray();
+                    animations[animationIndex].OpaqueMesh.Quads = animationQuads[0].ToArray();
+                }
+                else
+                {
+                    animations[animationIndex].OpaqueMesh.InstanceStartIndices = new int[0];
+                    animations[animationIndex].OpaqueMesh.InstanceCount = new int[0];
+                    animations[animationIndex].OpaqueMesh.Vertices = new Vector3[0];
+                    animations[animationIndex].OpaqueMesh.Quads = new int[0];
+                }
+
+                if (animationVertices[1].Count > 0)
+                {
+                    animations[animationIndex].TransparentMesh.InstanceStartIndices = startIndices[1].ToArray();
+                    animations[animationIndex].TransparentMesh.InstanceCount = instanceCounts[1].ToArray();
+                    animations[animationIndex].TransparentMesh.Vertices = animationVertices[1].ToArray();
+                    animations[animationIndex].TransparentMesh.Quads = animationQuads[1].ToArray();
+                    animations[animationIndex].HasTransparentFaces = true;
+                }
+                else
+                {
+                    animations[animationIndex].TransparentMesh.InstanceStartIndices = new int[0];
+                    animations[animationIndex].TransparentMesh.InstanceCount = new int[0];
+                    animations[animationIndex].TransparentMesh.Vertices = new Vector3[0];
+                    animations[animationIndex].TransparentMesh.Quads = new int[0];
+                }
+
                 animations[animationIndex].Bounds = CreateBounds(minBounds, maxBounds);
             }
 
@@ -173,7 +215,7 @@ namespace FoxEdit
 
         #region GreedyMeshing
 
-        private static int GreedyMeshing(VoxelObjectPackedFrameData data, bool[] isColorTransparent, ref List<Vector3> vertices, ref List<int> quads)
+        private static (int, int) GreedyMeshing(VoxelObjectPackedFrameData data, bool[] isColorTransparent, ref List<Vector3>[] vertices, ref List<int>[] quads)
         {
             Vector3Int size = data.MinBounds - data.MaxBounds;
             size.x = Mathf.Abs(size.x) + 1;
@@ -181,14 +223,14 @@ namespace FoxEdit
             size.z = Mathf.Abs(size.z) + 1;
             int[] colors = data.ColorIndices.GroupBy(color => color).Select(group => group.Key).ToArray();
 
-            BitArray[] binaryMasks = FillBinaryMasks(data, isColorTransparent, size);
-            Dictionary<int, BitArray[][][]> greedyPlanes = FillGreedyPlanes(data, binaryMasks, colors, size, data.MinBounds);
-            Dictionary<int, List<Rect>[][]> orderedQuads = Combine(greedyPlanes, colors);
+            BitArray[][] binaryMasks = FillBinaryMasks(data, isColorTransparent, size);
+            Dictionary<int, BitArray[][][]>[] greedyPlanes = FillGreedyPlanes(data, binaryMasks, colors, size, data.MinBounds);
+            Dictionary<int, List<Rect>[][]>[] orderedQuads = Combine(greedyPlanes, colors);
 
             return CreateQuads(orderedQuads, size, data.MinBounds, ref vertices, ref quads);
         }
 
-        private static BitArray[] FillBinaryMasks(VoxelObjectPackedFrameData data, bool[] isColorTransparent, Vector3Int size)
+        private static BitArray[][] FillBinaryMasks(VoxelObjectPackedFrameData data, bool[] isColorTransparent, Vector3Int size)
         {
             BitArray[] opaqueSlices = new BitArray[3];
             BitArray[] opaqueAndTransparentSlices = new BitArray[3];
@@ -206,16 +248,20 @@ namespace FoxEdit
             opaqueSlices[2] = opaqueSlice;
             opaqueAndTransparentSlices[2] = opaqueAndTransparentSlice;
 
-            BitArray[] binaryMasks = new BitArray[6];
+            BitArray[][] binaryMasks = new BitArray[2][];
+            binaryMasks[0] = new BitArray[6]; //opaque
+            binaryMasks[1] = new BitArray[6]; //transparent
 
             for (int axis = 0; axis < 3; axis++)
             {
-                int length = opaqueSlices[axis].Length;
                 BitArray baseOpaqueSlice = opaqueSlices[axis];
                 BitArray baseOpaqueAndTransparentSlice = opaqueAndTransparentSlices[axis];
 
-                binaryMasks[axis * 2] = (baseOpaqueSlice.Clone() as BitArray).LeftShift(1).Not().And(baseOpaqueSlice).Or((baseOpaqueAndTransparentSlice.Clone() as BitArray).LeftShift(1).Not().And(baseOpaqueAndTransparentSlice));
-                binaryMasks[axis * 2 + 1] = (baseOpaqueSlice.Clone() as BitArray).RightShift(1).Not().And(baseOpaqueSlice).Or((baseOpaqueAndTransparentSlice.Clone() as BitArray).RightShift(1).Not().And(baseOpaqueAndTransparentSlice));
+                binaryMasks[0][axis * 2] = (baseOpaqueSlice.Clone() as BitArray).LeftShift(1).Not().And(baseOpaqueSlice);
+                binaryMasks[0][axis * 2 + 1] = (baseOpaqueSlice.Clone() as BitArray).RightShift(1).Not().And(baseOpaqueSlice);
+
+                binaryMasks[1][axis * 2] = (binaryMasks[0][axis * 2].Clone() as BitArray).Or((baseOpaqueAndTransparentSlice.Clone() as BitArray).LeftShift(1).Not().And(baseOpaqueAndTransparentSlice)).Xor(binaryMasks[0][axis * 2]);
+                binaryMasks[1][axis * 2 + 1] = (binaryMasks[0][axis * 2 + 1].Clone() as BitArray).Or((baseOpaqueAndTransparentSlice.Clone() as BitArray).RightShift(1).Not().And(baseOpaqueAndTransparentSlice)).Xor(binaryMasks[0][axis * 2 + 1]);
             }
 
             return binaryMasks;
@@ -249,25 +295,32 @@ namespace FoxEdit
             }
         }
 
-        private static Dictionary<int, BitArray[][][]> FillGreedyPlanes(VoxelObjectPackedFrameData data, BitArray[] binaryMasks, int[] colors, Vector3Int size, Vector3Int minBounds)
+        private static Dictionary<int, BitArray[][][]>[] FillGreedyPlanes(VoxelObjectPackedFrameData data, BitArray[][] binaryMasks, int[] colors, Vector3Int size, Vector3Int minBounds)
         {
-            Dictionary<int, BitArray[][][]> greedyPlanes = new Dictionary<int, BitArray[][][]>();
+            Dictionary<int, BitArray[][][]>[] greedyPlanes = new Dictionary<int, BitArray[][][]>[2];
+            greedyPlanes[0] = new Dictionary<int, BitArray[][][]>(); //opaque
+            greedyPlanes[1] = new Dictionary<int, BitArray[][][]>(); //transparent
 
             foreach (int color in colors)
             {
-                greedyPlanes[color] = new BitArray[6][][];
+                greedyPlanes[0][color] = new BitArray[6][][];
+                greedyPlanes[1][color] = new BitArray[6][][];
             }
 
             for (int axisIndex = 0; axisIndex < 6; axisIndex++)
             {
-                int axisSize = (axisIndex == 0 || axisIndex == 1) ? size.x : (axisIndex == 2 || axisIndex == 3) ? size.y : size.z;
-                int xSize = (axisIndex == 0 || axisIndex == 1) ? size.z : (axisIndex == 2 || axisIndex == 3) ? size.x : size.x;
-                int ySize = (axisIndex == 0 || axisIndex == 1) ? size.y : (axisIndex == 2 || axisIndex == 3) ? size.z : size.y;
+                bool isXAxis = (axisIndex == 0 || axisIndex == 1);
+                bool isYAxis = (axisIndex == 2 || axisIndex == 3);
+
+                int axisSize = isXAxis ? size.x : isYAxis ? size.y : size.z;
+                int xSize = isXAxis ? size.z : isYAxis ? size.x : size.x;
+                int ySize = isXAxis ? size.y : isYAxis ? size.z : size.y;
                 int sliceSize = xSize * ySize;
 
                 foreach (int color in colors)
                 {
-                    greedyPlanes[color][axisIndex] = new BitArray[axisSize][];
+                    greedyPlanes[0][color][axisIndex] = new BitArray[axisSize][];
+                    greedyPlanes[1][color][axisIndex] = new BitArray[axisSize][];
                 }
 
                 axisSize += 1;
@@ -275,31 +328,35 @@ namespace FoxEdit
                 {
                     foreach (int color in colors)
                     {
-                        greedyPlanes[color][axisIndex][sliceIndex] = new BitArray[ySize];
+                        greedyPlanes[0][color][axisIndex][sliceIndex] = new BitArray[ySize];
+                        greedyPlanes[1][color][axisIndex][sliceIndex] = new BitArray[ySize];
                         for (int y = 0; y < ySize; y++)
                         {
-                            greedyPlanes[color][axisIndex][sliceIndex][y] = new BitArray(xSize);
+                            greedyPlanes[0][color][axisIndex][sliceIndex][y] = new BitArray(xSize);
+                            greedyPlanes[1][color][axisIndex][sliceIndex][y] = new BitArray(xSize);
                         }
                     }
 
                     for (int i = 0; i < sliceSize; i++)
                     {
-                        bool hasFace = binaryMasks[axisIndex].Get(i * axisSize + sliceIndex + 1);
-                        if (!hasFace)
+                        bool hasOpaqueFace = binaryMasks[0][axisIndex].Get(i * axisSize + sliceIndex + 1);
+                        bool hasTransparentFace = binaryMasks[1][axisIndex].Get(i * axisSize + sliceIndex + 1);
+
+                        if (!hasOpaqueFace && !hasTransparentFace)
                             continue;
 
                         int x = i % xSize;
                         int y = i / xSize;
 
                         Vector3Int voxelPosition = new Vector3Int(
-                            (axisIndex == 0 || axisIndex == 1) ? sliceIndex : (axisIndex == 2 || axisIndex == 3) ? x : x,
-                            (axisIndex == 0 || axisIndex == 1) ? y : (axisIndex == 2 || axisIndex == 3) ? sliceIndex : y,
-                            (axisIndex == 0 || axisIndex == 1) ? x : (axisIndex == 2 || axisIndex == 3) ? y : sliceIndex
+                            isXAxis ? sliceIndex : isYAxis ? x : x,
+                            isXAxis ? y : isYAxis ? sliceIndex : y,
+                            isXAxis ? x : isYAxis ? y : sliceIndex
                         );
 
                         VoxelData voxelData = data.Data.First(voxel => voxel.Position == voxelPosition + minBounds);
                         int colorIndex = voxelData.ColorIndex;
-                        greedyPlanes[colorIndex][axisIndex][sliceIndex][y].Set(x, true);
+                        greedyPlanes[hasOpaqueFace ? 0 : 1][colorIndex][axisIndex][sliceIndex][y].Set(x, true);
                     }
                 }
             }
@@ -307,65 +364,79 @@ namespace FoxEdit
             return greedyPlanes;
         }
 
-        private static Dictionary<int, List<Rect>[][]> Combine(Dictionary<int, BitArray[][][]> greedyPlanes, int[] colors)
+        private static Dictionary<int, List<Rect>[][]>[] Combine(Dictionary<int, BitArray[][][]>[] greedyPlanes, int[] colors)
         {
-            Dictionary<int, List<Rect>[][]> orderedQuads = new Dictionary<int, List<Rect>[][]>();
+            Dictionary<int, List<Rect>[][]>[] orderedQuads = new Dictionary<int, List<Rect>[][]>[2];
+            orderedQuads[0] = new Dictionary<int, List<Rect>[][]>(); //opaque
+            orderedQuads[1] = new Dictionary<int, List<Rect>[][]>(); //transparent
 
             foreach (var colorIndex in colors)
             {
-                orderedQuads[colorIndex] = new List<Rect>[6][];
+                orderedQuads[0][colorIndex] = new List<Rect>[6][];
+                orderedQuads[1][colorIndex] = new List<Rect>[6][];
+
                 for (int axisIndex = 0; axisIndex < 6; axisIndex++)
                 {
-                    orderedQuads[colorIndex][axisIndex] = new List<Rect>[greedyPlanes[colorIndex][axisIndex].Length];
-                    for (int sliceIndex = 0; sliceIndex < greedyPlanes[colorIndex][axisIndex].Length; sliceIndex++)
+                    orderedQuads[0][colorIndex][axisIndex] = new List<Rect>[greedyPlanes[0][colorIndex][axisIndex].Length];
+                    orderedQuads[1][colorIndex][axisIndex] = new List<Rect>[greedyPlanes[1][colorIndex][axisIndex].Length];
+
+                    for (int sliceIndex = 0; sliceIndex < greedyPlanes[0][colorIndex][axisIndex].Length; sliceIndex++)
                     {
-                        orderedQuads[colorIndex][axisIndex][sliceIndex] = new List<Rect>();
-                        for (int y = 0; y < greedyPlanes[colorIndex][axisIndex][sliceIndex].Length; y++)
-                        {
-                            int x = 0;
-                            int length = greedyPlanes[colorIndex][axisIndex][sliceIndex][y].Length;
-                            while (x < length)
-                            {
-                                BitArray clone = greedyPlanes[colorIndex][axisIndex][sliceIndex][y].Clone() as BitArray;
-                                clone.RightShift(x);
-                                int newOffset = TrailingCount(clone, false);
-                                x += newOffset;
-                                if (x >= length)
-                                    continue;
-
-                                clone.RightShift(newOffset);
-                                int width = Mathf.Max(1, TrailingCount(clone, true));
-                                BitArray widthMask = new BitArray(length, false);
-                                for (int w = 0; w < width; w++)
-                                {
-                                    widthMask.Set(w, true);
-                                }
-                                BitArray mask = widthMask.Clone() as BitArray;
-                                mask = mask.LeftShift(x);
-                                mask = mask.Not();
-
-                                int height = 1;
-                                while (y + height < greedyPlanes[colorIndex][axisIndex][sliceIndex].Length)
-                                {
-                                    BitArray nextRow = greedyPlanes[colorIndex][axisIndex][sliceIndex][y + height].Clone() as BitArray;
-                                    nextRow = nextRow.RightShift(x);
-                                    nextRow = nextRow.And(widthMask);
-                                    if (!BitEqual(nextRow, widthMask))
-                                        break;
-
-                                    greedyPlanes[colorIndex][axisIndex][sliceIndex][y + height] = greedyPlanes[colorIndex][axisIndex][sliceIndex][y + height].And(mask);
-                                    height += 1;
-                                }
-
-                                orderedQuads[colorIndex][axisIndex][sliceIndex].Add(new Rect(x, y, width, height));
-                                x += width;
-                            }
-                        }
+                        BinaryMerge(ref greedyPlanes, ref orderedQuads, colorIndex, axisIndex, sliceIndex, 0);
+                        BinaryMerge(ref greedyPlanes, ref orderedQuads, colorIndex, axisIndex, sliceIndex, 1);
                     }
                 }
             }
 
             return orderedQuads;
+        }
+
+        private static void BinaryMerge(ref Dictionary<int, BitArray[][][]>[] greedyPlanes, ref Dictionary<int, List<Rect>[][]>[] orderedQuads, int colorIndex, int axisIndex, int sliceIndex, int opacity)
+        {
+            orderedQuads[opacity][colorIndex][axisIndex][sliceIndex] = new List<Rect>();
+
+
+            for (int y = 0; y < greedyPlanes[opacity][colorIndex][axisIndex][sliceIndex].Length; y++)
+            {
+                int x = 0;
+                int length = greedyPlanes[opacity][colorIndex][axisIndex][sliceIndex][y].Length;
+                while (x < length)
+                {
+                    BitArray clone = greedyPlanes[opacity][colorIndex][axisIndex][sliceIndex][y].Clone() as BitArray;
+                    clone.RightShift(x);
+                    int newOffset = TrailingCount(clone, false);
+                    x += newOffset;
+                    if (x >= length)
+                        continue;
+
+                    clone.RightShift(newOffset);
+                    int width = Mathf.Max(1, TrailingCount(clone, true));
+                    BitArray widthMask = new BitArray(length, false);
+                    for (int w = 0; w < width; w++)
+                    {
+                        widthMask.Set(w, true);
+                    }
+                    BitArray mask = widthMask.Clone() as BitArray;
+                    mask = mask.LeftShift(x);
+                    mask = mask.Not();
+
+                    int height = 1;
+                    while (y + height < greedyPlanes[opacity][colorIndex][axisIndex][sliceIndex].Length)
+                    {
+                        BitArray nextRow = greedyPlanes[opacity][colorIndex][axisIndex][sliceIndex][y + height].Clone() as BitArray;
+                        nextRow = nextRow.RightShift(x);
+                        nextRow = nextRow.And(widthMask);
+                        if (!BitEqual(nextRow, widthMask))
+                            break;
+
+                        greedyPlanes[opacity][colorIndex][axisIndex][sliceIndex][y + height] = greedyPlanes[opacity][colorIndex][axisIndex][sliceIndex][y + height].And(mask);
+                        height += 1;
+                    }
+
+                    orderedQuads[opacity][colorIndex][axisIndex][sliceIndex].Add(new Rect(x, y, width, height));
+                    x += width;
+                }
+            }
         }
 
         private static bool BitEqual(BitArray array1, BitArray array2)
@@ -391,103 +462,114 @@ namespace FoxEdit
             return length;
         }
 
-        private static int CreateQuads(Dictionary<int, List<Rect>[][]> orderedQuads, Vector3Int size, Vector3Int minBounds, ref List<Vector3> vertices, ref List<int> quads)
+        private static (int, int) CreateQuads(Dictionary<int, List<Rect>[][]>[] orderedQuads, Vector3Int size, Vector3Int minBounds, ref List<Vector3>[] vertices, ref List<int>[] quads)
         {
-            int quadsCount = 0;
+            (int, int) quadsCount = (0, 0); //opaque and transparent
 
-            foreach (var color in orderedQuads.Keys)
+            foreach (var color in orderedQuads[0].Keys)
             {
                 for (int axis = 0; axis < 6; axis++)
                 {
-                    int axisSize = (axis == 0 || axis == 1) ? size.x : (axis == 2 || axis == 3) ? size.y : size.z;
-                    int xSize = (axis == 0 || axis == 1) ? size.z : (axis == 2 || axis == 3) ? size.x : size.x;
-                    int ySize = (axis == 0 || axis == 1) ? size.y : (axis == 2 || axis == 3) ? size.z : size.y;
+                    bool isXAxis = (axis == 0 || axis == 1);
+                    bool isYAxis = (axis == 2 || axis == 3);
+
+                    int axisSize = isXAxis ? size.x : isYAxis ? size.y : size.z;
+                    int xSize = isXAxis ? size.z : isYAxis ? size.x : size.x;
+                    int ySize = isXAxis ? size.y : isYAxis ? size.z : size.y;
 
                     for (int slice = 0; slice < axisSize; slice++)
                     {
-                        List<Rect> quadList = orderedQuads[color][axis][slice];
-
-                        for (int i = 0; i < quadList.Count; i++)
-                        {
-                            Rect rect = quadList[i];
-                            int axisPosition = slice;
-                            int rightPosition = (int)rect.x;
-                            int upPosition = (int)rect.y;
-
-                            Vector3 voxelPosition = new Vector3
-                            (
-                                (axis == 0 || axis == 1) ? axisPosition : (axis == 2 || axis == 3) ? rightPosition : rightPosition,
-                                (axis == 0 || axis == 1) ? upPosition : (axis == 2 || axis == 3) ? axisPosition : upPosition,
-                                (axis == 0 || axis == 1) ? rightPosition : (axis == 2 || axis == 3) ? upPosition : axisPosition
-                            ) + minBounds + new Vector3(axis == 1 ? 0.5f : -0.5f, axis == 3 ? 1.0f : 0.0f, axis == 5 ? 0.5f : -0.5f);
-                            voxelPosition *= 0.1f;
-
-                            int width = (int)rect.width;
-                            Vector3 widthVector = new Vector3
-                            (
-                                (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? width : width,
-                                (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? 0 : 0,
-                                (axis == 0 || axis == 1) ? width : (axis == 2 || axis == 3) ? 0 : 0
-                            ) * 0.1f;
-
-                            int height = (int)rect.height;
-                            Vector3 heightVector = new Vector3
-                            (
-                                (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? 0 : 0,
-                                (axis == 0 || axis == 1) ? height : (axis == 2 || axis == 3) ? 0 : height,
-                                (axis == 0 || axis == 1) ? 0 : (axis == 2 || axis == 3) ? height : 0
-                            ) * 0.1f;
-
-                            if (axis == 0 || axis == 2 || axis == 5)
-                            {
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-
-                                voxelPosition += heightVector;
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-
-                                voxelPosition -= heightVector;
-                                voxelPosition += widthVector;
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-
-                                voxelPosition += heightVector;
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-                            }
-                            else
-                            {
-                                voxelPosition += widthVector;
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-
-                                voxelPosition += heightVector;
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-
-                                voxelPosition -= widthVector;
-                                voxelPosition -= heightVector;
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-
-                                voxelPosition += heightVector;
-                                AddVertex(voxelPosition, ref vertices, ref quads);
-                            }
-
-                            quads.Add(color);
-                            quadsCount += 1;
-                        }
+                        quadsCount.Item1 += ParseVertices(ref vertices, ref quads, orderedQuads[0][color][axis][slice], axis, isXAxis, isYAxis, slice, color, minBounds, 0);
+                        quadsCount.Item2 += ParseVertices(ref vertices, ref quads, orderedQuads[1][color][axis][slice], axis, isXAxis, isYAxis, slice, color, minBounds, 1);
                     }
                 }
             }
             return quadsCount;
         }
 
-        private static void AddVertex(Vector3 vertex, ref List<Vector3> vertices, ref List<int> quads)
+        private static int ParseVertices(ref List<Vector3>[] vertices, ref List<int>[] quads, List<Rect> quadList, int axis, bool isXAxis, bool isYAxis, int slice, int color, Vector3Int minBounds, int opacity)
         {
-            int index = vertices.IndexOf(vertex);
+            int quadsCount = 0;
+
+            for (int i = 0; i < quadList.Count; i++)
+            {
+                Rect rect = quadList[i];
+                int axisPosition = slice;
+                int rightPosition = (int)rect.x;
+                int upPosition = (int)rect.y;
+
+                Vector3 voxelPosition = new Vector3
+                (
+                    isXAxis ? axisPosition : isYAxis ? rightPosition : rightPosition,
+                    isXAxis ? upPosition : isYAxis ? axisPosition : upPosition,
+                    isXAxis ? rightPosition : isYAxis ? upPosition : axisPosition
+                ) + minBounds + new Vector3(axis == 1 ? 0.5f : -0.5f, axis == 3 ? 1.0f : 0.0f, axis == 5 ? 0.5f : -0.5f);
+                voxelPosition *= 0.1f;
+
+                int width = (int)rect.width;
+                Vector3 widthVector = new Vector3
+                (
+                    isXAxis ? 0 : isYAxis ? width : width,
+                    isXAxis ? 0 : isYAxis ? 0 : 0,
+                    isXAxis ? width : isYAxis ? 0 : 0
+                ) * 0.1f;
+
+                int height = (int)rect.height;
+                Vector3 heightVector = new Vector3
+                (
+                    isXAxis ? 0 : isYAxis ? 0 : 0,
+                    isXAxis ? height : isYAxis ? 0 : height,
+                    isXAxis ? 0 : isYAxis ? height : 0
+                ) * 0.1f;
+
+                if (axis == 0 || axis == 2 || axis == 5)
+                {
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+
+                    voxelPosition += heightVector;
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+
+                    voxelPosition -= heightVector;
+                    voxelPosition += widthVector;
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+
+                    voxelPosition += heightVector;
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+                }
+                else
+                {
+                    voxelPosition += widthVector;
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+
+                    voxelPosition += heightVector;
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+
+                    voxelPosition -= widthVector;
+                    voxelPosition -= heightVector;
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+
+                    voxelPosition += heightVector;
+                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+                }
+
+                quads[opacity].Add(color);
+                quadsCount += 1;
+            }
+
+            return quadsCount;
+        }
+
+        private static void AddVertex(Vector3 vertex, ref List<Vector3>[] vertices, ref List<int>[] quads, int opacity)
+        {
+            int index = vertices[opacity].IndexOf(vertex);
             if (index != -1)
             {
-                quads.Add(index);
+                quads[opacity].Add(index);
             }
             else
             {
-                vertices.Add(vertex);
-                quads.Add(vertices.Count - 1);
+                vertices[opacity].Add(vertex);
+                quads[opacity].Add(vertices[opacity].Count - 1);
             }
         }
 

@@ -15,15 +15,24 @@ namespace FoxEdit
         }
 
         [Serializable]
-        public struct AnimationFrames
+        public struct MeshData
         {
-            public string AnimName;
-            public int FrameCount;
             public int[] InstanceStartIndices;
             public int[] InstanceCount;
             public Vector3[] Vertices;
             public int[] Quads;
+        }
+
+        [Serializable]
+        public struct AnimationFrames
+        {
+            public string AnimName;
+            public int FrameCount;
+            public MeshData OpaqueMesh;
+            public MeshData TransparentMesh;
             public Bounds Bounds;
+            public bool HasOpaqueFaces;
+            public bool HasTransparentFaces;
         }
 
         public int PaletteIndex = 0;
