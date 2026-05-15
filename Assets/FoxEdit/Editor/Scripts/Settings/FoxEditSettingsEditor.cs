@@ -79,8 +79,6 @@ namespace FoxEdit
             }
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(FoxEditSettings.Materials)));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(FoxEditSettings.computeShader)));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(FoxEditSettings.staticShader)));
 
             serializedObject.ApplyModifiedProperties();
         }

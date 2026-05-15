@@ -13,16 +13,16 @@ namespace FoxEdit
         [System.Serializable]
         public class MaterialsSettings
         {
-            public Material animatedMaterial;
-            public Material staticMaterial;
+            public Material animatedOpaqueMaterial;
+            public Material animatedTransparentMaterial;
+            public Material staticOpaqueMaterial;
+            public Material staticTransparentMaterial;
         }
 
         [SerializeField] private List<VoxelPalette> _palettes;
 
         public VoxelPalette[] Palettes { get { return _palettes.ToArray(); } }
         public MaterialsSettings Materials;
-        public ComputeShader computeShader;
-        public ComputeShader staticShader;
 
         public void AddPalette(VoxelPalette palette)
         {

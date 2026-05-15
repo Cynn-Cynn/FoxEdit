@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_Squirrel_Static
+  m_Name: M_StaticVoxel_Opaque
   m_Shader: {fileID: 4800000, guid: e6b71c272e5279346bf62f6f747856a3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -27,4 +27,3 @@ Material:
     m_Floats: []
     m_Colors: []
   m_BuildTextureStacks: []
-  m_AllowLocking: 1
