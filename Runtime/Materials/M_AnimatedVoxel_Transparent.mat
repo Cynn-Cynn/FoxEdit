@@ -7,14 +7,15 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_StaticVoxel
-  m_Shader: {fileID: 4800000, guid: e6b71c272e5279346bf62f6f747856a3, type: 3}
+  m_Name: M_AnimatedVoxel_Transparent
+  m_Shader: {fileID: 4800000, guid: 7a1bfe323a479a34e91931de537ea436, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - USE_EMISSION_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
+  m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
@@ -24,6 +25,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _EmissionOn: 1
+    - _MetallicStrength: 0
+    - _Smoothness: 1
+    m_Colors:
+    - _BaseColor: {r: 0.5754717, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

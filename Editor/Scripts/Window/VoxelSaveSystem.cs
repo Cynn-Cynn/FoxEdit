@@ -12,7 +12,7 @@ namespace FoxEdit
 {
     internal class VoxelSaveSystem
     {
-        internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorAnimation> animationList, ComputeShader computeStaticMesh)
+        internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorAnimation> animationList)
         {
             VoxelObject voxelObject = GetVoxelObject(voxelRenderer, meshName, saveDirectory);
             voxelObject = FillObject(voxelObject, animationList, palette, paletteIndex, saveDirectory, meshName);
@@ -59,16 +59,24 @@ namespace FoxEdit
 
             FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
 
-            Material animatedMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.animatedMaterial);
-            AssetDatabase.CreateAsset(animatedMaterialInstance, GetAssetPath($"M_{meshName}_Animated", saveDirectory, "mat"));
-            voxelObject.AnimatedMaterial = animatedMaterialInstance;
+            Material animatedOpaqueMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.animatedOpaqueMaterial);
+            AssetDatabase.CreateAsset(animatedOpaqueMaterialInstance, GetAssetPath($"M_{meshName}_Animated_Opaque", saveDirectory, "mat"));
+            voxelObject.AnimatedOpaqueMaterial = animatedOpaqueMaterialInstance;
 
-            Material staticMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.staticMaterial);
-            AssetDatabase.CreateAsset(staticMaterialInstance, GetAssetPath($"M_{meshName}_Static", saveDirectory, "mat"));
-            voxelObject.StaticMaterial = staticMaterialInstance;
+            Material animatedTransparentMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.animatedTransparentMaterial);
+            AssetDatabase.CreateAsset(animatedTransparentMaterialInstance, GetAssetPath($"M_{meshName}_Animated_Transparent", saveDirectory, "mat"));
+            voxelObject.AnimatedTransparentMaterial = animatedTransparentMaterialInstance;
+
+            Material staticOpaqueMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.staticOpaqueMaterial);
+            AssetDatabase.CreateAsset(staticOpaqueMaterialInstance, GetAssetPath($"M_{meshName}_Static_Opaque", saveDirectory, "mat"));
+            voxelObject.StaticOpaqueMaterial = staticOpaqueMaterialInstance;
+
+            Material staticTransparentMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.staticTransparentMaterial);
+            AssetDatabase.CreateAsset(staticTransparentMaterialInstance, GetAssetPath($"M_{meshName}_Static_Transparent", saveDirectory, "mat"));
+            voxelObject.StaticTransparentMaterial = staticTransparentMaterialInstance;
 
             MeshRenderer staticRenderer = voxelRenderer.GetComponent<MeshRenderer>();
-            staticRenderer.material = staticMaterialInstance;
+            staticRenderer.SetMaterials(new List<Material> { staticOpaqueMaterialInstance, staticTransparentMaterialInstance });
 
             EditorUtility.SetDirty(staticRenderer);
             EditorUtility.SetDirty(voxelRenderer);
@@ -134,7 +142,7 @@ namespace FoxEdit
                     instanceCounts[1].Add(newQuadsCount.Item2);
 
                     if (frame == 0 && animationIndex == 0)
-                        voxelObject.StaticMesh = CreateBinaryFBX(saveDirectory, $"SM_{meshName}", animationVertices[0], animationQuads[0]);
+                        voxelObject.StaticMesh = CreateBinaryFBX(saveDirectory, $"SM_{meshName}", animationVertices, animationQuads);
                 }
 
                 if (animationVertices[0].Count > 0)
@@ -643,7 +651,7 @@ namespace FoxEdit
 
         #region BinaryFbxCreation
 
-        private static Mesh CreateBinaryFBX(string saveDirectory, string meshName, List<Vector3> frameVertices, List<int> frameQuads)
+        private static Mesh CreateBinaryFBX(string saveDirectory, string meshName, List<Vector3>[] frameVertices, List<int>[] frameQuads)
         {
             string fbxPath = GetAssetPath(meshName, saveDirectory, "fbx");
 
@@ -668,8 +676,7 @@ namespace FoxEdit
                 fbxSceneInfo.mAuthor = "FoxEdit";
                 fbxScene.SetSceneInfo(fbxSceneInfo);
 
-                FbxNode mesh = CreateFbxMesh(fbxManager, meshName, frameVertices, frameQuads);
-                fbxScene.GetRootNode().AddChild(mesh);
+                fbxScene.GetRootNode().AddChild(CreateFbxMesh(fbxManager, meshName, frameVertices, frameQuads));
 
                 fbxExporter.Export(fbxScene);
 
@@ -682,10 +689,12 @@ namespace FoxEdit
             return meshGameObject.GetComponent<MeshFilter>().sharedMesh;
         }
 
-        private static FbxNode CreateFbxMesh(FbxManager fbxManager, string meshName, List<Vector3> frameVertices, List<int> frameQuads)
+        private static FbxNode CreateFbxMesh(FbxManager fbxManager, string meshName, List<Vector3>[] frameVertices, List<int>[] frameQuads)
         {
+            //TODO: créer qu'un seul material si nécessaire
+
             FbxMesh fbxMesh = FbxMesh.Create(fbxManager, meshName);
-            fbxMesh.InitControlPoints(frameVertices.Count);
+            fbxMesh.InitControlPoints(frameVertices[0].Count + frameVertices[1].Count);
 
             var normalElement = FbxLayerElementNormal.Create(fbxMesh, "Normals");
             normalElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
@@ -697,46 +706,60 @@ namespace FoxEdit
             uvElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
             var uvArray = uvElement.GetDirectArray();
 
+            var materialElement = FbxLayerElementMaterial.Create(fbxMesh, "Materials");
+            materialElement.SetMappingMode(FbxLayerElement.EMappingMode.eByPolygon);
+            materialElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eIndexToDirect);
+            var materialArray = materialElement.GetIndexArray();
+
             int vertexIndex = 0;
-            for (int i = 0; i < frameQuads.Count; i += 5)
+            for (int opacity = 0; opacity < 2; opacity++)
             {
-                FbxVector4 fbxNormal = GetFaceNormal(frameVertices[frameQuads[i]], frameVertices[frameQuads[i + 1]], frameVertices[frameQuads[i + 2]]);
-                int color = frameQuads[i + 4];
-
-                for (int y = 0; y < 4; y++)
+                for (int i = 0; i < frameQuads[opacity].Count; i += 5)
                 {
-                    int quadIndex = i + y;
-                    Vector3 voxelPosition = frameVertices[frameQuads[quadIndex]];
-                    voxelPosition *= 100.0f;
+                    FbxVector4 fbxNormal = GetFaceNormal(frameVertices[opacity][frameQuads[opacity][i]], frameVertices[opacity][frameQuads[opacity][i + 1]], frameVertices[opacity][frameQuads[opacity][i + 2]]);
+                    int color = frameQuads[opacity][i + 4];
 
-                    fbxMesh.SetControlPointAt(new FbxVector4(-voxelPosition.x, voxelPosition.y, voxelPosition.z), vertexIndex + y);
-                    normalArray.Add(fbxNormal);
-                    uvArray.Add(new FbxVector2(color, 0));
+                    for (int y = 0; y < 4; y++)
+                    {
+                        int quadIndex = i + y;
+                        Vector3 voxelPosition = frameVertices[opacity][frameQuads[opacity][quadIndex]];
+                        voxelPosition *= 100.0f;
+
+                        fbxMesh.SetControlPointAt(new FbxVector4(-voxelPosition.x, voxelPosition.y, voxelPosition.z), vertexIndex + y);
+                        normalArray.Add(fbxNormal);
+                        uvArray.Add(new FbxVector2(color, 0));
+                    }
+
+                    fbxMesh.BeginPolygon(opacity);
+                    fbxMesh.AddPolygon(vertexIndex);
+                    fbxMesh.AddPolygon(vertexIndex + 1);
+                    fbxMesh.AddPolygon(vertexIndex + 2);
+                    fbxMesh.EndPolygon();
+                    materialArray.Add(opacity);
+
+                    fbxMesh.BeginPolygon(opacity);
+                    fbxMesh.AddPolygon(vertexIndex + 1);
+                    fbxMesh.AddPolygon(vertexIndex + 3);
+                    fbxMesh.AddPolygon(vertexIndex + 2);
+                    fbxMesh.EndPolygon();
+                    materialArray.Add(opacity);
+
+                    vertexIndex += 4;
                 }
-
-                fbxMesh.BeginPolygon();
-                fbxMesh.AddPolygon(vertexIndex);
-                fbxMesh.AddPolygon(vertexIndex + 1);
-                fbxMesh.AddPolygon(vertexIndex + 2);
-                fbxMesh.EndPolygon();
-
-                fbxMesh.BeginPolygon();
-                fbxMesh.AddPolygon(vertexIndex + 1);
-                fbxMesh.AddPolygon(vertexIndex + 3);
-                fbxMesh.AddPolygon(vertexIndex + 2);
-                fbxMesh.EndPolygon();
-
-                vertexIndex += 4;
             }
 
             fbxMesh.GetLayer(0).SetNormals(normalElement);
             fbxMesh.GetLayer(0).SetUVs(uvElement);
+            fbxMesh.GetLayer(0).SetMaterials(materialElement);
 
             FbxNode meshNode = FbxNode.Create(fbxManager, meshName);
             meshNode.LclTranslation.Set(new FbxDouble3(0.0, 0.0, 0.0));
             meshNode.LclRotation.Set(new FbxDouble3(0.0, 0.0, 0.0));
             meshNode.LclScaling.Set(new FbxDouble3(1.0, 1.0, 1.0));
             meshNode.SetNodeAttribute(fbxMesh);
+
+            meshNode.AddMaterial(FbxSurfacePhong.Create(fbxManager, "M_Opaque"));
+            meshNode.AddMaterial(FbxSurfacePhong.Create(fbxManager, "M_Transparent"));
 
             return meshNode;
         }

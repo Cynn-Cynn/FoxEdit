@@ -37,7 +37,8 @@ namespace FoxEdit
         private GraphicsBuffer _transparentVerticesBuffer = null;
         private GraphicsBuffer _opaqueQuadsBuffer = null;
         private GraphicsBuffer _transparentQuadsBuffer = null;
-        private Material _staticMaterialInstance = null;
+        private Material _staticOpaqueMaterialInstance = null;
+        private Material _staticTransparentMaterialInstance = null;
 
         private float _timer = 0.0f;
         private int _animationIndex = 0;
@@ -50,12 +51,12 @@ namespace FoxEdit
 
         private void InitializeRenderParams()
         {
-            _opaqueRenderParams = new RenderParams(_voxelObject.AnimatedMaterial);
+            _opaqueRenderParams = new RenderParams(_voxelObject.AnimatedOpaqueMaterial);
             _opaqueRenderParams.matProps = new MaterialPropertyBlock();
             _opaqueRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _opaqueRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
 
-            _transparentRenderParams = new RenderParams(_voxelObject.AnimatedMaterial);
+            _transparentRenderParams = new RenderParams(_voxelObject.AnimatedTransparentMaterial);
             _transparentRenderParams.matProps = new MaterialPropertyBlock();
             _transparentRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _transparentRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
@@ -69,7 +70,7 @@ namespace FoxEdit
             _meshRenderer = GetComponent<MeshRenderer>();
 
             if (_paletteIndexOverride != _voxelObject.PaletteIndex)
-                CreateStaticMaterialInstance();
+                CreateStaticMaterialInstances();
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
@@ -187,13 +188,14 @@ namespace FoxEdit
 
                 if (_paletteIndexOverride == -1 && index != -1)
                 {
-                    CreateStaticMaterialInstance();
+                    CreateStaticMaterialInstances();
                     _paletteIndexOverride = index;
                 }
                 else if (index == _voxelObject.PaletteIndex)
                 {
-                    _meshRenderer.material = _voxelObject.StaticMaterial;
-                    _staticMaterialInstance = null;
+                    _meshRenderer.SetMaterials(new List<Material>{ _voxelObject.StaticOpaqueMaterial, _voxelObject.StaticTransparentMaterial });
+                    _staticOpaqueMaterialInstance = null;
+                    _staticTransparentMaterialInstance = null;
                     _paletteIndexOverride = -1;
                 }
             }
@@ -208,11 +210,15 @@ namespace FoxEdit
 #endif
         }
 
-        private void CreateStaticMaterialInstance()
+        private void CreateStaticMaterialInstances()
         {
-            _staticMaterialInstance = new Material(_voxelObject.StaticMaterial);
-            _staticMaterialInstance.name = _voxelObject.StaticMaterial.name + "_Instance";
-            _meshRenderer.material = _staticMaterialInstance;
+            _staticOpaqueMaterialInstance = new Material(_voxelObject.StaticOpaqueMaterial);
+            _staticOpaqueMaterialInstance.name = _voxelObject.StaticOpaqueMaterial.name + "_Instance";
+
+            _staticTransparentMaterialInstance = new Material(_voxelObject.StaticTransparentMaterial);
+            _staticTransparentMaterialInstance.name = _voxelObject.StaticTransparentMaterial.name + "_Instance";
+            
+            _meshRenderer.SetMaterials(new List<Material> { _staticOpaqueMaterialInstance, _staticTransparentMaterialInstance });
         }
 
         public void SetAnimation(int animationIndex)
@@ -378,10 +384,16 @@ namespace FoxEdit
 
         private void StaticRender()
         {
-            if (_staticMaterialInstance != null)
-                _staticMaterialInstance.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+            if (_staticOpaqueMaterialInstance != null)
+            {
+                _staticOpaqueMaterialInstance.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+                _staticTransparentMaterialInstance.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+            }
             else
-                _voxelObject.StaticMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+            {
+                _voxelObject.StaticOpaqueMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+                _voxelObject.StaticTransparentMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+            }
         }
 
         private void AnimationRender()

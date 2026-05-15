@@ -135,14 +135,10 @@ namespace FoxEdit
         //private bool wasVoxelRendererStatic = false;
 
 
-        //Save
-        private ComputeShader _computeStaticMesh = null;
-
         #region Init
         public VoxelEditor(VoxelRenderer voxelRenderer)
         {
             _voxelRenderer = voxelRenderer;
-            _computeStaticMesh = FoxEditSettings.GetSettings().staticShader;
             _animationList = new List<VoxelEditorAnimation>();
             _voxelPrefab = FoxEditEditorSettings.Instance.VoxelPrefab.Asset;
             VoxelEditor.OnChangePalette += OnPaletteChanged;
@@ -475,7 +471,7 @@ namespace FoxEdit
         {
             string directory = Path.GetDirectoryName(savePath);
             string meshName = Path.GetFileNameWithoutExtension(savePath);
-            VoxelSaveSystem.Save(meshName, directory, _voxelRenderer, CurrentPalette, PaletteIndex, _animationList, _computeStaticMesh);
+            VoxelSaveSystem.Save(meshName, directory, _voxelRenderer, CurrentPalette, PaletteIndex, _animationList);
             IsDirty = false;
         }
     }

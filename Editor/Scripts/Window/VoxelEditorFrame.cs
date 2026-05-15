@@ -609,13 +609,14 @@ namespace FoxEdit
 
         private VoxelData[] GetVoxelData(bool[] isColorTransparent)
         {
+            //TODO: ça pue très fort par ici
             List<VoxelData> meshData = new List<VoxelData>();
 
             foreach (Vector3Int key in _grid.Keys)
             {
                 VoxelData data = GetVisibleFaces(new VoxelData(key), key, isColorTransparent);
                 data.ColorIndex = _grid.Get(key).ColorIndex;
-                if (data.GetFaces().Length != 0)
+                //if (data.GetFaces().Length != 0)
                     meshData.Add(data);
             }
 

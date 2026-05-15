@@ -1,4 +1,4 @@
-Shader "Voxel/VoxelShader"
+Shader "Voxel/AnimatedTransparentVoxel"
 {
     Properties
     {
@@ -8,14 +8,14 @@ Shader "Voxel/VoxelShader"
     {
         Tags
         {
-            "RenderType" = "Opaque"
-            "Queue" = "Geometry"
+            "RenderType" = "Transparent"
+            "Queue" = "Transparent"
             "RenderPipeline" = "UniversalPipeline"
         }
 
         Pass
         {
-            Cull Front
+            Cull Back
             Blend SrcAlpha OneMinusSrcAlpha
 
             Tags{
