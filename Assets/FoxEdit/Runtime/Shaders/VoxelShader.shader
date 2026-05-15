@@ -15,6 +15,7 @@ Shader "Voxel/VoxelShader"
 
         Pass
         {
+            Cull Front
             Blend SrcAlpha OneMinusSrcAlpha
 
             Tags{
