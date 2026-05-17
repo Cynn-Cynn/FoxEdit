@@ -59,14 +59,6 @@ namespace FoxEdit
 
             FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
 
-            Material animatedOpaqueMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.animatedOpaqueMaterial);
-            AssetDatabase.CreateAsset(animatedOpaqueMaterialInstance, GetAssetPath($"M_{meshName}_Animated_Opaque", saveDirectory, "mat"));
-            voxelObject.AnimatedOpaqueMaterial = animatedOpaqueMaterialInstance;
-
-            Material animatedTransparentMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.animatedTransparentMaterial);
-            AssetDatabase.CreateAsset(animatedTransparentMaterialInstance, GetAssetPath($"M_{meshName}_Animated_Transparent", saveDirectory, "mat"));
-            voxelObject.AnimatedTransparentMaterial = animatedTransparentMaterialInstance;
-
             Material staticOpaqueMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.staticOpaqueMaterial);
             AssetDatabase.CreateAsset(staticOpaqueMaterialInstance, GetAssetPath($"M_{meshName}_Static_Opaque", saveDirectory, "mat"));
             voxelObject.StaticOpaqueMaterial = staticOpaqueMaterialInstance;
@@ -691,15 +683,16 @@ namespace FoxEdit
 
         private static FbxNode CreateFbxMesh(FbxManager fbxManager, string meshName, List<Vector3>[] frameVertices, List<int>[] frameQuads)
         {
-            //TODO: créer qu'un seul material si nécessaire
+            bool hasOpaqueFaces = frameVertices[0].Count > 0;
+            bool hasTransparentFaces = frameVertices[1].Count > 0;
 
             FbxMesh fbxMesh = FbxMesh.Create(fbxManager, meshName);
             fbxMesh.InitControlPoints(frameVertices[0].Count + frameVertices[1].Count);
 
             var normalElement = FbxLayerElementNormal.Create(fbxMesh, "Normals");
-            normalElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
-            normalElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eDirect);
-            var normalArray = normalElement.GetDirectArray();
+            normalElement.SetMappingMode(FbxLayerElement.EMappingMode.eByPolygon);
+            normalElement.SetReferenceMode(FbxLayerElement.EReferenceMode.eIndexToDirect);
+            var normalArray = normalElement.GetIndexArray();
 
             var uvElement = FbxLayerElementUV.Create(fbxMesh, "UVs");
             uvElement.SetMappingMode(FbxLayerElement.EMappingMode.eByControlPoint);
@@ -712,12 +705,11 @@ namespace FoxEdit
             var materialArray = materialElement.GetIndexArray();
 
             int vertexIndex = 0;
-            for (int opacity = 0; opacity < 2; opacity++)
+            for (int opacity = 0; opacity < (hasOpaqueFaces && hasTransparentFaces ? 2 : 1); opacity++)
             {
                 for (int i = 0; i < frameQuads[opacity].Count; i += 5)
                 {
-                    FbxVector4 fbxNormal = GetFaceNormal(frameVertices[opacity][frameQuads[opacity][i]], frameVertices[opacity][frameQuads[opacity][i + 1]], frameVertices[opacity][frameQuads[opacity][i + 2]]);
-                    int color = frameQuads[opacity][i + 4];
+                    FbxVector2 color = new FbxVector2(frameQuads[opacity][i + 4], 0);
 
                     for (int y = 0; y < 4; y++)
                     {
@@ -726,9 +718,10 @@ namespace FoxEdit
                         voxelPosition *= 100.0f;
 
                         fbxMesh.SetControlPointAt(new FbxVector4(-voxelPosition.x, voxelPosition.y, voxelPosition.z), vertexIndex + y);
-                        normalArray.Add(fbxNormal);
-                        uvArray.Add(new FbxVector2(color, 0));
+                        uvArray.Add(color);
                     }
+
+                    FbxVector4 fbxNormal = GetFaceNormal(frameVertices[opacity][frameQuads[opacity][i]], frameVertices[opacity][frameQuads[opacity][i + 1]], frameVertices[opacity][frameQuads[opacity][i + 2]]);
 
                     fbxMesh.BeginPolygon(opacity);
                     fbxMesh.AddPolygon(vertexIndex);
@@ -736,6 +729,7 @@ namespace FoxEdit
                     fbxMesh.AddPolygon(vertexIndex + 2);
                     fbxMesh.EndPolygon();
                     materialArray.Add(opacity);
+                    normalArray.Add(fbxNormal);
 
                     fbxMesh.BeginPolygon(opacity);
                     fbxMesh.AddPolygon(vertexIndex + 1);
@@ -743,6 +737,7 @@ namespace FoxEdit
                     fbxMesh.AddPolygon(vertexIndex + 2);
                     fbxMesh.EndPolygon();
                     materialArray.Add(opacity);
+                    normalArray.Add(fbxNormal);
 
                     vertexIndex += 4;
                 }
@@ -758,8 +753,10 @@ namespace FoxEdit
             meshNode.LclScaling.Set(new FbxDouble3(1.0, 1.0, 1.0));
             meshNode.SetNodeAttribute(fbxMesh);
 
-            meshNode.AddMaterial(FbxSurfacePhong.Create(fbxManager, "M_Opaque"));
-            meshNode.AddMaterial(FbxSurfacePhong.Create(fbxManager, "M_Transparent"));
+            if (hasOpaqueFaces)
+                meshNode.AddMaterial(FbxSurfacePhong.Create(fbxManager, "M_Opaque"));
+            if (hasTransparentFaces)
+                meshNode.AddMaterial(FbxSurfacePhong.Create(fbxManager, "M_Transparent"));
 
             return meshNode;
         }
