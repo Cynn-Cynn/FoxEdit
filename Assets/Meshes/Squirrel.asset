@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: Squirrel
   m_EditorClassIdentifier: 
   PaletteIndex: 0
-  AnimatedOpaqueMaterial: {fileID: 2100000, guid: 1fbae5643cbe6f84388e14fbe67e9083, type: 2}
-  AnimatedTransparentMaterial: {fileID: 2100000, guid: 4785d6d9326fcd24bbf68a447e7048df, type: 2}
   StaticOpaqueMaterial: {fileID: 2100000, guid: c43d426bf3866154aafb88c23d77497b, type: 2}
   StaticTransparentMaterial: {fileID: 2100000, guid: e7be1beca1f3b834d8403eb01feaba1b, type: 2}
   StaticMesh: {fileID: -3394617356442485732, guid: 6e41e5f9adf880843b77e4213526d416, type: 3}

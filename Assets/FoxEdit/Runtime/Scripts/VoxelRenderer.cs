@@ -51,12 +51,14 @@ namespace FoxEdit
 
         private void InitializeRenderParams()
         {
-            _opaqueRenderParams = new RenderParams(_voxelObject.AnimatedOpaqueMaterial);
+            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
+
+            _opaqueRenderParams = new RenderParams(foxEditSettings.Materials.animatedOpaqueMaterial);
             _opaqueRenderParams.matProps = new MaterialPropertyBlock();
             _opaqueRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _opaqueRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
 
-            _transparentRenderParams = new RenderParams(_voxelObject.AnimatedTransparentMaterial);
+            _transparentRenderParams = new RenderParams(foxEditSettings.Materials.animatedTransparentMaterial);
             _transparentRenderParams.matProps = new MaterialPropertyBlock();
             _transparentRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _transparentRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
