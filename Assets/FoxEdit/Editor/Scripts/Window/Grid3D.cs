@@ -103,5 +103,17 @@ namespace FoxEdit
         {
             _grid.Clear();
         }
+
+        internal Dictionary<Vector3Int, int> GetPositionToColor()
+        {
+            Dictionary<Vector3Int, int> positionToColor = new Dictionary<Vector3Int, int>();
+
+            foreach (Vector3Int position in _grid.Keys)
+            {
+                positionToColor.Add(position, _grid[position].ColorIndex);
+            }
+
+            return positionToColor;
+        }
     }
 }
