@@ -7,12 +7,17 @@ namespace FoxEdit
     internal class VoxelEditorAnimation
     {
         public string Name = null;
+        public float FrameDuration = 1.0f;
 
-        public VoxelEditorAnimation(string name)
+        public VoxelEditorAnimation(string name, float frameDuration = 1.0f)
         {
             if (string.IsNullOrEmpty(name))
                 name = "New animation";
             this.Name = name;
+
+            if (frameDuration < 0.0f)
+                frameDuration = 1.0f;
+            FrameDuration = frameDuration;
         }
         public List<VoxelEditorFrame> frames = new List<VoxelEditorFrame>();
 

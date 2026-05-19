@@ -11,7 +11,6 @@ namespace FoxEdit
         private VoxelRenderer _voxelRenderer = null;
 
         private bool _staticRender = false;
-        private float _frameDuration = 0.0f;
         private SerializedProperty _frameDurationProperty = null;
 
         private string[] _paletteNames = null;
@@ -22,9 +21,6 @@ namespace FoxEdit
             _voxelRenderer = target as VoxelRenderer;
 
             _staticRender = serializedObject.FindProperty("_staticRender").boolValue;
-
-            _frameDurationProperty = serializedObject.FindProperty("_frameDuration");
-            _frameDuration = _frameDurationProperty.floatValue;
 
             PaletteSetup();
         }
@@ -44,8 +40,6 @@ namespace FoxEdit
 
             PaletteIndexOverrideDisplay();
             StaticRenderDisplay();
-            if (!_staticRender)
-                FrameTimeDisplay();
             if (!Application.isPlaying && GUILayout.Button("Edit Voxel"))
                 FoxEditManager.StartEditVoxelObject(_voxelRenderer);
         }
@@ -88,17 +82,6 @@ namespace FoxEdit
             {
                 _voxelRenderer.RenderSwap();
                 _staticRender = !_staticRender;
-                Save();
-            }
-        }
-
-        private void FrameTimeDisplay()
-        {
-            float frameDuration = EditorGUILayout.FloatField("Frame duration", _frameDuration);
-            if (frameDuration != _frameDuration)
-            {
-                _frameDurationProperty.floatValue = frameDuration;
-                _frameDuration = frameDuration;
                 Save();
             }
         }

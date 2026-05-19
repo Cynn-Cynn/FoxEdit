@@ -226,7 +226,7 @@ namespace FoxEdit
             {
                 for (int animation = 0; animation < voxelObject.Animations.Length; animation++)
                 {
-                    _animationList.Add(new VoxelEditorAnimation(voxelObject.Animations[animation].AnimName));
+                    _animationList.Add(new VoxelEditorAnimation(voxelObject.Animations[animation].AnimName, voxelObject.Animations[animation].FrameDuration));
                     for (int i = 0; i < voxelObject.Animations[animation].FrameCount; i++)
                     {
                         VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, this);
