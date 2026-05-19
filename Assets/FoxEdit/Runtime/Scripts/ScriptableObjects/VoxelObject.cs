@@ -28,6 +28,7 @@ namespace FoxEdit
         {
             public string AnimName;
             public int FrameCount;
+            public float FrameDuration;
             public MeshData OpaqueMesh;
             public MeshData TransparentMesh;
             public Bounds Bounds;
@@ -42,5 +43,6 @@ namespace FoxEdit
         public Mesh StaticMesh = null;
 
         public AnimationFrames[] Animations = null;
+        public RuntimeAnimatorController animatorController = null;
     }
 }

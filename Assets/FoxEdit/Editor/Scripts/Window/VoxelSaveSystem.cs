@@ -4,8 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
-using UnityEngine.VFX;
+using UnityEditor.Animations;
 using static FoxEdit.VoxelObject;
 
 namespace FoxEdit
@@ -14,7 +13,7 @@ namespace FoxEdit
     {
         internal static void Save(string meshName, string saveDirectory, VoxelRenderer voxelRenderer, VoxelPalette palette, int paletteIndex, List<VoxelEditorAnimation> animationList)
         {
-            VoxelObject voxelObject = GetVoxelObject(voxelRenderer, meshName, saveDirectory);
+            VoxelObject voxelObject = GetVoxelObject(voxelRenderer, meshName, saveDirectory, animationList);
             voxelObject = FillObject(voxelObject, animationList, palette, paletteIndex, saveDirectory, meshName);
 
             voxelRenderer.VoxelObject = voxelObject;
@@ -39,17 +38,17 @@ namespace FoxEdit
             return assetPath;
         }
 
-        private static VoxelObject GetVoxelObject(VoxelRenderer voxelRenderer, string meshName, string saveDirectory)
+        private static VoxelObject GetVoxelObject(VoxelRenderer voxelRenderer, string meshName, string saveDirectory, List<VoxelEditorAnimation> animationList)
         {
             VoxelObject voxelObject = AssetDatabase.LoadAssetAtPath<VoxelObject>(GetAssetPath(meshName, saveDirectory, "asset"));
 
             if (voxelObject == null)
-                voxelObject = CreateVoxelObject(voxelRenderer, meshName, saveDirectory);
+                voxelObject = CreateVoxelObject(voxelRenderer, meshName, saveDirectory, animationList);
 
             return voxelObject;
         }
 
-        private static VoxelObject CreateVoxelObject(VoxelRenderer voxelRenderer, string meshName, string saveDirectory)
+        private static VoxelObject CreateVoxelObject(VoxelRenderer voxelRenderer, string meshName, string saveDirectory, List<VoxelEditorAnimation> animationList)
         {
             string assetPath = GetAssetPath(meshName, saveDirectory, "asset");
 
@@ -70,6 +69,29 @@ namespace FoxEdit
             MeshRenderer staticRenderer = voxelRenderer.GetComponent<MeshRenderer>();
             staticRenderer.SetMaterials(new List<Material> { staticOpaqueMaterialInstance, staticTransparentMaterialInstance });
 
+            //TODO: ajouter nouveaux clips si nouvelles anims
+            AnimatorController animator = AnimatorController.CreateAnimatorControllerAtPath(GetAssetPath($"AC_{meshName}", saveDirectory, "controller"));
+            AnimatorStateMachine stateMachine = animator.layers[0].stateMachine;
+
+            for (int i = 0; i < animationList.Count; i++)
+            {
+                string animationName = animationList[i].Name;
+                AnimatorState state = stateMachine.AddState(animationName);
+                AnimationClip clip = new AnimationClip();
+                clip.name = animationName;
+                AnimationEvent animationEvent = new AnimationEvent();
+                animationEvent.functionName = "SetAnimation";
+                animationEvent.intParameter = i;
+                animationEvent.time = 0.0f;
+                clip.AddEvent(animationEvent);
+                AssetDatabase.CreateAsset(clip, GetAssetPath($"A_{meshName}_{animationName}", saveDirectory, "anim"));
+                state.motion = clip;
+                EditorUtility.SetDirty(clip);
+            }
+
+            voxelObject.animatorController = animator;
+
+            EditorUtility.SetDirty(animator);
             EditorUtility.SetDirty(staticRenderer);
             EditorUtility.SetDirty(voxelRenderer);
             EditorUtility.SetDirty(voxelObject);
@@ -100,7 +122,8 @@ namespace FoxEdit
                     OpaqueMesh = new MeshData(),
                     HasOpaqueFaces = false,
                     TransparentMesh = new MeshData(),
-                    HasTransparentFaces = false
+                    HasTransparentFaces = false,
+                    FrameDuration = editorAnimations[animationIndex].FrameDuration
                 };
 
                 List<Vector3Int> minBounds = new List<Vector3Int>();

@@ -12,6 +12,7 @@ namespace FoxEdit
     [ExecuteAlways]
     [RequireComponent(typeof(MeshFilter))]
     [RequireComponent(typeof(MeshRenderer))]
+    [RequireComponent(typeof(Animator))]
     public class VoxelRenderer : MonoBehaviour
     {
         private enum OpacityType
@@ -25,13 +26,14 @@ namespace FoxEdit
         [SerializeField] private VoxelObject _voxelObject = null;
         [SerializeField] private int _paletteIndexOverride = -1;
         [SerializeField] private bool _staticRender = false;
-        [SerializeField] private float _frameDuration = 0.2f;
 
         //Setup
         [SerializeField] private MeshFilter _meshFilter = null;
         [SerializeField] private MeshRenderer _meshRenderer = null;
+        [SerializeField] private Animator _animator = null;
 
         public VoxelObject VoxelObject { get { return _voxelObject; } set { SetVoxelObject(value); } }
+        public Animator VoxelAnimator { get { return _animator; } }
 
         private GraphicsBuffer _opaqueVerticesBuffer = null;
         private GraphicsBuffer _transparentVerticesBuffer = null;
@@ -40,7 +42,7 @@ namespace FoxEdit
         private Material _staticOpaqueMaterialInstance = null;
         private Material _staticTransparentMaterialInstance = null;
 
-        private float _timer = 0.0f;
+        private float _animationTimer = 0.0f;
         private int _animationIndex = 0;
         private int _frameIndex = 0;
 
@@ -49,7 +51,7 @@ namespace FoxEdit
 
         #region Initialization
 
-        private void InitializeRenderParams()
+        private void InitializeAnimatedRenderer()
         {
             FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
 
@@ -70,6 +72,7 @@ namespace FoxEdit
         {
             _meshFilter = GetComponent<MeshFilter>();
             _meshRenderer = GetComponent<MeshRenderer>();
+            _animator = GetComponent<Animator>();
 
             if (_paletteIndexOverride != _voxelObject.PaletteIndex)
                 CreateStaticMaterialInstances();
@@ -90,7 +93,7 @@ namespace FoxEdit
             if (Application.isPlaying || setupForRender)
             {
 #endif
-                InitializeRenderParams();
+                InitializeAnimatedRenderer();
                 Setup();
 #if UNITY_EDITOR
             }
@@ -149,7 +152,7 @@ namespace FoxEdit
 #if UNITY_EDITOR
             }
 #endif
-            _timer = 0.0f;
+            _animationTimer = 0.0f;
         }
 
         //public void SetAnimatedRender()
@@ -203,7 +206,6 @@ namespace FoxEdit
             }
 
 #if UNITY_EDITOR
-
             if (!Application.isPlaying)
             {
                 EditorUtility.SetDirty(gameObject);
@@ -229,6 +231,7 @@ namespace FoxEdit
                 return;
 
             _animationIndex = animationIndex;
+            _animationTimer = 0.0f;
             SetVoxelBuffers();
             SetWorldBounds();
         }
@@ -243,6 +246,7 @@ namespace FoxEdit
                 return;
 
             _meshFilter.mesh = _voxelObject.StaticMesh;
+            _animator.runtimeAnimatorController = _voxelObject.animatorController;
 #if UNITY_EDITOR
             _meshRenderer.enabled = _staticRender || !Application.isPlaying;
 #else
@@ -400,12 +404,12 @@ namespace FoxEdit
 
         private void AnimationRender()
         {
-            _timer += Time.deltaTime;
+            _animationTimer += Time.deltaTime;
 
-            if (_timer >= _frameDuration)
+            if (_animationTimer >= _voxelObject.Animations[_animationIndex].FrameDuration)
             {
                 _frameIndex = (_frameIndex + 1) % _voxelObject.Animations[_animationIndex].FrameCount;
-                _timer -= _frameDuration;
+                _animationTimer -= _voxelObject.Animations[_animationIndex].FrameDuration;
                 if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
                     _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceStartIndices[_frameIndex]);
                 if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
