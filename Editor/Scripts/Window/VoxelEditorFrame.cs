@@ -572,24 +572,23 @@ namespace FoxEdit
 
         #region SaveSystem
 
-        internal VoxelObjectPackedFrameData GetPackedData(bool[] isColorTansparent)
+        internal VoxelObjectPackedFrameData GetPackedData()
         {
             Vector3Int minBounds;
             Vector3Int maxBounds;
             GetBounds(out minBounds, out maxBounds);
 
-            VoxelObjectPackedFrameData packedData = new VoxelObjectPackedFrameData()
+            VoxelObjectPackedFrameData packedData = new VoxelObjectPackedFrameData
             {
-                Data = GetVoxelData(isColorTansparent),
                 MinBounds = minBounds,
                 MaxBounds = maxBounds,
-                VoxelPositions = _grid.Keys.ToArray(),
-                ColorIndices = _grid.Values.Select(voxel => voxel.ColorIndex).ToArray()
+                VoxelPositionToColor = _grid.GetPositionToColor()
             };
 
             return packedData;
         }
 
+        //TODO: compute in realtime
         private void GetBounds(out Vector3Int min, out Vector3Int max)
         {
             min = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
@@ -605,57 +604,6 @@ namespace FoxEdit
                 max.y = Mathf.Max(position.y, max.y);
                 max.z = Mathf.Max(position.z, max.z);
             }
-        }
-
-        private VoxelData[] GetVoxelData(bool[] isColorTransparent)
-        {
-            //TODO: ça pue très fort par ici
-            List<VoxelData> meshData = new List<VoxelData>();
-
-            foreach (Vector3Int key in _grid.Keys)
-            {
-                VoxelData data = GetVisibleFaces(new VoxelData(key), key, isColorTransparent);
-                data.ColorIndex = _grid.Get(key).ColorIndex;
-                //if (data.GetFaces().Length != 0)
-                    meshData.Add(data);
-            }
-
-            VoxelData[] opaqueMeshData = meshData.Where(mesh => !isColorTransparent[mesh.ColorIndex]).ToArray();
-            VoxelData[] transparentMeshData = meshData.Where(mesh => isColorTransparent[mesh.ColorIndex]).ToArray();
-            meshData = opaqueMeshData.Concat(transparentMeshData).ToList();
-
-            return meshData.ToArray();
-        }
-
-        private VoxelData GetVisibleFaces(VoxelData meshData, Vector3Int key, bool[] isColorTransparent)
-        {
-            bool isTransparent = isColorTransparent[_grid.Get(key).ColorIndex];
-
-            if (IsFaceVisible(key + new Vector3Int(0, 1, 0), isTransparent, isColorTransparent))
-                meshData.AddFace(0);
-            if (IsFaceVisible(key + new Vector3Int(0, 0, -1), isTransparent, isColorTransparent))
-                meshData.AddFace(1);
-            if (IsFaceVisible(key + new Vector3Int(0, -1, 0), isTransparent, isColorTransparent))
-                meshData.AddFace(2);
-            if (IsFaceVisible(key + new Vector3Int(0, 0, 1), isTransparent, isColorTransparent))
-                meshData.AddFace(3);
-            if (IsFaceVisible(key + new Vector3Int(-1, 0, 0), isTransparent, isColorTransparent))
-                meshData.AddFace(4);
-            if (IsFaceVisible(key + new Vector3Int(1, 0, 0), isTransparent, isColorTransparent))
-                meshData.AddFace(5);
-
-            return meshData;
-        }
-
-        private bool IsFaceVisible(Vector3Int key, bool isTransparent, bool[] isColorTransparent)
-        {
-            if (_grid.IsEmpty(key))
-                return true;
-
-            if (isColorTransparent[_grid.Get(key).ColorIndex])
-                return !isTransparent;
-
-            return false;
         }
 
         #endregion SaveSystem

@@ -4,12 +4,10 @@ using UnityEngine;
 
 namespace FoxEdit
 {
-    internal class VoxelObjectPackedFrameData
+    internal struct VoxelObjectPackedFrameData
     {
-        public VoxelData[] Data;
         public Vector3Int MinBounds;
         public Vector3Int MaxBounds;
-        public Vector3Int[] VoxelPositions;
-        public int[] ColorIndices;
+        public Dictionary<Vector3Int, int> VoxelPositionToColor;
     }
 }

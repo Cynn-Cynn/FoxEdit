@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq;
 
 namespace FoxEdit
 {
@@ -29,6 +30,11 @@ namespace FoxEdit
                 return;
 
             _colors[index] = color;
+        }
+
+        internal bool[] GetColorOpacities()
+        {
+            return Colors.Select(material => material.Color.a < 1.0f).ToArray();
         }
     }
 }
