@@ -33,6 +33,7 @@ namespace FoxEdit
             public Bounds Bounds;
             public bool HasOpaqueFaces;
             public bool HasTransparentFaces;
+            public EditorFrameVoxels[] EditorVoxels;
         }
 
         public int PaletteIndex = 0;
@@ -41,6 +42,5 @@ namespace FoxEdit
         public Mesh StaticMesh = null;
 
         public AnimationFrames[] Animations = null;
-        public EditorFrameVoxels[] EditorVoxelPositions = null;
     }
 }

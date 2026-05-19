@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static FoxEdit.VoxelObject;
 
 namespace FoxEdit
 {
@@ -28,12 +29,13 @@ namespace FoxEdit
             _grid = new Grid3D();
         }
 
-        internal void LoadFromSave(Vector3Int[] voxelPositions, int paletteIndex, int[] colorIndices)
+        internal void LoadFromSave(EditorFrameVoxels editorVoxels, int paletteIndex)
         {
-            for (int i = 0; i < voxelPositions.Length; i++)
+            for (int i = 0; i < editorVoxels.VoxelPositions.Length; i++)
             {
-                _grid.Set(voxelPositions[i], CreateVoxelObject(voxelPositions[i]));
-                SetColor(voxelPositions[i], paletteIndex, colorIndices[i]);
+                Vector3Int position = editorVoxels.VoxelPositions[i];
+                _grid.Set(position, CreateVoxelObject(position));
+                SetColor(position, paletteIndex, editorVoxels.ColorIndices[i]);
             }
         }
 

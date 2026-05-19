@@ -80,20 +80,19 @@ namespace FoxEdit
 
         private static VoxelObject FillObject(VoxelObject voxelObject, List<VoxelEditorAnimation> editorAnimations, VoxelPalette palette, int paletteIndex, string saveDirectory, string meshName)
         {
-            List<EditorFrameVoxels> editorVoxelPositions = new List<EditorFrameVoxels>();
-
             bool[] isColorTransparent = palette.GetColorOpacities();
-
-            List<int>[] startIndices = new List<int>[2];
-            startIndices[0] = new List<int>(); //opaque
-            startIndices[1] = new List<int>(); //transparent
-            List<int>[] instanceCounts = new List<int>[2];
-            instanceCounts[0] = new List<int>(); //opaque
-            instanceCounts[1] = new List<int>(); //transparent
             AnimationFrames[] animations = new AnimationFrames[editorAnimations.Count];
 
             for (int animationIndex = 0; animationIndex < editorAnimations.Count; animationIndex++)
             {
+                List<int>[] startIndices = new List<int>[2];
+                startIndices[0] = new List<int>(); //opaque
+                startIndices[1] = new List<int>(); //transparent
+                List<int>[] instanceCounts = new List<int>[2];
+                instanceCounts[0] = new List<int>(); //opaque
+                instanceCounts[1] = new List<int>(); //transparent
+                List<EditorFrameVoxels> editorVoxels = new List<EditorFrameVoxels>();
+
                 animations[animationIndex] = new AnimationFrames
                 {
                     AnimName = editorAnimations[animationIndex].Name,
@@ -122,7 +121,7 @@ namespace FoxEdit
                         VoxelPositions = packedData.VoxelPositionToColor.Keys.ToArray(),
                         ColorIndices = packedData.VoxelPositionToColor.Values.ToArray()
                     };
-                    editorVoxelPositions.Add(editorVoxel);
+                    editorVoxels.Add(editorVoxel);
                     minBounds.Add(packedData.MinBounds);
                     maxBounds.Add(packedData.MaxBounds);
 
@@ -172,11 +171,11 @@ namespace FoxEdit
                 }
 
                 animations[animationIndex].Bounds = CreateBounds(minBounds, maxBounds);
+                animations[animationIndex].EditorVoxels = editorVoxels.ToArray();
             }
 
             voxelObject.PaletteIndex = paletteIndex;
             voxelObject.Animations = animations;
-            voxelObject.EditorVoxelPositions = editorVoxelPositions.ToArray();
 
             return voxelObject;
         }
@@ -652,7 +651,6 @@ namespace FoxEdit
             using (var fbxManager = FbxManager.Create())
             {
                 FbxIOSettings fbxIOSettings = FbxIOSettings.Create(fbxManager, Globals.IOSROOT);
-
                 fbxManager.SetIOSettings(fbxIOSettings);
                 FbxExporter fbxExporter = FbxExporter.Create(fbxManager, "Exporter");
                 int fileFormat = fbxManager.GetIOPluginRegistry().FindWriterIDByDescription("FBX ascii (*.fbx)");
@@ -660,7 +658,7 @@ namespace FoxEdit
 
                 if (!status)
                 {
-                    Debug.LogError(string.Format("failed to initialize exporter, reason: {0}", fbxExporter.GetStatus().GetErrorString()));
+                    Debug.LogError($"Failed to initialize exporter, reason: {fbxExporter.GetStatus().GetErrorString()}");
                     return null;
                 }
 
@@ -669,11 +667,8 @@ namespace FoxEdit
                 fbxSceneInfo.mTitle = meshName;
                 fbxSceneInfo.mAuthor = "FoxEdit";
                 fbxScene.SetSceneInfo(fbxSceneInfo);
-
                 fbxScene.GetRootNode().AddChild(CreateFbxMesh(fbxManager, meshName, colors, frameVertices, frameQuads));
-
                 fbxExporter.Export(fbxScene);
-
                 fbxScene.Destroy();
                 fbxExporter.Destroy();
             }
