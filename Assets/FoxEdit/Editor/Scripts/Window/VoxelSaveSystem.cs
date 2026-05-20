@@ -69,27 +69,8 @@ namespace FoxEdit
             MeshRenderer staticRenderer = voxelRenderer.GetComponent<MeshRenderer>();
             staticRenderer.SetMaterials(new List<Material> { staticOpaqueMaterialInstance, staticTransparentMaterialInstance });
 
-            //TODO: ajouter nouveaux clips si nouvelles anims
             AnimatorController animator = AnimatorController.CreateAnimatorControllerAtPath(GetAssetPath($"AC_{meshName}", saveDirectory, "controller"));
-            AnimatorStateMachine stateMachine = animator.layers[0].stateMachine;
-
-            for (int i = 0; i < animationList.Count; i++)
-            {
-                string animationName = animationList[i].Name;
-                AnimatorState state = stateMachine.AddState(animationName);
-                AnimationClip clip = new AnimationClip();
-                clip.name = animationName;
-                AnimationEvent animationEvent = new AnimationEvent();
-                animationEvent.functionName = "SetAnimation";
-                animationEvent.intParameter = i;
-                animationEvent.time = 0.0f;
-                clip.AddEvent(animationEvent);
-                AssetDatabase.CreateAsset(clip, GetAssetPath($"A_{meshName}_{animationName}", saveDirectory, "anim"));
-                state.motion = clip;
-                EditorUtility.SetDirty(clip);
-            }
-
-            voxelObject.animatorController = animator;
+            voxelObject.AnimatorController = animator;
 
             EditorUtility.SetDirty(animator);
             EditorUtility.SetDirty(staticRenderer);
@@ -195,6 +176,8 @@ namespace FoxEdit
 
                 animations[animationIndex].Bounds = CreateBounds(minBounds, maxBounds);
                 animations[animationIndex].EditorVoxels = editorVoxels.ToArray();
+
+                SetAnimation(voxelObject.AnimatorController, editorAnimations[animationIndex].Name, meshName, saveDirectory, animationIndex);
             }
 
             voxelObject.PaletteIndex = paletteIndex;
@@ -233,6 +216,35 @@ namespace FoxEdit
             bounds.extents = new Vector3((float)size.x / 2.0f, (float)size.y / 2.0f, (float)size.z / 2.0f) * 0.1f;
 
             return bounds;
+        }
+
+        private static void SetAnimation(RuntimeAnimatorController animator, string animationName, string meshName, string saveDirectory, int index)
+        {
+            string animationPath = GetAssetPath($"A_{meshName}_{animationName}", saveDirectory, "anim");
+            AnimationClip clip = AssetDatabase.LoadAssetAtPath(animationPath, typeof(AnimationClip)) as AnimationClip;
+            AnimationEvent animationEvent = null;
+
+            if (clip == null)
+            {
+                clip = new AnimationClip();
+                clip.name = $"A_{meshName}_{animationName}";
+                AssetDatabase.CreateAsset(clip, animationPath);
+                animationEvent = new AnimationEvent();
+                animationEvent.functionName = "SetAnimation";
+                animationEvent.time = 0.0f;
+                AnimationUtility.SetAnimationEvents(clip, new AnimationEvent[] { animationEvent });
+                AnimatorState state = (animator as AnimatorController).layers[0].stateMachine.AddState(animationName);
+                state.motion = clip;
+            }
+            else
+            {
+                animationEvent = clip.events[0];
+            }
+
+            animationEvent.intParameter = index;
+
+            EditorUtility.SetDirty(animator);
+            EditorUtility.SetDirty(clip);
         }
 
         #endregion VoxelObjectCreation
