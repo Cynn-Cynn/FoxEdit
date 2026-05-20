@@ -246,7 +246,7 @@ namespace FoxEdit
                 return;
 
             _meshFilter.mesh = _voxelObject.StaticMesh;
-            _animator.runtimeAnimatorController = _voxelObject.animatorController;
+            _animator.runtimeAnimatorController = _voxelObject.AnimatorController;
 #if UNITY_EDITOR
             _meshRenderer.enabled = _staticRender || !Application.isPlaying;
 #else
