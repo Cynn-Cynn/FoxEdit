@@ -79,7 +79,7 @@ namespace FoxEdit
 
         internal bool TryAddVoxelNextTo(Vector3Int gridPosition, Vector3Int direction, int paletteIndex, int colorIndex)
         {
-            if (TryGetDiffAddVoxelNextTo(out Vector3Int newGridPosition, gridPosition, direction))
+            if (CanAddVoxel(out Vector3Int newGridPosition, gridPosition, direction))
             {
                 _grid.Set(newGridPosition, CreateVoxelObject(newGridPosition));
                 SetColor(newGridPosition, paletteIndex, colorIndex);
@@ -90,7 +90,7 @@ namespace FoxEdit
             return false;
         }
 
-        internal bool TryGetDiffAddVoxelNextTo(out Vector3Int newVoxel, Vector3Int gridPosition, Vector3Int direction)
+        internal bool CanAddVoxel(out Vector3Int newVoxel, Vector3Int gridPosition, Vector3Int direction)
         {
             newVoxel = Vector3Int.zero;
             if (_grid.IsEmpty(gridPosition) && gridPosition != Vector3Int.zero)
@@ -104,7 +104,7 @@ namespace FoxEdit
             return true;
         }
 
-        internal bool TryGetDiffAddLayer(out List<Vector3Int> newVoxels, Vector3Int gridPosition, Vector3Int direction, int baseColorIndex = -1, HashSet<Vector3Int> verifiedVoxels = null)
+        internal bool CanAddLayer(out List<Vector3Int> newVoxels, Vector3Int gridPosition, Vector3Int direction, int baseColorIndex = -1, HashSet<Vector3Int> verifiedVoxels = null)
         {
             newVoxels = new List<Vector3Int>();
             if (verifiedVoxels == null)
@@ -132,15 +132,15 @@ namespace FoxEdit
             List<Vector3Int> tmpVoxelList = null;
 
             Vector3Int tangent = new Vector3Int(direction.z, direction.x, direction.y);
-            if (TryGetDiffAddLayer(out tmpVoxelList, gridPosition + tangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanAddLayer(out tmpVoxelList, gridPosition + tangent, direction, baseColorIndex, verifiedVoxels))
                 newVoxels.AddRange(tmpVoxelList);
-            if (TryGetDiffAddLayer(out tmpVoxelList, gridPosition - tangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanAddLayer(out tmpVoxelList, gridPosition - tangent, direction, baseColorIndex, verifiedVoxels))
                 newVoxels.AddRange(tmpVoxelList);
 
             Vector3Int bitangent = new Vector3Int(direction.y, direction.z, direction.x);
-            if (TryGetDiffAddLayer(out tmpVoxelList, gridPosition + bitangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanAddLayer(out tmpVoxelList, gridPosition + bitangent, direction, baseColorIndex, verifiedVoxels))
                 newVoxels.AddRange(tmpVoxelList);
-            if (TryGetDiffAddLayer(out tmpVoxelList, gridPosition - bitangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanAddLayer(out tmpVoxelList, gridPosition - bitangent, direction, baseColorIndex, verifiedVoxels))
                 newVoxels.AddRange(tmpVoxelList);
 
             return true;
@@ -148,7 +148,7 @@ namespace FoxEdit
 
         internal bool TryAddLayer(Vector3Int gridPosition, Vector3Int direction, int paletteIndex, int colorIndex, int baseColorIndex = -1)
         {
-            if (TryGetDiffAddLayer(out List<Vector3Int> newVoxelsPositions, gridPosition, direction, baseColorIndex))
+            if (CanAddLayer(out List<Vector3Int> newVoxelsPositions, gridPosition, direction, baseColorIndex))
             {
                 foreach (Vector3Int newGridPosition in newVoxelsPositions)
                 {
@@ -173,7 +173,7 @@ namespace FoxEdit
 
         internal bool TryRemoveLayer(Vector3Int gridPosition, Vector3Int direction, int baseColorIndex = -1)
         {
-            if (TryGetDiffRemoveLayer(out List<Vector3Int> voxelsToRemove, gridPosition, direction, baseColorIndex))
+            if (CanRemoveLayer(out List<Vector3Int> voxelsToRemove, gridPosition, direction, baseColorIndex))
             {
                 foreach (Vector3Int voxelToRemove in voxelsToRemove)
                 {
@@ -185,7 +185,7 @@ namespace FoxEdit
             return false;
         }
 
-        internal bool TryGetDiffRemoveLayer(out List<Vector3Int> removedVoxels, Vector3Int gridPosition, Vector3Int direction, int baseColorIndex = -1, HashSet<Vector3Int> verifiedVoxels = null)
+        internal bool CanRemoveLayer(out List<Vector3Int> removedVoxels, Vector3Int gridPosition, Vector3Int direction, int baseColorIndex = -1, HashSet<Vector3Int> verifiedVoxels = null)
         {
             removedVoxels = new List<Vector3Int>();
             if (verifiedVoxels == null)
@@ -207,15 +207,15 @@ namespace FoxEdit
             List<Vector3Int> tmpVoxelList = null;
 
             Vector3Int tangent = new Vector3Int(direction.z, direction.x, direction.y);
-            if (TryGetDiffRemoveLayer(out tmpVoxelList, gridPosition + tangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanRemoveLayer(out tmpVoxelList, gridPosition + tangent, direction, baseColorIndex, verifiedVoxels))
                 removedVoxels.AddRange(tmpVoxelList);
-            if (TryGetDiffRemoveLayer(out tmpVoxelList, gridPosition - tangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanRemoveLayer(out tmpVoxelList, gridPosition - tangent, direction, baseColorIndex, verifiedVoxels))
                 removedVoxels.AddRange(tmpVoxelList);
 
             Vector3Int bitangent = new Vector3Int(direction.y, direction.z, direction.x);
-            if (TryGetDiffRemoveLayer(out tmpVoxelList, gridPosition + bitangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanRemoveLayer(out tmpVoxelList, gridPosition + bitangent, direction, baseColorIndex, verifiedVoxels))
                 removedVoxels.AddRange(tmpVoxelList);
-            if (TryGetDiffRemoveLayer(out tmpVoxelList, gridPosition - bitangent, direction, baseColorIndex, verifiedVoxels))
+            if (CanRemoveLayer(out tmpVoxelList, gridPosition - bitangent, direction, baseColorIndex, verifiedVoxels))
                 removedVoxels.AddRange(tmpVoxelList);
 
             return true;
@@ -232,7 +232,7 @@ namespace FoxEdit
 
         internal bool TryFillColor(Vector3Int gridPosition, int paletteIndex, int colorIndex, int baseColorIndex = -1)
         {
-            if (TryGetDeltaFillColor(out List<Vector3Int> modifiedVoxels, gridPosition, colorIndex, baseColorIndex))
+            if (CanFillColor(out List<Vector3Int> modifiedVoxels, gridPosition, colorIndex, baseColorIndex))
             {
                 foreach (Vector3Int modifiedVoxel in modifiedVoxels)
                     SetColor(modifiedVoxel, paletteIndex, colorIndex);
@@ -242,7 +242,7 @@ namespace FoxEdit
             return false;
         }
 
-        internal bool TryGetDeltaFillColor(out List<Vector3Int> modifiedVoxels, Vector3Int gridPosition, int colorIndex, int baseColorIndex = -1, HashSet<Vector3Int> verifiedVoxels = null)
+        internal bool CanFillColor(out List<Vector3Int> modifiedVoxels, Vector3Int gridPosition, int colorIndex, int baseColorIndex = -1, HashSet<Vector3Int> verifiedVoxels = null)
         {
             modifiedVoxels = new List<Vector3Int>();
             if (verifiedVoxels == null)
@@ -261,17 +261,17 @@ namespace FoxEdit
             modifiedVoxels.Add(gridPosition);
             List<Vector3Int> tmpVoxelList = null;
 
-            if (TryGetDeltaFillColor(out tmpVoxelList, gridPosition + Vector3Int.up, colorIndex, baseColorIndex, verifiedVoxels))
+            if (CanFillColor(out tmpVoxelList, gridPosition + Vector3Int.up, colorIndex, baseColorIndex, verifiedVoxels))
                 modifiedVoxels.AddRange(tmpVoxelList);
-            if (TryGetDeltaFillColor(out tmpVoxelList, gridPosition + Vector3Int.down, colorIndex, baseColorIndex, verifiedVoxels))
+            if (CanFillColor(out tmpVoxelList, gridPosition + Vector3Int.down, colorIndex, baseColorIndex, verifiedVoxels))
                 modifiedVoxels.AddRange(tmpVoxelList);
-            if (TryGetDeltaFillColor(out tmpVoxelList, gridPosition + Vector3Int.left, colorIndex, baseColorIndex, verifiedVoxels))
+            if (CanFillColor(out tmpVoxelList, gridPosition + Vector3Int.left, colorIndex, baseColorIndex, verifiedVoxels))
                 modifiedVoxels.AddRange(tmpVoxelList);
-            if (TryGetDeltaFillColor(out tmpVoxelList, gridPosition + Vector3Int.right, colorIndex, baseColorIndex, verifiedVoxels))
+            if (CanFillColor(out tmpVoxelList, gridPosition + Vector3Int.right, colorIndex, baseColorIndex, verifiedVoxels))
                 modifiedVoxels.AddRange(tmpVoxelList);
-            if (TryGetDeltaFillColor(out tmpVoxelList, gridPosition + Vector3Int.forward, colorIndex, baseColorIndex, verifiedVoxels))
+            if (CanFillColor(out tmpVoxelList, gridPosition + Vector3Int.forward, colorIndex, baseColorIndex, verifiedVoxels))
                 modifiedVoxels.AddRange(tmpVoxelList);
-            if (TryGetDeltaFillColor(out tmpVoxelList, gridPosition + Vector3Int.back, colorIndex, baseColorIndex, verifiedVoxels))
+            if (CanFillColor(out tmpVoxelList, gridPosition + Vector3Int.back, colorIndex, baseColorIndex, verifiedVoxels))
                 modifiedVoxels.AddRange(tmpVoxelList);
 
             return true;
@@ -282,9 +282,9 @@ namespace FoxEdit
             List<GameObject> selectedVoxels = Selection.gameObjects.ToList();
             float voxelScale = selectedVoxels[0].transform.localScale.x;
             if (voxelScale < 1.0f)
-                DownScale(selectedVoxels, voxelScale, paletteIndex);
+                ScaleDown(selectedVoxels, voxelScale, paletteIndex);
             else if (voxelScale > 1.0f)
-                Upscale(selectedVoxels, voxelScale, paletteIndex);
+                ScaleUp(selectedVoxels, voxelScale, paletteIndex);
             else
                 SnapToGrid(selectedVoxels);
         }
@@ -328,7 +328,7 @@ namespace FoxEdit
             _grid = gridCopy;
         }
 
-        private void Upscale(List<GameObject> selectedVoxels, float scale, int paletteIndex)
+        private void ScaleUp(List<GameObject> selectedVoxels, float scale, int paletteIndex)
         {
             int roundedScale = Mathf.RoundToInt(scale);
             Vector3Int[] gridPositions = _grid.Keys.ToArray();
@@ -384,7 +384,7 @@ namespace FoxEdit
             _grid = gridCopy;
         }
 
-        private void DownScale(List<GameObject> selectedVoxels, float scale, int paletteIndex)
+        private void ScaleDown(List<GameObject> selectedVoxels, float scale, int paletteIndex)
         {
             int roundedScale = Mathf.RoundToInt(1.0f / scale);
             if (roundedScale == 1)

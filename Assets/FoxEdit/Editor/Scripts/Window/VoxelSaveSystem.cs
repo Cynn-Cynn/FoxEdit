@@ -229,12 +229,16 @@ namespace FoxEdit
                 clip = new AnimationClip();
                 clip.name = $"A_{meshName}_{animationName}";
                 AssetDatabase.CreateAsset(clip, animationPath);
+                AnimatorState state = (animator as AnimatorController).layers[0].stateMachine.AddState(animationName);
+                state.motion = clip;
+            }
+
+            if (clip.events.Length == 0)
+            {
                 animationEvent = new AnimationEvent();
                 animationEvent.functionName = "SetAnimation";
                 animationEvent.time = 0.0f;
                 AnimationUtility.SetAnimationEvents(clip, new AnimationEvent[] { animationEvent });
-                AnimatorState state = (animator as AnimatorController).layers[0].stateMachine.AddState(animationName);
-                state.motion = clip;
             }
             else
             {
@@ -709,6 +713,17 @@ namespace FoxEdit
             }
 
             AssetDatabase.Refresh();
+            ModelImporter importer = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            importer.animationType = ModelImporterAnimationType.None;
+            importer.importAnimation = false;
+            importer.importBlendShapes = false;
+            importer.importBlendShapeDeformPercent = false;
+            importer.importVisibility = false;
+            importer.importCameras = false;
+            importer.importLights = false;
+            importer.SaveAndReimport();
+            
             GameObject meshGameObject = AssetDatabase.LoadAssetAtPath(fbxPath, typeof(GameObject)) as GameObject;
             return meshGameObject.GetComponent<MeshFilter>().sharedMesh;
         }

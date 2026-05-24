@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FoxEdit;
 using FoxEdit.WindowPanels;
 using UnityEditor;
@@ -22,7 +23,7 @@ internal class NewFoxEditorWindow : EditorWindow
     private VoxelObjectEditorPanel objectEditor = null;
     private VisualElement voxelRendererSelectorContainer = null;
     private VoxelRendererSelectorElement voxelRendererSelectorElement = null;
-    public static NewFoxEditorWindow currentWindow {get; private set;}
+    public static NewFoxEditorWindow currentWindow { get; private set; }
 
     [MenuItem("FoxEdit/Voxel Editor")]
     public static void Open()
@@ -30,6 +31,14 @@ internal class NewFoxEditorWindow : EditorWindow
         currentWindow = GetWindow<NewFoxEditorWindow>();
         currentWindow.titleContent = new GUIContent("FoxEditor");
     }
+
+    //Debug
+    //[MenuItem("FoxEdit/New voxel mesh")]
+    //public static void NewVoxelMesh()
+    //{
+    //    FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
+    //    VoxelSaveSystem.Save("Test", "Assets/Meshes/Test", FindObjectsByType<VoxelRenderer>(FindObjectsSortMode.None).Where(voxel => voxel.gameObject.name == "Test").First(), foxEditSettings.Palettes[0], 0, new List<VoxelEditorAnimation>());
+    //}
 
     public void CreateGUI()
     {
@@ -70,7 +79,7 @@ internal class NewFoxEditorWindow : EditorWindow
         FoxEditManager.OnStopEditVoxelObject -= ShowVoxelObjectSelector;
         if (voxelRendererSelectorElement != null)
         {
-        voxelRendererSelectorElement.OnSelectVoxelObject -= OnSelectVoxelObject;
+            voxelRendererSelectorElement.OnSelectVoxelObject -= OnSelectVoxelObject;
         }
     }
 

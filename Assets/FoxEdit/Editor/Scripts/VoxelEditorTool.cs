@@ -119,12 +119,12 @@ namespace FoxEdit
             {
                 if (VoxelEditor.Tool == vxTool.Fill)
                 {
-                    if (voxelEditorFrame.TryGetDiffAddLayer(out editedVoxels, gridPosition, direction))
+                    if (voxelEditorFrame.CanAddLayer(out editedVoxels, gridPosition, direction))
                         return editedVoxels;
                 }
                 else if (VoxelEditor.Tool == vxTool.Brush)
                 {
-                    if (voxelEditorFrame.TryGetDiffAddVoxelNextTo(out Vector3Int newVoxel, gridPosition, direction))
+                    if (voxelEditorFrame.CanAddVoxel(out Vector3Int newVoxel, gridPosition, direction))
                         return new List<Vector3Int>() { newVoxel };
                 }
             }
@@ -132,7 +132,7 @@ namespace FoxEdit
             {
                 if (VoxelEditor.Tool == vxTool.Fill)
                 {
-                    if (voxelEditorFrame.TryGetDiffRemoveLayer(out editedVoxels, gridPosition, direction))
+                    if (voxelEditorFrame.CanRemoveLayer(out editedVoxels, gridPosition, direction))
                         return editedVoxels;
                 }
             }
@@ -140,7 +140,7 @@ namespace FoxEdit
             {
                 if (VoxelEditor.Tool == vxTool.Fill)
                 {
-                    if (voxelEditorFrame.TryGetDeltaFillColor(out editedVoxels, gridPosition, VoxelEditor.ColorIndex))
+                    if (voxelEditorFrame.CanFillColor(out editedVoxels, gridPosition, VoxelEditor.ColorIndex))
                         return editedVoxels;
                 }
             }
