@@ -10,9 +10,7 @@ using UnityEngine;
 namespace FoxEdit
 {
     [ExecuteAlways]
-    [RequireComponent(typeof(MeshFilter))]
-    [RequireComponent(typeof(MeshRenderer))]
-    [RequireComponent(typeof(Animator))]
+    [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(Animator))]
     public class VoxelRenderer : MonoBehaviour
     {
         private enum OpacityType
@@ -155,20 +153,16 @@ namespace FoxEdit
             _animationTimer = 0.0f;
         }
 
-        //public void SetAnimatedRender()
-        //{
-        //    _staticRender = false;
-        //    _meshRenderer.enabled = false;
-        //    _timer = 0.0f;
-        //}
+        internal void HideMesh()
+        {
+            _meshRenderer.enabled = false;
+        }
 
-        //public void SetStaticRender()
-        //{
-        //    _staticRender = true;
-        //    _meshRenderer.enabled = true;
-        //}
+        internal void ShowMesh()
+        {
+            _meshRenderer.enabled = true;
+        }
 
-        //public bool IsStaticRender => _staticRender;
 
         public int GetPaletteIndex()
         {

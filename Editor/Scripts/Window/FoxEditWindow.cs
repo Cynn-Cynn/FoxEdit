@@ -319,6 +319,7 @@ namespace FoxEdit
             CreateFrameIndices(_frameList.Count > 0 ? _frameList[0].Count : 1);
 
             _voxelRenderer.enabled = false;
+            _voxelRenderer.HideMesh();
             _edit = true;
             SceneView.duringSceneGui += OnSceneGUI;
         }
@@ -350,6 +351,7 @@ namespace FoxEdit
             if (_voxelRenderer != null && !isFromReload)
             {
                 _voxelRenderer.enabled = true;
+                _voxelRenderer.ShowMesh();
                 _voxelRenderer.Setup();
             }
         }
@@ -417,7 +419,7 @@ namespace FoxEdit
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Frame", EditorStyles.boldLabel);
-            int selectedFrame = EditorGUILayout.Popup(_selectedFrame, _frameIndices);
+            int selectedFrame = EditorGUILayout.Popup(_selectedFrame, new string[1] {"Oui"} );
             EditorGUILayout.EndHorizontal();
 
             if (selectedFrame != _selectedFrame)
