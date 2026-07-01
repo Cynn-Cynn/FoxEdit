@@ -1,0 +1,44 @@
+.button-group {
+    margin-bottom: 3px;
+}
+
+.button-group-button {
+    background-color: var(--unity-colors-play_mode-background);
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    font-size: 15px;
+    color: rgb(43, 43, 43);
+}
+
+.button-group-text-button {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.button-group-highlighted-button {
+    background-color: var(--unity-colors-default-text-hover);
+}
+
+.button-group-button:hover {
+    background-color: var(--unity-colors-default-text);
+}
+
+.button-group-icon-button {
+    width: 50px;
+    height: 50px;
+}
+
+.icon-button-group #buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.button-group-icon-button > #icon {
+    flex-grow: 1;
+    margin-top: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    -unity-background-image-tint-color: rgb(43, 43, 43);
+}

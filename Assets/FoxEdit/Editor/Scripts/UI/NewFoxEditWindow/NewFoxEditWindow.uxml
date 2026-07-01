@@ -1,0 +1,44 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/NewFoxEditWindow.uss?fileID=7433441132597879392&amp;guid=51b0ad05fb96ea14fbbb98f7f2e9bc35&amp;type=3#NewFoxEditWindow" />
+    <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/ViewPanel.uss?fileID=7433441132597879392&amp;guid=d7e24864adbf97f4c9d298668cb4bac5&amp;type=3#ViewPanel" />
+    <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/PalettePanel.uss?fileID=7433441132597879392&amp;guid=451cf6ad185c4d644b7c4d34261db559&amp;type=3#PalettePanel" />
+    <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/ButtonsGroup.uss?fileID=7433441132597879392&amp;guid=1ce144433f6192447bcc68992d9e78c6&amp;type=3#ButtonsGroup" />
+    <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/BrushPanel.uss?fileID=7433441132597879392&amp;guid=47cdee8f2571b96419aac8295b785da0&amp;type=3#BrushPanel" />
+    <ui:VisualElement name="body">
+        <FoxEdit.WindowComponents.Panel name="PalettePanel" title="Palette">
+            <ui:VisualElement name="palette-selection" class="palette-selection">
+                <ui:VisualElement name="palette-selection" class="palette-selection-container">
+                    <ui:DropdownField name="palette-dropdown" class="palette-selection-container" />
+                    <ui:Button text="T" parse-escape-sequences="true" display-tooltip-when-elided="true" name="palette-rename-button" />
+                </ui:VisualElement>
+                <ui:TextField picking-mode="Ignore" value="filler text" name="rename-palette-textfield" style="display: none;" />
+            </ui:VisualElement>
+            <ui:ScrollView scroll-deceleration-rate="0,135" elasticity="0,1" class="palette-selection-scrollview">
+                <FoxEdit.WindowComponents.ColorSelector ElementSCount="300" />
+            </ui:ScrollView>
+            <ui:VisualElement name="buttons" class="palette-selection-buttons">
+                <FoxEdit.WindowComponents.IconButton name="open-palette" />
+                <FoxEdit.WindowComponents.IconButton name="save-palette" />
+                <FoxEdit.WindowComponents.IconButton name="new-palette">
+                    <FoxEdit.WindowComponents.IconButton name="new-palette" />
+                </FoxEdit.WindowComponents.IconButton>
+                <FoxEdit.WindowComponents.IconButton name="copy-region">
+                    <FoxEdit.WindowComponents.IconButton name="new-palette" />
+                </FoxEdit.WindowComponents.IconButton>
+                <FoxEdit.WindowComponents.IconButton name="paste-region" />
+            </ui:VisualElement>
+        </FoxEdit.WindowComponents.Panel>
+        <FoxEdit.WindowComponents.Panel name="BrushPanel" title="Brush">
+            <FoxEdit.WindowComponents.ButtonGroup enumType="FoxEdit.WindowComponents.BrushAction, FoxEdit.Editor" name="brushAction" buttonGroupType="Text" index="0" />
+            <FoxEdit.WindowComponents.ButtonGroup buttonGroupType="Icon" enumType="FoxEdit.WindowComponents.SelectionAction, FoxEdit.Editor" name="selectionAction" />
+        </FoxEdit.WindowComponents.Panel>
+        <FoxEdit.WindowComponents.Panel name="ViewPanel" title="View">
+            <ui:VisualElement name="header" class="view-panel-header" style="display: none;" />
+            <ui:VisualElement name="view" class="view-panel-view" />
+            <ui:VisualElement name="footer" class="view-panel-footer">
+                <ui:Label tabindex="-1" text="Attach Voxel [T] " parse-escape-sequences="true" display-tooltip-when-elided="true" name="hint" class="view-panel-hint-label" />
+            </ui:VisualElement>
+        </FoxEdit.WindowComponents.Panel>
+        <FoxEdit.WindowComponents.Panel name="EditPanel" title="Edit" />
+    </ui:VisualElement>
+</ui:UXML>

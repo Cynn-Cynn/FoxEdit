@@ -1,0 +1,95 @@
+.palette-selection-scrollview {
+    flex-grow: 1;
+}
+
+.palette-selection-buttons {
+    flex-direction: row;
+    height: 25px;
+    border-top-width: 1px;
+    border-top-color: rgb(47, 47, 47);
+    padding-top: 2px;
+    padding-bottom: 2px;
+    margin-bottom: 5px;
+    border-bottom-color: rgb(47, 47, 47);
+    border-bottom-width: 1px;
+}
+
+.palette-selection-buttons > IconButton {
+    flex-grow: 1;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+#open-palette > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/folder-open.png?fileID=2800000&guid=77b5ffae69559e34f8c2c265d78a4c2a&type=3#folder-open");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#save-palette > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/floppy-disk.png?fileID=2800000&guid=6644d8b8655c72c43af6ddf63ed392ea&type=3#floppy-disk");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#copy-region > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/copy%20region.png?fileID=2800000&guid=ac9dab6f557258f49b25095c979fc9f4&type=3#copy region");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#paste-region > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/clipboard.png?fileID=2800000&guid=324cb860f561c71409838e2851a0ce58&type=3#clipboard");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#new-palette > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/file.png?fileID=2800000&guid=e536db89dce865e47969fb2abfccde77&type=3#file");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.palette-selection-container {
+    flex-direction: row;
+}
+
+.palette-selection-container > palettedropdown {
+}
+
+.palette-selection-container {
+    flex-grow: 1;
+}
+
+.color-selector {
+    flex-grow: 1;
+}
+
+.color-selector-line {
+    height: 20px;
+    flex-direction: row;
+}
+
+.color-selector-element {
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-left-color: rgb(0, 0, 0);
+    border-right-color: rgb(0, 0, 0);
+    border-top-color: rgb(0, 0, 0);
+    border-bottom-color: rgb(0, 0, 0);
+    width: 12.5%;
+}
+
+.palette-selection {
+    margin-bottom: 5px;
+}
+
+.color-selector-cursor {
+    width: 20px;
+    height: 20px;
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-left-color: rgb(255, 255, 255);
+    border-right-color: rgb(255, 255, 255);
+    border-top-color: rgb(255, 255, 255);
+    border-bottom-color: rgb(255, 255, 255);
+}

@@ -1,0 +1,27 @@
+#BrushPanel {
+    width: 162px;
+}
+
+#selectionAction #Transform #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/arrows-out-cardinal.png?fileID=2800000&guid=fa229767454316946a7cd919fd0025a7&type=3#arrows-out-cardinal");
+}
+
+#selectionAction #Marquee #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/selection.png?fileID=2800000&guid=c39ee2bb56cf6614aadfe7898331669f&type=3#selection");
+}
+
+#selectionAction #Region #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/magic-wand.png?fileID=2800000&guid=c750968db6a58184293329138c8bfc95&type=3#magic-wand");
+}
+
+#selectionAction #PickVoxelColor #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/eyedropper.png?fileID=2800000&guid=33881d8db29ef7a4ea3f15eebed1e5da&type=3#eyedropper");
+}
+
+#selectionAction #RegionRemove #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/trash-simple.png?fileID=2800000&guid=b9c5abf157c9aec4dae03dbebf29166a&type=3#trash-simple");
+}
+
+#selectionAction #RegionReplace #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/paint-bucket.png?fileID=2800000&guid=f38c25a36252ef943809cd8f9b16ac07&type=3#paint-bucket");
+}
