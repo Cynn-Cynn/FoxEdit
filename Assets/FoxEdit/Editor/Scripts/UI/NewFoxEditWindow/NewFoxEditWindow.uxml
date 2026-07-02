@@ -4,6 +4,7 @@
     <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/PalettePanel.uss?fileID=7433441132597879392&amp;guid=451cf6ad185c4d644b7c4d34261db559&amp;type=3#PalettePanel" />
     <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/ButtonsGroup.uss?fileID=7433441132597879392&amp;guid=1ce144433f6192447bcc68992d9e78c6&amp;type=3#ButtonsGroup" />
     <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/BrushPanel.uss?fileID=7433441132597879392&amp;guid=47cdee8f2571b96419aac8295b785da0&amp;type=3#BrushPanel" />
+    <Style src="project://database/Assets/FoxEdit/Editor/Scripts/UI/NewFoxEditWindow/Style/MirrorButtonGroup.uss?fileID=7433441132597879392&amp;guid=c8c239f19128c3d44a1e1c2f3ac54a89&amp;type=3#MirrorButtonGroup" />
     <ui:VisualElement name="body">
         <FoxEdit.WindowComponents.Panel name="PalettePanel" title="Palette">
             <ui:VisualElement name="palette-selection" class="palette-selection">
@@ -31,6 +32,8 @@
         <FoxEdit.WindowComponents.Panel name="BrushPanel" title="Brush">
             <FoxEdit.WindowComponents.ButtonGroup enumType="FoxEdit.WindowComponents.BrushAction, FoxEdit.Editor" name="brushAction" buttonGroupType="Text" index="0" />
             <FoxEdit.WindowComponents.ButtonGroup buttonGroupType="Icon" enumType="FoxEdit.WindowComponents.SelectionAction, FoxEdit.Editor" name="selectionAction" />
+            <FoxEdit.WindowComponents.MirrorButtonGroups name="mirrorMode" />
+            <FoxEdit.WindowComponents.MirrorButtonGroups name="axisMode" />
         </FoxEdit.WindowComponents.Panel>
         <FoxEdit.WindowComponents.Panel name="ViewPanel" title="View">
             <ui:VisualElement name="header" class="view-panel-header" style="display: none;" />

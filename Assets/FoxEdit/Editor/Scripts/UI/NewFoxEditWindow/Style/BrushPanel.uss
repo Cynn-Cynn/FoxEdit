@@ -25,3 +25,33 @@
 #selectionAction #RegionReplace #icon {
     background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/paint-bucket.png?fileID=2800000&guid=f38c25a36252ef943809cd8f9b16ac07&type=3#paint-bucket");
 }
+
+#mirrorMode > #content > #reset > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/flip.png?fileID=2800000&guid=d43dfd0aa6772f64c885c3fa799d2bef&type=3#flip");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#axisMode > #content > #reset > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/NewWindowAssets/axis-mode.png?fileID=2800000&guid=b5afada0ac2abe74086c087c146a24ca&type=3#axis-mode");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+#mirrorMode .mirror-button {
+    border-bottom-width: 0;
+}
+
+#mirrorMode #reset {
+    border-top-left-radius: 5px;
+}
+
+#axisMode #reset {
+    border-bottom-left-radius: 5px;
+}
+
+#mirrorMode #z-button {
+    border-top-right-radius: 5px;
+}
+
+#axisMode #z-button {
+    border-bottom-right-radius: 5px;
+}
