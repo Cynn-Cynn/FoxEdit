@@ -24,6 +24,7 @@ namespace FoxEdit
             Current = null;
         }
 
+        //TODO: passer en linéaire
         public bool MoveNext()
         {
             _index.x += 1;
@@ -43,8 +44,8 @@ namespace FoxEdit
                 }
             }
 
-            if (_grid.ContainsKey(_index))
-                Current = _grid[_index];
+            if (_grid.TryGetValue(_index, out VoxelEditorObject voxel))
+                Current = voxel;
             else
                 Current = null;
 
@@ -54,9 +55,7 @@ namespace FoxEdit
         public void Reset()
         {
             Current = null;
-            _index = Vector3Int.zero;
-            _min = Vector3Int.zero;
-            _max = Vector3Int.zero;
+            _index = _min;
         }
     }
 }
