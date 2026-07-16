@@ -165,14 +165,31 @@ namespace FoxEdit
 
         private void OnMouseMove(Event e)
         {
-            if (_voxelEditor.TryGetCubePosition(out Vector3 newCubePosition, out Vector3 newWorldNormal, HandleUtility.GUIPointToWorldRay(e.mousePosition)))
+            //if (_voxelEditor.TryGetCubePosition(out Vector3 newCubePosition, out Vector3 newWorldNormal, HandleUtility.GUIPointToWorldRay(e.mousePosition)))
+            //{
+            //    if (newCubePosition != _cubePosition)
+            //        _repaint = true;
+            //    if (newWorldNormal != _worldNormal)
+            //        _repaint = true;
+            //    _cubePosition = newCubePosition;
+            //    _worldNormal = newWorldNormal;
+            //    _isMouseOnVoxel = true;
+            //}
+            //else
+            //{
+            //    _isMouseOnVoxel = false;
+            //    _repaint = true;
+            //}
+
+            if (_voxelEditor.CurrentFrame.VoxelRaycast(HandleUtility.GUIPointToWorldRay(e.mousePosition), out VoxelEditorObject voxel, out Vector3 faceNormal))
             {
-                if (newCubePosition != _cubePosition)
+                if (voxel.WorldPosition != _cubePosition)
                     _repaint = true;
-                if (newWorldNormal != _worldNormal)
+                if (faceNormal != _worldNormal)
                     _repaint = true;
-                _cubePosition = newCubePosition;
-                _worldNormal = newWorldNormal;
+                _cubePosition = voxel.WorldPosition;
+                _worldNormal = faceNormal;
+                Debug.DrawLine(_cubePosition, _cubePosition +  _worldNormal, Color.red, 5.0f);
                 _isMouseOnVoxel = true;
             }
             else

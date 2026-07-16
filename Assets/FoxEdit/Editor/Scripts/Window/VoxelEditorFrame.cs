@@ -16,6 +16,28 @@ namespace FoxEdit
         private Grid3D _grid = null;
         public Texture2D thumbnail = null;
 
+        public bool VoxelRaycast(Ray ray, out VoxelEditorObject voxel, out Vector3 faceNormal)
+        {
+            //ShowGrid(5.0f, 30);
+
+            Vector3Int gridSpacePosition = WorldToGridPosition(ray.origin);
+            Vector3 roundedPosition = GridToWorldPosition(gridSpacePosition);
+            Vector3 difference = roundedPosition - ray.origin;
+
+            if (difference.y > 0.0f)
+                gridSpacePosition.y -= 1;
+            roundedPosition = GridToWorldPosition(gridSpacePosition);
+
+            Vector3 voxelSpacePosition = ray.origin - roundedPosition;
+
+            if (_grid.VoxelRaycast(gridSpacePosition, voxelSpacePosition, ray.direction, this, out voxel, out faceNormal))
+            {
+                faceNormal = (FrameObject.rotation * faceNormal).normalized;
+                return true;
+            }
+            return false;
+        }
+
         #region Initialization
 
         internal VoxelEditorFrame(Transform parent, int frameIndex, MeshRenderer voxelPrefab, VoxelEditor editWindow)
@@ -34,7 +56,7 @@ namespace FoxEdit
             for (int i = 0; i < editorVoxels.VoxelPositions.Length; i++)
             {
                 Vector3Int position = editorVoxels.VoxelPositions[i];
-                _grid.Set(position, CreateVoxelObject(position));
+                _grid[position] = CreateVoxelObject(position);
                 SetColor(position, paletteIndex, editorVoxels.ColorIndices[i]);
             }
         }
@@ -52,11 +74,11 @@ namespace FoxEdit
             foreach (Vector3Int gridPosition in _grid.Keys)
             {
                 VoxelEditorObject voxelObject = newFrame.CreateVoxelObject(gridPosition);
-                int colorIndex = _grid.Get(gridPosition).ColorIndex;
+                int colorIndex = _grid[gridPosition].ColorIndex;
                 Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
                 voxelObject.SetColor(material, colorIndex);
 
-                otherGrid.Set(gridPosition, voxelObject);
+                otherGrid[gridPosition] = voxelObject;
             }
 
             newFrame.LoadFromCopy(otherGrid);
@@ -81,7 +103,7 @@ namespace FoxEdit
         {
             if (CanAddVoxel(out Vector3Int newGridPosition, gridPosition, direction))
             {
-                _grid.Set(newGridPosition, CreateVoxelObject(newGridPosition));
+                _grid[newGridPosition] = CreateVoxelObject(newGridPosition);
                 SetColor(newGridPosition, paletteIndex, colorIndex);
 
                 return true;
@@ -109,21 +131,21 @@ namespace FoxEdit
             newVoxels = new List<Vector3Int>();
             if (verifiedVoxels == null)
                 verifiedVoxels = new HashSet<Vector3Int>();
-            
+
 
             if (_grid.IsEmpty(gridPosition))
                 return false;
             if (!verifiedVoxels.Add(gridPosition))
                 return false;
-            
+
             Vector3Int newGridPosition = gridPosition + direction;
 
             if (!_grid.IsEmpty(newGridPosition))
                 return false;
 
             if (baseColorIndex == -1)
-                baseColorIndex = _grid.Get(gridPosition).ColorIndex;
-            else if (_grid.Get(gridPosition).ColorIndex != baseColorIndex)
+                baseColorIndex = _grid[gridPosition].ColorIndex;
+            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
                 return false;
 
             newVoxels.Add(newGridPosition);
@@ -152,7 +174,7 @@ namespace FoxEdit
             {
                 foreach (Vector3Int newGridPosition in newVoxelsPositions)
                 {
-                    _grid.Set(newGridPosition, CreateVoxelObject(newGridPosition));
+                    _grid[newGridPosition] = CreateVoxelObject(newGridPosition);
                     SetColor(newGridPosition, paletteIndex, colorIndex);
                 }
                 return true;
@@ -166,7 +188,7 @@ namespace FoxEdit
             if (_grid.IsEmpty(gridPosition) || _grid.Count == 1)
                 return false;
 
-            _grid.Get(gridPosition).Destroy();
+            _grid[gridPosition].Destroy();
             _grid.Remove(gridPosition);
             return true;
         }
@@ -177,7 +199,7 @@ namespace FoxEdit
             {
                 foreach (Vector3Int voxelToRemove in voxelsToRemove)
                 {
-                    _grid.Get(voxelToRemove).Destroy();
+                    _grid[voxelToRemove].Destroy();
                     _grid.Remove(voxelToRemove);
                 }
                 return true;
@@ -193,13 +215,13 @@ namespace FoxEdit
 
             if (_grid.IsEmpty(gridPosition) || _grid.Count == 1)
                 return false;
-            
+
             if (!verifiedVoxels.Add(gridPosition))
                 return false;
 
             if (baseColorIndex == -1)
-                baseColorIndex = _grid.Get(gridPosition).ColorIndex;
-            else if (_grid.Get(gridPosition).ColorIndex != baseColorIndex)
+                baseColorIndex = _grid[gridPosition].ColorIndex;
+            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
                 return false;
 
             removedVoxels.Add(gridPosition);
@@ -223,7 +245,7 @@ namespace FoxEdit
 
         internal bool TryColorVoxel(Vector3Int gridPosition, int paletteIndex, int colorIndex)
         {
-            if (_grid.IsEmpty(gridPosition) || _grid.Get(gridPosition).ColorIndex == colorIndex)
+            if (_grid.IsEmpty(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
                 return false;
 
             SetColor(gridPosition, paletteIndex, colorIndex);
@@ -248,14 +270,14 @@ namespace FoxEdit
             if (verifiedVoxels == null)
                 verifiedVoxels = new HashSet<Vector3Int>();
 
-            if (_grid.IsEmpty(gridPosition) || _grid.Get(gridPosition).ColorIndex == colorIndex)
+            if (_grid.IsEmpty(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
                 return false;
             if (!verifiedVoxels.Add(gridPosition))
                 return false;
 
             if (baseColorIndex == -1)
-                baseColorIndex = _grid.Get(gridPosition).ColorIndex;
-            else if (_grid.Get(gridPosition).ColorIndex != baseColorIndex)
+                baseColorIndex = _grid[gridPosition].ColorIndex;
+            else if (_grid[gridPosition].ColorIndex != baseColorIndex)
                 return false;
 
             modifiedVoxels.Add(gridPosition);
@@ -299,8 +321,8 @@ namespace FoxEdit
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
-                if (!selectedVoxels.Contains(_grid.Get(gridPosition).GameObject))
-                    gridCopy.Set(gridPosition, _grid.Get(gridPosition));
+                if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
+                    gridCopy[gridPosition] = _grid[gridPosition];
                 else
                     selectedGridPosition.Add(gridPosition);
             }
@@ -308,20 +330,20 @@ namespace FoxEdit
             for (int i = 0; i < selectedGridPosition.Count; i++)
             {
                 Vector3Int gridPosition = selectedGridPosition[i];
-                Vector3 worldPosition = _grid.Get(gridPosition).WorldPosition;
+                Vector3 worldPosition = _grid[gridPosition].WorldPosition;
                 Vector3Int newGridPosition = WorldToGridPosition(worldPosition);
 
                 if (!gridCopy.IsEmpty(newGridPosition))
                 {
-                    _grid.Get(gridPosition).Destroy();
+                    _grid[gridPosition].Destroy();
                 }
                 else
                 {
-                    VoxelEditorObject voxel = _grid.Get(gridPosition);
+                    VoxelEditorObject voxel = _grid[gridPosition];
                     voxel.ResetRotation();
                     Vector3 localPosition = GridToLocalPosition(newGridPosition);
                     voxel.SetPosition(localPosition, newGridPosition);
-                    gridCopy.Set(newGridPosition, voxel);
+                    gridCopy[newGridPosition] = voxel;
                 }
             }
 
@@ -337,9 +359,9 @@ namespace FoxEdit
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
-                _grid.Get(gridPosition).ResetScale();
+                _grid[gridPosition].ResetScale();
                 Vector3 localPosition = GridToLocalPosition(gridPosition);
-                _grid.Get(gridPosition).SetPosition(localPosition, gridPosition);
+                _grid[gridPosition].SetPosition(localPosition, gridPosition);
             }
 
             if (roundedScale == 1)
@@ -348,9 +370,9 @@ namespace FoxEdit
             for (int i = 0; i < gridPositions.Length; i++)
             {
                 Vector3Int gridPosition = gridPositions[i];
-                if (!selectedVoxels.Contains(_grid.Get(gridPosition).GameObject))
+                if (!selectedVoxels.Contains(_grid[gridPosition].GameObject))
                 {
-                    gridCopy.Set(gridPosition, _grid.Get(gridPosition));
+                    gridCopy[gridPosition] = _grid[gridPosition];
                     continue;
                 }
 
@@ -360,21 +382,21 @@ namespace FoxEdit
                     {
                         for (int z = 0; z < roundedScale; z++)
                         {
-                            int colorIndex = _grid.Get(gridPosition).ColorIndex;
+                            int colorIndex = _grid[gridPosition].ColorIndex;
                             Vector3Int initialGridPosition = gridPosition * roundedScale;
                             Vector3Int offset = new Vector3Int(x, y, z);
                             if (x == 0 && y == 0 && z == 0)
                             {
-                                gridCopy.Set(initialGridPosition, _grid.Get(gridPosition));
+                                gridCopy[initialGridPosition] = _grid[gridPosition];
                                 Vector3 localPosition = GridToLocalPosition(initialGridPosition);
-                                gridCopy.Get(initialGridPosition).SetPosition(localPosition, initialGridPosition);
+                                gridCopy[initialGridPosition].SetPosition(localPosition, initialGridPosition);
                             }
                             else
                             {
                                 Vector3Int newGridPosition = initialGridPosition + offset;
-                                gridCopy.Set(newGridPosition, CreateVoxelObject(newGridPosition));
+                                gridCopy[newGridPosition] = CreateVoxelObject(newGridPosition);
                                 Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-                                gridCopy.Get(newGridPosition).SetColor(material, colorIndex);
+                                gridCopy[newGridPosition].SetColor(material, colorIndex);
                             }
                         }
                     }
@@ -419,13 +441,13 @@ namespace FoxEdit
                     {
                         Vector3Int offsetPosition = basePosition + new Vector3Int(x, y, z);
 
-                        VoxelEditorObject voxel = _grid.Get(offsetPosition);
+                        VoxelEditorObject voxel = _grid[offsetPosition];
                         if (voxel == null)
                             continue;
 
                         if (!selectedVoxels.Contains(voxel.GameObject))
                         {
-                            gridCopy.Set(voxel.GridPosition, voxel);
+                            gridCopy[voxel.GridPosition] = voxel;
                             continue;
                         }
 
@@ -438,7 +460,7 @@ namespace FoxEdit
                             Vector3 localPosition = GridToLocalPosition(newPosition);
                             voxel.SetPosition(localPosition, newPosition);
                             voxel.ResetScale();
-                            gridCopy.Set(newPosition, voxel);
+                            gridCopy[newPosition] = voxel;
                         }
                         else
                         {
@@ -460,7 +482,7 @@ namespace FoxEdit
 
         public VoxelEditorObject GetVoxelEditorObject(Vector3Int cubePosition)
         {
-            return _grid.Get(cubePosition);
+            return _grid[cubePosition];
         }
 
         private Vector3Int DividePosition(Vector3Int position, int divide)
@@ -514,7 +536,7 @@ namespace FoxEdit
                 return;
 
             Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-            _grid.Get(gridPosition).SetColor(material, colorIndex);
+            _grid[gridPosition].SetColor(material, colorIndex);
         }
 
         public void UpdatePalette(int paletteIndex)
@@ -558,7 +580,7 @@ namespace FoxEdit
         public Vector3 GridToWorldPosition(Vector3Int gridPosition)
         {
             Vector3 localPosition = (Vector3)gridPosition;
-            localPosition /= 10.0f;
+            localPosition *= 0.1f;
             return FrameObject.TransformPoint(localPosition);
         }
 
@@ -609,5 +631,30 @@ namespace FoxEdit
         }
 
         #endregion SaveSystem
+
+#if UNITY_EDITOR
+        #region Debug
+
+        public void ShowGrid(float duration = 1.0f, int customSize = -1)
+        {
+            ShowGrid(Color.darkGreen, duration, customSize);
+        }
+
+        public void ShowGrid(Color color, float duration = 1.0f, int customSize = -1)
+        {
+            Vector3Int size = _grid.Max - _grid.Min + Vector3Int.one;
+            Vector3Int min = _grid.Min;
+
+            if (customSize >= 0)
+            {
+                size = new Vector3Int(customSize, customSize, customSize);
+                min = new Vector3Int(customSize, customSize, customSize) / -2;
+            }
+
+            DebugDrawHelper.DebugDrawGrid(GridToWorldPosition(min) + new Vector3(-0.05f, 0.0f, -0.05f), size, 0.1f, color, duration);
+        }
+
+        #endregion Debug
+#endif
     }
 }
