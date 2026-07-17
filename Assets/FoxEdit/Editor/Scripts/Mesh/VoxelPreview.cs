@@ -1,5 +1,7 @@
 using Codice.Client.BaseCommands;
 using FoxEdit;
+using log4net.Util;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -36,9 +38,75 @@ namespace FoxEdit
         {
             _frameToPreview = frame;
             _paletteIndex = paletteIndex;
-            _frameData = _frameToPreview.GetPackedData();
+
+            Initialize();
         }
 
+        internal void Refresh()
+        {
+            GreedyMeshing();
+            SetWorldBounds();
+            SetVoxelBuffers();
+        }
+
+        internal void ChangeFrame(VoxelEditorFrame frame)
+        {
+            _frameToPreview = frame;
+            Initialize();
+        }
+
+        internal void Destroy()
+        {
+            DisposeBuffers(OpacityType.Both);
+        }
+
+        internal void SetPaletteIndex(int index)
+        {
+            _paletteIndex = index;
+            SetColorBuffer();
+        }
+
+        private void Initialize()
+        {
+            GreedyMeshing();
+            SetRenderParams();
+            SetWorldBounds();
+            SetColorBuffer();
+            SetVoxelBuffers();
+        }
+
+        private void GreedyMeshing()
+        {
+            _frameData = _frameToPreview.GetPackedData();
+
+            List<Vector3>[] vertices = new List<Vector3>[2];
+            vertices[0] = new List<Vector3>(); //opaque
+            vertices[1] = new List<Vector3>(); //transparent
+            List<int>[] quads = new List<int>[2];
+            quads[0] = new List<int>(); //opaque
+            quads[1] = new List<int>(); //transparent
+
+            bool[] isColorTransparent = VoxelSharedData.GetPalette(_paletteIndex).GetColorOpacities();
+            (int, int) instancesCount = VoxelSaveSystem.GreedyMeshing(_frameData, isColorTransparent, ref vertices, ref quads);
+
+            _opaquePreview = new VoxelObject.MeshData
+            {
+                InstanceStartIndices = new int[1] { 0 },
+                InstanceCount = new int[1] { instancesCount.Item1 },
+                Vertices = vertices[0].ToArray(),
+                Quads = quads[0].ToArray()
+            };
+            _hasOpaqueFaces = instancesCount.Item1 != 0;
+
+            _transparentPreview = new VoxelObject.MeshData
+            {
+                InstanceStartIndices = new int[1] { 0 },
+                InstanceCount = new int[1] { instancesCount.Item2 },
+                Vertices = vertices[1].ToArray(),
+                Quads = quads[1].ToArray()
+            };
+            _hasTransparentFaces = instancesCount.Item2 != 0;
+        }
 
         private void SetRenderParams()
         {
@@ -55,13 +123,6 @@ namespace FoxEdit
             _transparentRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
         }
 
-        private void Initialize()
-        {
-            SetRenderParams();
-            SetWorldBounds();
-            SetColorBuffer();
-        }
-
         private void SetColorBuffer()
         {
             GraphicsBuffer colorsBuffer = VoxelSharedData.GetColorBuffer(_paletteIndex);
@@ -70,25 +131,6 @@ namespace FoxEdit
                 _opaqueRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
                 _transparentRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
             }
-            SetVoxelBuffers();
-        }
-
-        private void SetVoxelBuffers()
-        {
-            if (_opaqueVerticesBuffer != null && _opaqueVerticesBuffer.count != _opaquePreview.Vertices.Length)
-                DisposeBuffers(OpacityType.Opaque);
-            if (_transparentVerticesBuffer != null && _transparentVerticesBuffer.count != _transparentPreview.Vertices.Length)
-                DisposeBuffers(OpacityType.Transparent);
-
-            if (_opaqueVerticesBuffer == null && _hasOpaqueFaces)
-                CreateBuffers(OpacityType.Opaque);
-            if (_transparentVerticesBuffer == null && _hasTransparentFaces)
-                CreateBuffers(OpacityType.Transparent);
-
-            if (_hasOpaqueFaces)
-                SetBufferData(OpacityType.Opaque);
-            if (_hasTransparentFaces)
-                SetBufferData(OpacityType.Transparent);
         }
 
         private void SetWorldBounds()
@@ -112,6 +154,27 @@ namespace FoxEdit
             bounds.center += _frameToPreview.FrameObject.position;
             _opaqueRenderParams.worldBounds = bounds;
             _transparentRenderParams.worldBounds = bounds;
+
+            _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.FrameObject.localToWorldMatrix);
+            _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.FrameObject.localToWorldMatrix);
+        }
+
+        private void SetVoxelBuffers()
+        {
+            if (_opaqueVerticesBuffer != null && (_opaqueVerticesBuffer.count != _opaquePreview.Vertices.Length || _opaqueQuadsBuffer.count != _opaquePreview.Quads.Length))
+                DisposeBuffers(OpacityType.Opaque);
+            if (_transparentVerticesBuffer != null && (_transparentVerticesBuffer.count != _transparentPreview.Vertices.Length || _transparentQuadsBuffer.count != _transparentPreview.Quads.Length))
+                DisposeBuffers(OpacityType.Transparent);
+
+            if (_opaqueVerticesBuffer == null && _hasOpaqueFaces)
+                CreateBuffers(OpacityType.Opaque);
+            if (_transparentVerticesBuffer == null && _hasTransparentFaces)
+                CreateBuffers(OpacityType.Transparent);
+
+            if (_hasOpaqueFaces)
+                SetBufferData(OpacityType.Opaque);
+            if (_hasTransparentFaces)
+                SetBufferData(OpacityType.Transparent);
         }
 
         private void CreateBuffers(OpacityType opacityType)
@@ -166,7 +229,7 @@ namespace FoxEdit
             }
         }
 
-        private void DrawPreview()
+        internal void DrawPreview()
         {
             if (_hasOpaqueFaces)
                 Graphics.RenderPrimitivesIndexed(_opaqueRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _opaquePreview.InstanceCount[0]);

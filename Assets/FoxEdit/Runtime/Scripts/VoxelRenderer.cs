@@ -269,9 +269,9 @@ namespace FoxEdit
 
         private void SetVoxelBuffers()
         {
-            if (_opaqueVerticesBuffer != null && _opaqueVerticesBuffer.count != _voxelObject.Animations[_animationIndex].OpaqueMesh.Vertices.Length)
+            if (_opaqueVerticesBuffer != null && (_opaqueVerticesBuffer.count != _voxelObject.Animations[_animationIndex].OpaqueMesh.Vertices.Length || _opaqueQuadsBuffer.count != _voxelObject.Animations[_animationIndex].OpaqueMesh.Quads.Length))
                 DisposeBuffers(OpacityType.Opaque);
-            if (_transparentVerticesBuffer != null && _transparentVerticesBuffer.count != _voxelObject.Animations[_animationIndex].TransparentMesh.Vertices.Length)
+            if (_transparentVerticesBuffer != null && (_transparentVerticesBuffer.count != _voxelObject.Animations[_animationIndex].TransparentMesh.Vertices.Length || _transparentQuadsBuffer.count != _voxelObject.Animations[_animationIndex].TransparentMesh.Quads.Length))
                 DisposeBuffers(OpacityType.Transparent);
 
             if (_opaqueVerticesBuffer == null && _voxelObject.Animations[_animationIndex].HasOpaqueFaces)
