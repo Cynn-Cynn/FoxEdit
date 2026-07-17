@@ -327,27 +327,6 @@ namespace FoxEdit
 #endregion
         #region Helpers
 
-        public bool TryGetCubePosition(out Vector3 cubePosition, out Vector3 worldNormal, Ray ray)
-        {
-            cubePosition = Vector3.zero;
-            worldNormal = Vector3.zero;
-            if (HandleUtility.RaySnap(ray) is RaycastHit hit)
-            {
-                if (!IsCubeGameObject(hit.transform.gameObject))
-                    return false;
-                cubePosition = hit.transform.position;
-                worldNormal = hit.normal;
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool IsCubeGameObject(GameObject gameObject)
-        {
-            return string.Compare("EditorVoxel", gameObject.name) == 0;
-        }
-
         public VoxelEditorObject GetVoxelEditorObject(Vector3Int gridPosition)
         {
             if (CurrentFrame != null)
