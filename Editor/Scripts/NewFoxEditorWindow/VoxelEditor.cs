@@ -119,6 +119,8 @@ namespace FoxEdit
             }
         }
 
+        private int _lastFrameCount = -1;
+
         public VoxelEditorAnimation CurrentAnimation
         {
             get
@@ -147,6 +149,21 @@ namespace FoxEdit
                 EnableEditing();
 
             _preview = new VoxelPreview(CurrentFrame, _paletteIndex);
+            SceneView.duringSceneGui += DrawPreview;
+            EditorApplication.update += CountFrame;
+        }
+
+        private void CountFrame()
+        {
+            _lastFrameCount = Time.frameCount;
+        }
+
+        private void DrawPreview(SceneView obj)
+        {
+            if (_lastFrameCount == Time.frameCount)
+                return;
+
+            _preview?.DrawPreview();
         }
 
         #endregion
@@ -404,6 +421,8 @@ namespace FoxEdit
             DisableEditing(false);
             VoxelEditor.OnChangePalette -= OnPaletteChanged;
             _preview?.Destroy();
+            SceneView.duringSceneGui -= DrawPreview;
+            EditorApplication.update -= CountFrame;
         }
 
         public void Save(string savePath)
@@ -413,11 +432,5 @@ namespace FoxEdit
             VoxelSaveSystem.Save(meshName, directory, _voxelRenderer, CurrentPalette, PaletteIndex, _animationList);
             IsDirty = false;
         }
-
-        public void DrawPreview()
-        {
-            _preview?.DrawPreview();
-        }
     }
-
 }

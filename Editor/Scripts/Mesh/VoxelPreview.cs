@@ -47,6 +47,7 @@ namespace FoxEdit
             GreedyMeshing();
             SetWorldBounds();
             SetVoxelBuffers();
+            DrawPreview();
         }
 
         internal void ChangeFrame(VoxelEditorFrame frame)
