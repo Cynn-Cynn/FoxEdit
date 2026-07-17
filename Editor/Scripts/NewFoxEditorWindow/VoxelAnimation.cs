@@ -23,7 +23,12 @@ namespace FoxEdit
 
         public VoxelEditorFrame this[int index]
         {
-            get => frames[index];
+            get
+            {
+                if (frames.Count == 0)
+                    return null;
+                return frames[index];
+            }
             set => frames[index] = value;
         }
 

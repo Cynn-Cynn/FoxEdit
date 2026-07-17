@@ -235,7 +235,6 @@ namespace FoxEdit
             else
             {
                 NewAnimation("Default");
-                NewFrame();
             }
 
             _voxelRenderer.enabled = false;
@@ -287,7 +286,7 @@ namespace FoxEdit
             IsDirty = true;
         }
 
-#region Animations
+        #region Animations
         public VoxelEditorAnimation GetVoxelEditorAnimation(int index)
         {
             return _animationList[index];
@@ -295,15 +294,20 @@ namespace FoxEdit
 
         public void DeleteAnimation(int index)
         {
+            if (_animationList.Count <= 1)
+                return;
             foreach (VoxelEditorFrame voxelEditorFrame in _animationList[index].frames)
+            {
                 GameObject.DestroyImmediate(voxelEditorFrame.FrameObject.gameObject);
+            }
+            lastVisibleEditorFrame = null;
 
+            _animationList.RemoveAt(index);
             if (index <= SelectedAnimationIndex && SelectedAnimationIndex > 0)
                 SelectedAnimationIndex--;
             else
                 SelectedAnimationIndex = SelectedAnimationIndex;
-            
-            _animationList.RemoveAt(index);
+
 
             IsDirty = true;
         }
@@ -311,10 +315,17 @@ namespace FoxEdit
         public void NewAnimation(string animationName)
         {
             _animationList.Add(new VoxelEditorAnimation(animationName));
-            VoxelEditorFrame newFrame = CurrentAnimation[SelectedFrameIndex].GetCopy(_animationList.Count, PaletteIndex);
-            SelectedAnimationIndex = _animationList.Count - 1;
-            CurrentAnimation.AddFrame(newFrame);
-
+            if (CurrentAnimation != null && CurrentAnimation.FramesCount != 0)
+            {
+                VoxelEditorFrame newFrame = CurrentAnimation[SelectedFrameIndex].GetCopy(_animationList.Count, PaletteIndex);
+                SelectedAnimationIndex = _animationList.Count - 1;
+                CurrentAnimation.AddFrame(newFrame);
+            }
+            else
+            {
+                SelectedAnimationIndex = _animationList.Count - 1;
+                NewFrame();
+            }
             ChangeFrame(CurrentAnimation.FramesCount - 1);
 
             IsDirty = true;
@@ -324,7 +335,7 @@ namespace FoxEdit
         {
             return _animationList.Select(a => a.Name).ToList();
         }
-#endregion
+        #endregion
         #region Helpers
 
         public VoxelEditorObject GetVoxelEditorObject(Vector3Int gridPosition)
