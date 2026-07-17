@@ -80,7 +80,6 @@ namespace FoxEdit
 
         //Mesh
         private VoxelRenderer _voxelRenderer = null;
-        private Material[][] _editorMaterials = null;
 
         //Preview
         private VoxelPreview _preview = null;
@@ -145,47 +144,10 @@ namespace FoxEdit
             VoxelEditor.OnChangePalette += OnPaletteChanged;
             _voxelRenderer?.HideMesh();
 
-            CreateMaterials(); ;
-
             if (!_edit)
                 EnableEditing();
 
             _preview = new VoxelPreview(CurrentFrame, _paletteIndex);
-        }
-
-        private void CreateMaterials()
-        {
-            Material materialPrefab = FoxEditEditorSettings.Instance.VoxelEditorCubeMaterial.Asset;
-            int paletteCount = VoxelSharedData.GetPaletteCount();
-            _editorMaterials = new Material[paletteCount][];
-
-            for (int paletteIndex = 0; paletteIndex < paletteCount; paletteIndex++)
-            {
-                VoxelPalette palette = VoxelSharedData.GetPalette(paletteIndex);
-                int colorCount = palette.Colors.Length;
-                _editorMaterials[paletteIndex] = new Material[colorCount];
-
-                for (int colorIndex = 0; colorIndex < colorCount; colorIndex++)
-                {
-                    VoxelColor color = palette.Colors[colorIndex];
-                    Material newMaterial = new Material(materialPrefab);
-                    newMaterial.color = color.Color + color.Color * color.EmissiveIntensity;
-                    newMaterial.SetFloat("_Smoothness", color.Smoothness);
-                    newMaterial.SetFloat("_Metallic", color.Metallic);
-                    _editorMaterials[paletteIndex][colorIndex] = newMaterial;
-                }
-            }
-        }
-
-        public Material GetMaterial(int paletteIndex, int colorIndex)
-        {
-            if (paletteIndex > _editorMaterials.Length)
-                return null;
-
-            if (colorIndex > _editorMaterials[paletteIndex].Length)
-                return null;
-
-            return _editorMaterials[paletteIndex][colorIndex];
         }
         #endregion
 
