@@ -151,12 +151,12 @@ namespace FoxEdit
 
             bounds.extents = new Vector3((float)size.x / 2.0f, (float)size.y / 2.0f, (float)size.z / 2.0f) * 0.1f;
 
-            bounds.center += _frameToPreview.FrameObject.position;
+            bounds.center += _frameToPreview.VoxelTransform.position;
             _opaqueRenderParams.worldBounds = bounds;
             _transparentRenderParams.worldBounds = bounds;
 
-            _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.FrameObject.localToWorldMatrix);
-            _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.FrameObject.localToWorldMatrix);
+            _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.VoxelTransform.localToWorldMatrix);
+            _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.VoxelTransform.localToWorldMatrix);
         }
 
         private void SetVoxelBuffers()
