@@ -82,8 +82,6 @@ namespace FoxEdit
                 window.Repaint();
                 _repaint = false;
             }
-
-            _voxelEditor.DrawPreview();
         }
 
         private void DrawChangePreview()
