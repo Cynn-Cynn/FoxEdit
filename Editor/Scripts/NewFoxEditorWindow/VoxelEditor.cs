@@ -130,13 +130,12 @@ namespace FoxEdit
         }
 
         //Scene editor voxels
-        private Transform _voxelParent = null;
         private List<VoxelEditorAnimation> _animationList;
         //No editor animated render anymore
         //private bool wasVoxelRendererStatic = false;
 
-
         #region Init
+
         public VoxelEditor(VoxelRenderer voxelRenderer)
         {
             _voxelRenderer = voxelRenderer;
@@ -149,6 +148,7 @@ namespace FoxEdit
 
             _preview = new VoxelPreview(CurrentFrame, _paletteIndex);
         }
+
         #endregion
 
         private void EnableEditing()
@@ -165,11 +165,8 @@ namespace FoxEdit
             else
                 PaletteIndex = 0;
 
-            if (_voxelParent != null)
-            {
-                GameObject.DestroyImmediate(_voxelParent.gameObject);
+            if (_animationList.Count < 0)
                 _animationList.Clear();
-            }
 
             string objectName = null;
             if (voxelObject == null)
@@ -177,9 +174,6 @@ namespace FoxEdit
             else
                 objectName = voxelObject.name;
 
-            _voxelParent = new GameObject(string.Format("{0} Editor", objectName)).transform;
-            _voxelParent.parent = _voxelRenderer.transform;
-            _voxelParent.localPosition = Vector3.zero;
             _animationList = new List<VoxelEditorAnimation>();
 
             if (voxelObject != null)
@@ -189,7 +183,7 @@ namespace FoxEdit
                     _animationList.Add(new VoxelEditorAnimation(voxelObject.Animations[animation].AnimName, voxelObject.Animations[animation].FrameDuration));
                     for (int i = 0; i < voxelObject.Animations[animation].FrameCount; i++)
                     {
-                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, this);
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelRenderer.transform, i, this);
                         frame.LoadFromSave(voxelObject.Animations[animation].EditorVoxels[i], PaletteIndex);
                         if (i != _selectedFrameIndex || animation != 0)
                             frame.Hide();
@@ -264,7 +258,7 @@ namespace FoxEdit
         public void DeleteAnimation(int index)
         {
             foreach (VoxelEditorFrame voxelEditorFrame in _animationList[index].frames)
-                GameObject.DestroyImmediate(voxelEditorFrame.FrameObject.gameObject);
+                GameObject.DestroyImmediate(voxelEditorFrame.VoxelTransform.gameObject);
 
             if (index <= SelectedAnimationIndex && SelectedAnimationIndex > 0)
                 SelectedAnimationIndex--;
@@ -306,7 +300,7 @@ namespace FoxEdit
         #region Frames
         public void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _animationList.Count, this);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelRenderer.transform, _animationList.Count, this);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, PaletteIndex, 0);
             CurrentAnimation.AddFrame(newFrame);
             ChangeFrame(CurrentAnimation.FramesCount - 1);
@@ -361,8 +355,8 @@ namespace FoxEdit
         {
             VoxelEditorFrame movedFrame = CurrentAnimation.Move(oldIndex, newIndex);
             for (int i = 0; i < _animationList.Count; i++)
-                CurrentAnimation[i].FrameObject.name = string.Format("Frame {0}", i);
-            movedFrame.FrameObject.SetSiblingIndex(newIndex);
+                CurrentAnimation[i].VoxelTransform.name = string.Format("Frame {0}", i);
+            movedFrame.VoxelTransform.SetSiblingIndex(newIndex);
             if (oldIndex == SelectedFrameIndex)
                 SelectedFrameIndex = _animationList.IndexOf(CurrentAnimation);
         }
@@ -387,17 +381,11 @@ namespace FoxEdit
 
         private void DestroyEditorFrame(bool isFromReload)
         {
-            if (_voxelParent != null)
-            {
-                GameObject.DestroyImmediate(_voxelParent.gameObject);
-                _voxelParent = null;
+            if (_animationList.Count > 0)
                 _animationList.Clear();
-            }
 
             if (_voxelRenderer != null && !isFromReload)
-            {
                 _voxelRenderer.enabled = true;
-            }
         }
 
         public void Dispose()
