@@ -38,6 +38,7 @@ namespace FoxEdit.WindowPanels
             {
                 Add(CreateVoxelRendererButtonTemplate());
             }
+            Add(CreateAddVoxelButton());
         }
 
         public void RegisterContextualMenu(VisualElement target)
@@ -70,6 +71,7 @@ namespace FoxEdit.WindowPanels
 
                 Add(voxelRendererButton);
             }
+            Add(CreateAddVoxelButton());
         }
 
         private Button CreateVoxelRendererButton(VoxelObject voxelObject)
@@ -82,6 +84,16 @@ namespace FoxEdit.WindowPanels
 
             SetIcon(voxelObject, button.Q("icon"));
 
+            return button;
+        }
+
+        private Button CreateAddVoxelButton()
+        {
+            Button button = CreateVoxelRendererButtonTemplate();
+
+            button.name = "add-voxel-object-button";
+            button.text = "New voxel object";
+            button.clicked += NewVoxelObject;
             return button;
         }
 

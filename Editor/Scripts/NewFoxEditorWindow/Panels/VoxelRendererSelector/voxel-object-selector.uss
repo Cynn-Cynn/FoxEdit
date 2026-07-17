@@ -24,3 +24,7 @@
     -unity-background-scale-mode: scale-to-fit;
     margin-bottom: 14px;
 }
+
+#add-voxel-object-button > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/add-cube.png?fileID=2800000&guid=98084a4e8150fe946a04a4ebebfe24ab&type=3#add-cube");
+}
