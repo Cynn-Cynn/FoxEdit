@@ -73,9 +73,7 @@ namespace FoxEdit
             {
                 VoxelEditorObject voxelObject = newFrame.CreateVoxelObject(gridPosition);
                 int colorIndex = _grid[gridPosition].ColorIndex;
-                Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-                voxelObject.SetColor(material, colorIndex);
-
+                voxelObject.SetColor(colorIndex);
                 otherGrid[gridPosition] = voxelObject;
             }
 
@@ -517,13 +515,11 @@ namespace FoxEdit
             if (_grid.IsEmpty(gridPosition))
                 return;
 
-            Material material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-            _grid[gridPosition].SetColor(material, colorIndex);
+            _grid[gridPosition].SetColor(colorIndex);
         }
 
         public void UpdatePalette(int paletteIndex)
         {
-            Material material = null;
             int colorIndex = -1;
 
             foreach (VoxelEditorObject obj in _grid)
@@ -531,9 +527,7 @@ namespace FoxEdit
                 if (obj == null)
                     continue;
                 colorIndex = obj.ColorIndex;
-                material = _editWindow.GetMaterial(paletteIndex, colorIndex);
-
-                obj.SetColor(material, colorIndex);
+                obj.SetColor(colorIndex);
             }
         }
 

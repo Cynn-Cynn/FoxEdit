@@ -17,7 +17,7 @@ namespace FoxEdit
             ColorIndex = 0;
         }
 
-        internal void SetColor(Material material, int colorIndex)
+        internal void SetColor(int colorIndex)
         {
             ColorIndex = colorIndex;
         }
