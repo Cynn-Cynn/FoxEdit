@@ -25,7 +25,6 @@ namespace FoxEdit
         {
             _icon = new GUIContent(EditorGUIUtility.Load("d_Prefab On Icon") as Texture2D, "Voxel Editor Tool");
             FoxEditManager.OnStartEditVoxelObject += OnStartEditVoxelObject;
-
         }
 
         private void OnStartEditVoxelObject(VoxelObject obj, VoxelRenderer renderer, VoxelEditor voxelEditor)
@@ -83,6 +82,8 @@ namespace FoxEdit
                 window.Repaint();
                 _repaint = false;
             }
+
+            _voxelEditor.DrawPreview();
         }
 
         private void DrawChangePreview()
