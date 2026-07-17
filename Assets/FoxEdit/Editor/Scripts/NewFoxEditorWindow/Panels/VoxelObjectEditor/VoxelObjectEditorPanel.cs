@@ -120,6 +120,7 @@ namespace FoxEdit.WindowPanels
         private void OnDeleteAnimationFromAnimSelector(int animIndex)
         {
             voxelEditor.DeleteAnimation(animIndex);
+            animationSelector.SetAnimationNames(voxelEditor.GetAnimationNames());
         }
 
         private void OnAddAnimationFromAnimSelector(string obj)
@@ -239,7 +240,6 @@ namespace FoxEdit.WindowPanels
             frameSelector.SelectFrame(frameIndex, false);
         }
 
-
         #endregion
 
         #region Callbacks
@@ -284,7 +284,5 @@ namespace FoxEdit.WindowPanels
         {
             root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
-
-
     }
 }

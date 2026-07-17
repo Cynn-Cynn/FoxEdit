@@ -155,12 +155,14 @@ namespace FoxEdit
 
         internal void HideMesh()
         {
-            _meshRenderer.enabled = false;
+            if (_meshRenderer != null)
+                _meshRenderer.enabled = false;
         }
 
         internal void ShowMesh()
         {
-            _meshRenderer.enabled = true;
+            if (_meshRenderer != null)
+                _meshRenderer.enabled = true;
         }
 
 

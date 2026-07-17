@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -7,6 +9,7 @@ namespace FoxEdit.WindowPanels.SubPanels
 {
     public class AnimationSelectorSubPanel
     {
+        private const string DEFAULT_ANIM_NAME = "Anim";
         private VisualElement root = null;
         private TextField renameField = null;
         private DropdownField animationSelector = null;
@@ -60,14 +63,34 @@ namespace FoxEdit.WindowPanels.SubPanels
         private void OnDeleteButtonClicked()
         {
             OnDeleteAnimation?.Invoke(GetSelectedAnimationIndex());
+            UpdateDeleteButtonVisibility();
         }
 
         private void OnAddButtonClicked()
         {
-            string newAnimName = string.Format("Anim {0}", animationSelector.choices.Count);
+            string newAnimName = GetNewAnimName();
             animationSelector.choices.Add(newAnimName);
             animationSelector.value = newAnimName;
             OnAddAnimation?.Invoke(newAnimName);
+            UpdateDeleteButtonVisibility();
+        }
+        
+        private string GetNewAnimName()
+        {
+            List<int> existingNumbers = new List<int>();
+
+            string[] splitedName = null;
+            int id = -1;
+            foreach (string name in animationSelector.choices)
+            {
+                splitedName = name.Split(' ');
+                if (splitedName.Length == 2 && int.TryParse(splitedName[1], out id))
+                    existingNumbers.Add(id);
+            }
+            int newId = 1;
+            while(existingNumbers.Contains(newId))
+                newId++;
+            return string.Format("{0} {1}", DEFAULT_ANIM_NAME, newId);
         }
 
         private void OnRenameClicked()
@@ -132,6 +155,9 @@ namespace FoxEdit.WindowPanels.SubPanels
         public void SetAnimationNames(List<string> animationNames)
         {
             animationSelector.choices = animationNames;
+            if (animationSelector.index == -1)
+                animationSelector.index = 0;
+            UpdateDeleteButtonVisibility();
         }
 
         public void SetAnimationIndex(int index, bool notify = true)
@@ -148,5 +174,9 @@ namespace FoxEdit.WindowPanels.SubPanels
             return animationSelector.choices.IndexOf(animationSelector.value);
         }
 
+        private void UpdateDeleteButtonVisibility()
+        {
+            deleteButton.style.display = animationSelector.choices.Count > 1 ? DisplayStyle.Flex : DisplayStyle.None;
+        }
     }
 }
