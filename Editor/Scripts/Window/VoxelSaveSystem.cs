@@ -255,7 +255,7 @@ namespace FoxEdit
 
         #region GreedyMeshing
 
-        private static (int, int) GreedyMeshing(VoxelObjectPackedFrameData data, bool[] isColorTransparent, ref List<Vector3>[] vertices, ref List<int>[] quads)
+        internal static (int, int) GreedyMeshing(VoxelObjectPackedFrameData data, bool[] isColorTransparent, ref List<Vector3>[] vertices, ref List<int>[] quads)
         {
             Vector3Int size = data.MinBounds - data.MaxBounds;
             size.x = Mathf.Abs(size.x) + 1;

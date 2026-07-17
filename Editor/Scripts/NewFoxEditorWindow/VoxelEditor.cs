@@ -82,6 +82,9 @@ namespace FoxEdit
         private VoxelRenderer _voxelRenderer = null;
         private Material[][] _editorMaterials = null;
 
+        //Preview
+        private VoxelPreview _preview = null;
+
         public event Action<int> OnFrameIndexChanged;
         private VoxelEditorFrame lastVisibleEditorFrame = null;
         private int _selectedFrameIndex = 0;
@@ -128,7 +131,6 @@ namespace FoxEdit
         }
 
         //Scene editor voxels
-        private MeshRenderer _voxelPrefab = null;
         private Transform _voxelParent = null;
         private List<VoxelEditorAnimation> _animationList;
         //No editor animated render anymore
@@ -140,7 +142,6 @@ namespace FoxEdit
         {
             _voxelRenderer = voxelRenderer;
             _animationList = new List<VoxelEditorAnimation>();
-            _voxelPrefab = FoxEditEditorSettings.Instance.VoxelPrefab.Asset;
             VoxelEditor.OnChangePalette += OnPaletteChanged;
             _voxelRenderer?.HideMesh();
 
@@ -148,6 +149,8 @@ namespace FoxEdit
 
             if (!_edit)
                 EnableEditing();
+
+            _preview = new VoxelPreview(CurrentFrame, _paletteIndex);
         }
 
         private void CreateMaterials()
@@ -224,7 +227,7 @@ namespace FoxEdit
                     _animationList.Add(new VoxelEditorAnimation(voxelObject.Animations[animation].AnimName, voxelObject.Animations[animation].FrameDuration));
                     for (int i = 0; i < voxelObject.Animations[animation].FrameCount; i++)
                     {
-                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, _voxelPrefab, this);
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, this);
                         frame.LoadFromSave(voxelObject.Animations[animation].EditorVoxels[i], PaletteIndex);
                         if (i != _selectedFrameIndex || animation != 0)
                             frame.Hide();
@@ -284,6 +287,9 @@ namespace FoxEdit
                 }
             }
 
+            if (IsDirty)
+                _preview.Refresh();
+
             IsDirty = true;
         }
 
@@ -338,7 +344,7 @@ namespace FoxEdit
         #region Frames
         public void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _animationList.Count, _voxelPrefab, this);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _animationList.Count, this);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, PaletteIndex, 0);
             CurrentAnimation.AddFrame(newFrame);
             ChangeFrame(CurrentAnimation.FramesCount - 1);
@@ -436,6 +442,7 @@ namespace FoxEdit
         {
             DisableEditing(false);
             VoxelEditor.OnChangePalette -= OnPaletteChanged;
+            _preview?.Destroy();
         }
 
         public void Save(string savePath)
@@ -444,6 +451,11 @@ namespace FoxEdit
             string meshName = Path.GetFileNameWithoutExtension(savePath);
             VoxelSaveSystem.Save(meshName, directory, _voxelRenderer, CurrentPalette, PaletteIndex, _animationList);
             IsDirty = false;
+        }
+
+        public void DrawPreview()
+        {
+            _preview?.DrawPreview();
         }
     }
 
