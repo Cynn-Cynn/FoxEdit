@@ -44,8 +44,8 @@ namespace FoxEdit
         private int _animationIndex = 0;
         private int _frameIndex = 0;
 
-        RenderParams _opaqueRenderParams;
-        RenderParams _transparentRenderParams;
+        private RenderParams _opaqueRenderParams;
+        private RenderParams _transparentRenderParams;
 
         #region Initialization
 

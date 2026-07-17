@@ -18,7 +18,7 @@ namespace FoxEdit
 
         public bool VoxelRaycast(Ray ray, out VoxelEditorObject voxel, out Vector3 faceNormal)
         {
-            //ShowGrid(5.0f, 30);
+            //ShowGrid(5.0f);
 
             Vector3Int gridSpacePosition = WorldToGridPosition(ray.origin);
             Vector3 roundedPosition = GridToWorldPosition(gridSpacePosition);

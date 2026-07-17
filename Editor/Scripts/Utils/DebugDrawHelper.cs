@@ -32,7 +32,6 @@ public static class DebugDrawHelper
 
     public static void DebugDrawGrid(Vector3 position, Vector3Int size, float cubeSize, Color color, float duration = 1.0f)
     {
-        Debug.Log(size);
         Vector3 linesLength = new Vector3(size.x, size.y, size.z) * cubeSize;
 
         for (int x = 0; x < size.x + 1; x++)
