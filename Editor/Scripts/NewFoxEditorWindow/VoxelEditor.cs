@@ -152,19 +152,14 @@ namespace FoxEdit
                 EnableEditing();
 
             SceneView.duringSceneGui += DrawPreview;
-            EditorApplication.update += CountFrame;
         }
 
-        private void CountFrame()
-        {
-            _lastFrameCount = Time.frameCount;
-        }
-
-        private void DrawPreview(SceneView obj)
+        private void DrawPreview(SceneView sceneView)
         {
             if (_lastFrameCount == Time.frameCount)
                 return;
 
+            _lastFrameCount = Time.frameCount;
             _preview?.DrawPreview();
         }
 
@@ -425,7 +420,6 @@ namespace FoxEdit
             VoxelEditor.OnChangePalette -= _preview.SetPaletteIndex;
             _preview?.Destroy();
             SceneView.duringSceneGui -= DrawPreview;
-            EditorApplication.update -= CountFrame;
         }
 
         public void Save(string savePath)
