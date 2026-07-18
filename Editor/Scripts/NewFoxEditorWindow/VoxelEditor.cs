@@ -94,6 +94,7 @@ namespace FoxEdit
             {
                 _selectedFrameIndex = value;
                 OnFrameIndexChanged?.Invoke(_selectedFrameIndex);
+                _preview.ChangeFrame(CurrentFrame);
             }
         }
         public VoxelEditorFrame CurrentFrame
@@ -142,13 +143,14 @@ namespace FoxEdit
         {
             _voxelRenderer = voxelRenderer;
             _animationList = new List<VoxelEditorAnimation>();
+            _preview = new VoxelPreview(CurrentFrame, _paletteIndex);
             VoxelEditor.OnChangePalette += OnPaletteChanged;
+            VoxelEditor.OnChangePalette += _preview.SetPaletteIndex;
             _voxelRenderer?.HideMesh();
 
             if (!_edit)
                 EnableEditing();
 
-            _preview = new VoxelPreview(CurrentFrame, _paletteIndex);
             SceneView.duringSceneGui += DrawPreview;
             EditorApplication.update += CountFrame;
         }
@@ -420,6 +422,7 @@ namespace FoxEdit
         {
             DisableEditing(false);
             VoxelEditor.OnChangePalette -= OnPaletteChanged;
+            VoxelEditor.OnChangePalette -= _preview.SetPaletteIndex;
             _preview?.Destroy();
             SceneView.duringSceneGui -= DrawPreview;
             EditorApplication.update -= CountFrame;

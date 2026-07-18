@@ -69,6 +69,9 @@ namespace FoxEdit
 
         private void Initialize()
         {
+            if (_frameToPreview == null)
+                return;
+
             GreedyMeshing();
             SetRenderParams();
             SetWorldBounds();
