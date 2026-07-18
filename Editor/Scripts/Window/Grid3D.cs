@@ -12,14 +12,20 @@ namespace FoxEdit
         private Dictionary<Vector3Int, VoxelEditorObject> _grid = null;
         private Vector3Int _min = Vector3Int.zero;
         private Vector3Int _max = Vector3Int.zero;
-        private Plane[] _facePlanes = new Plane[6]
+
+        private struct PlaneData
         {
-            new Plane(new Vector3(1, 0, 0), new Vector3(0.05f, 0, 0)),
-            new Plane(new Vector3(-1, 0, 0), new Vector3(-0.05f, 0, 0)),
-            new Plane(new Vector3(0, 1, 0), new Vector3(0, 0.1f, 0)),
-            new Plane(new Vector3(0, -1, 0), new Vector3(0, 0, 0)),
-            new Plane(new Vector3(0, 0, 1), new Vector3(0, 0, 0.05f)),
-            new Plane(new Vector3(0, 0, -1), new Vector3(0, 0, -0.05f))
+            public Vector3 Normal;
+            public float Point;
+        }
+        private PlaneData[] _facePlanes = new PlaneData[6]
+        {
+            new PlaneData { Normal = new Vector3(1, 0, 0), Point = 0.05f },
+            new PlaneData { Normal = new Vector3(-1, 0, 0), Point = -0.05f },
+            new PlaneData { Normal = new Vector3(0, 1, 0), Point = 0.1f },
+            new PlaneData { Normal = new Vector3(0, -1, 0), Point = 0.0f },
+            new PlaneData { Normal = new Vector3(0, 0, 1), Point = 0.05f },
+            new PlaneData { Normal = new Vector3(0, 0, -1), Point = -0.05f }
         };
 
         internal Grid3D()
@@ -103,7 +109,7 @@ namespace FoxEdit
                 direction.z >= 0.0f
             };
 
-            Plane[] planes = new Plane[3]
+            PlaneData[] planes = new PlaneData[3]
             {
                 boundDirections[0] ? _facePlanes[0] : _facePlanes[1],
                 boundDirections[1] ? _facePlanes[2] : _facePlanes[3],
@@ -118,57 +124,34 @@ namespace FoxEdit
             return false;
         }
 
-        private VoxelEditorObject GetIntersectedVoxel(Vector3Int gridSpacePosition, Vector3 voxelSpacePosition, Vector3 direction, Plane[] planes, bool[] boundDirections, VoxelEditorFrame parent, ref Vector3 faceNormal)
+        private VoxelEditorObject GetIntersectedVoxel(Vector3Int gridSpacePosition, Vector3 voxelSpacePosition, Vector3 direction, PlaneData[] planes, bool[] boundDirections, VoxelEditorFrame parent, ref Vector3 faceNormal)
         {
             if (IsOutOfBounds(gridSpacePosition, boundDirections))
                 return null;
 
-            Vector3 wsPosition = parent.GridToWorldPosition(gridSpacePosition);
-            //Debug.DrawRay(wsPosition + voxelSpacePosition, direction * 0.12f, Color.red, 20.0f);
-
             if (_grid.TryGetValue(gridSpacePosition, out VoxelEditorObject voxel))
-            {
                 return voxel;
-            }
-            
-            Ray ray = new Ray(voxelSpacePosition, direction);
 
-            for (int i = 0; i < 3; i++)
-            {
-                float enter;
-                if (planes[i].Raycast(ray, out enter))
-                {
-                    Vector3 newVoxelSpacePosition = ray.GetPoint(enter);
-                    string axis = i == 0 ? "x" : i == 1 ? "y" : "z";
-                    //Debug.Log($"{axis}: ({newVoxelSpacePosition.x}; {newVoxelSpacePosition.y}; {newVoxelSpacePosition.z}) | {Mathf.Abs(newVoxelSpacePosition.x) <= 0.051f}; {Mathf.Abs(newVoxelSpacePosition.y - 0.05f) <= 0.05f}; {Mathf.Abs(newVoxelSpacePosition.z) <= 0.051f}");
-                    if (Mathf.Abs(newVoxelSpacePosition.x) <= 0.051f && Mathf.Abs(newVoxelSpacePosition.y - 0.05f) <= 0.051f && Mathf.Abs(newVoxelSpacePosition.z) <= 0.051f)
-                    {
-                        int gridOffset = boundDirections[i] ? 1 : -1;
-                        float voxelPositionMirror = boundDirections[i] ? -0.05f : 0.05f;
-                        if (i == 0)
-                        {
-                            newVoxelSpacePosition.x = voxelPositionMirror;
-                            gridSpacePosition.x += gridOffset;
-                        }
-                        else if (i == 1)
-                        {
-                            newVoxelSpacePosition.y = voxelPositionMirror + 0.05f;
-                            gridSpacePosition.y += gridOffset;
-                        }
-                        else if (i == 2)
-                        {
-                            newVoxelSpacePosition.z = voxelPositionMirror;
-                            gridSpacePosition.z += gridOffset;
-                        }
+            float xLength = (planes[0].Point - voxelSpacePosition.x) / direction.x;
+            float yLength = (planes[1].Point - voxelSpacePosition.y) / direction.y;
+            float zLength = (planes[2].Point - voxelSpacePosition.z) / direction.z;
 
-                        faceNormal = -planes[i].normal;
-                        return GetIntersectedVoxel(gridSpacePosition, newVoxelSpacePosition, direction, planes, boundDirections, parent, ref faceNormal);
-                    }
-                }
-            }
+            float minLength = Mathf.Min(xLength, yLength, zLength);
 
-            //Debug.Log("bugged out");
-            return null;
+            int directionIndex = minLength == xLength ? 0 : minLength == yLength ? 1 : 2;
+            faceNormal = -planes[directionIndex].Normal;
+            gridSpacePosition -= new Vector3Int((int)faceNormal.x, (int)faceNormal.y, (int)faceNormal.z);
+
+            Vector3 newVoxelSpacePosition = voxelSpacePosition + direction * minLength;
+            float mirrorPosition = boundDirections[directionIndex] ? -0.05f : 0.05f;
+            if (minLength == xLength)
+                newVoxelSpacePosition.x = mirrorPosition;
+            else if (minLength == yLength)
+                newVoxelSpacePosition.y = mirrorPosition + 0.05f;
+            else
+                newVoxelSpacePosition.z = mirrorPosition;
+
+            return GetIntersectedVoxel(gridSpacePosition, newVoxelSpacePosition, direction, planes, boundDirections, parent, ref faceNormal);
         }
 
         private bool IsOutOfBounds(Vector3Int position, bool[] boundDirections)
