@@ -20,12 +20,12 @@ namespace FoxEdit
         }
         private PlaneData[] _facePlanes = new PlaneData[6]
         {
-            new PlaneData { Normal = new Vector3(1, 0, 0), Point = 0.05f },
-            new PlaneData { Normal = new Vector3(-1, 0, 0), Point = -0.05f },
-            new PlaneData { Normal = new Vector3(0, 1, 0), Point = 0.1f },
-            new PlaneData { Normal = new Vector3(0, -1, 0), Point = 0.0f },
-            new PlaneData { Normal = new Vector3(0, 0, 1), Point = 0.05f },
-            new PlaneData { Normal = new Vector3(0, 0, -1), Point = -0.05f }
+            new PlaneData { Normal = new Vector3(-1, 0, 0), Point = 0.05f },
+            new PlaneData { Normal = new Vector3(1, 0, 0), Point = -0.05f },
+            new PlaneData { Normal = new Vector3(0, -1, 0), Point = 0.1f },
+            new PlaneData { Normal = new Vector3(0, 1, 0), Point = 0.0f },
+            new PlaneData { Normal = new Vector3(0, 0, -1), Point = 0.05f },
+            new PlaneData { Normal = new Vector3(0, 0, 1), Point = -0.05f }
         };
 
         internal Grid3D()
@@ -132,21 +132,21 @@ namespace FoxEdit
             if (_grid.TryGetValue(gridSpacePosition, out VoxelEditorObject voxel))
                 return voxel;
 
-            float xLength = (planes[0].Point - voxelSpacePosition.x) / direction.x;
-            float yLength = (planes[1].Point - voxelSpacePosition.y) / direction.y;
-            float zLength = (planes[2].Point - voxelSpacePosition.z) / direction.z;
+            float xSteps = (planes[0].Point - voxelSpacePosition.x) / direction.x;
+            float ySteps = (planes[1].Point - voxelSpacePosition.y) / direction.y;
+            float zSteps = (planes[2].Point - voxelSpacePosition.z) / direction.z;
 
-            float minLength = Mathf.Min(xLength, yLength, zLength);
+            float minSteps = Mathf.Min(xSteps, ySteps, zSteps);
 
-            int directionIndex = minLength == xLength ? 0 : minLength == yLength ? 1 : 2;
-            faceNormal = -planes[directionIndex].Normal;
+            int directionIndex = minSteps == xSteps ? 0 : minSteps == ySteps ? 1 : 2;
+            faceNormal = planes[directionIndex].Normal;
             gridSpacePosition -= new Vector3Int((int)faceNormal.x, (int)faceNormal.y, (int)faceNormal.z);
 
-            Vector3 newVoxelSpacePosition = voxelSpacePosition + direction * minLength;
+            Vector3 newVoxelSpacePosition = voxelSpacePosition + direction * minSteps;
             float mirrorPosition = boundDirections[directionIndex] ? -0.05f : 0.05f;
-            if (minLength == xLength)
+            if (minSteps == xSteps)
                 newVoxelSpacePosition.x = mirrorPosition;
-            else if (minLength == yLength)
+            else if (minSteps == ySteps)
                 newVoxelSpacePosition.y = mirrorPosition + 0.05f;
             else
                 newVoxelSpacePosition.z = mirrorPosition;
