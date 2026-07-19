@@ -7,6 +7,7 @@ using System.Linq;
 using System;
 using System.Threading.Tasks;
 using System.IO;
+using System.Collections;
 
 namespace FoxEdit
 {
@@ -83,6 +84,10 @@ namespace FoxEdit
 
         //Preview
         private VoxelPreview _preview = null;
+        private double _lastEditorTime = 0.0d;
+        private double _animationPreviewTimer = 0.0d;
+        private int _previewAnimationIndex = 0;
+        private bool _isAnimationPreviewPaused = false;
 
         public event Action<int> OnFrameIndexChanged;
         private VoxelEditorFrame lastVisibleEditorFrame = null;
@@ -311,6 +316,48 @@ namespace FoxEdit
         {
             return _animationList.Select(a => a.Name).ToList();
         }
+
+        public void PlayAnimation()
+        {
+            EditorApplication.update += AnimationPreview;
+            _animationPreviewTimer = 0.0f;
+            _lastEditorTime = EditorApplication.timeSinceStartup;
+            _previewAnimationIndex = 0;
+            _isAnimationPreviewPaused = false;
+        }
+
+        public void PauseAnimation()
+        {
+            _isAnimationPreviewPaused = !_isAnimationPreviewPaused;
+            _lastEditorTime = EditorApplication.timeSinceStartup;
+
+            if (_isAnimationPreviewPaused)
+                EditorApplication.update -= AnimationPreview;
+            else
+                EditorApplication.update += AnimationPreview;
+        }
+
+        public void StopAnimation()
+        {
+            EditorApplication.update -= AnimationPreview;
+            _preview.ChangeFrame(CurrentFrame);
+        }
+
+        private void AnimationPreview()
+        {
+            double deltaTime = EditorApplication.timeSinceStartup - _lastEditorTime;
+            _lastEditorTime = EditorApplication.timeSinceStartup;
+            _animationPreviewTimer += deltaTime;
+
+            if (_animationPreviewTimer < CurrentAnimation.FrameDuration)
+                return;
+
+            _animationPreviewTimer -= CurrentAnimation.FrameDuration;
+            _preview.ChangeFrame(CurrentAnimation.frames[_previewAnimationIndex]);
+            _previewAnimationIndex = (_previewAnimationIndex + 1) % CurrentAnimation.frames.Count;
+            SceneView.RepaintAll();
+        }
+
         #endregion
         #region Helpers
 
@@ -420,6 +467,7 @@ namespace FoxEdit
             VoxelEditor.OnChangePalette -= _preview.SetPaletteIndex;
             _preview?.Destroy();
             SceneView.duringSceneGui -= DrawPreview;
+            EditorApplication.update -= AnimationPreview;
         }
 
         public void Save(string savePath)
