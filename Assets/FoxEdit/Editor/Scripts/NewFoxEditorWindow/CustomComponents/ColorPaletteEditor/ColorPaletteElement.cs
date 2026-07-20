@@ -117,7 +117,7 @@ namespace FoxEdit.WindowComponents
 
         private void OnClickAddColor(ClickEvent clickEvent)
         {
-            AddPaletteItem(VoxelColor.GetRandomColor());
+            ColorEditorPopUp.Open(AddPaletteItem, false, false);
         }
 
         private void UpdatePaletteSize()
@@ -165,5 +165,6 @@ namespace FoxEdit.WindowComponents
             itemsContainer.Add(paletteItem);
             addColorButton.BringToFront();
         }
+
     }
 }

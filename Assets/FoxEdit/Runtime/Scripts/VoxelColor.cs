@@ -13,6 +13,7 @@ namespace FoxEdit
 
         public VoxelColor() { }
 
+
         public VoxelColor(Color color, float emissiveIntensity, float metallic, float smoothness)
         {
             Color = color;
@@ -20,6 +21,7 @@ namespace FoxEdit
             Metallic = Mathf.Clamp01(metallic);
             Smoothness = Mathf.Clamp01(smoothness);
         }
+        public VoxelColor(VoxelColor voxelColor) : this(voxelColor.Color, voxelColor.EmissiveIntensity, voxelColor.Metallic, voxelColor.Smoothness){}
 
         public static VoxelColor GetRandomColor()
         {

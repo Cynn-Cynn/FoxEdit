@@ -174,7 +174,7 @@
     height: 25px;
 }
 
-#animation-play-pause > #icon {
+.animation-play-pause-button > #icon {
     width: 100%;
     height: 100%;
     background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/play.png?fileID=2800000&guid=f23ff9c3417edfc4d93b86bff6516090&type=3#play");
