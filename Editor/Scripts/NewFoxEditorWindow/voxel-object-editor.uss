@@ -65,23 +65,23 @@
 }
 
 #Paint-button > .toolbar-button-icon {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/add-cube.png?fileID=2800000&guid=98084a4e8150fe946a04a4ebebfe24ab&type=3#add-cube");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/add-cube.png?fileID=2800000&guid=98084a4e8150fe946a04a4ebebfe24ab&type=3#add-cube");
 }
 
 #Erase-button > .toolbar-button-icon {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/eraser.png?fileID=2800000&guid=4d1167178bb2a914cb1740fcf5c63aba&type=3#eraser");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/eraser.png?fileID=2800000&guid=4d1167178bb2a914cb1740fcf5c63aba&type=3#eraser");
 }
 
 #Color-button > .toolbar-button-icon {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/palette.png?fileID=2800000&guid=1a1324b9931772946b093ca989493504&type=3#palette");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/palette.png?fileID=2800000&guid=1a1324b9931772946b093ca989493504&type=3#palette");
 }
 
 #Brush-button > .toolbar-button-icon {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/brush.png?fileID=2800000&guid=a573551a0e928b14dadaddfb48f3867d&type=3#brush");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/brush.png?fileID=2800000&guid=a573551a0e928b14dadaddfb48f3867d&type=3#brush");
 }
 
 #Fill-button > .toolbar-button-icon {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/fill.png?fileID=2800000&guid=fd47e6cf7c805264ba23805ecda61b1f&type=3#fill");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/fill.png?fileID=2800000&guid=fd47e6cf7c805264ba23805ecda61b1f&type=3#fill");
 }
 
 #Paint-button {
@@ -112,15 +112,15 @@
 }
 
 #scale-transformation > VisualElement {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/scale-icon.png?fileID=2800000&guid=5493ff9b8cb6bcc4595e4559c6873c30&type=3#scale-icon");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/scale-icon.png?fileID=2800000&guid=5493ff9b8cb6bcc4595e4559c6873c30&type=3#scale-icon");
 }
 
 #rotate-transformation > VisualElement {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/rotate-icon.png?fileID=2800000&guid=fda2f21bdb2b56048a67a79fdf4a378a&type=3#rotate-icon");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/rotate-icon.png?fileID=2800000&guid=fda2f21bdb2b56048a67a79fdf4a378a&type=3#rotate-icon");
 }
 
 #translate-transformation > VisualElement {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/translate-icon.png?fileID=2800000&guid=d6fd3c835dee52948ae2a19a99c4095f&type=3#translate-icon");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/translate-icon.png?fileID=2800000&guid=d6fd3c835dee52948ae2a19a99c4095f&type=3#translate-icon");
 }
 
 .transformation-button > VisualElement {
@@ -147,7 +147,7 @@
 }
 
 #fox-icon {
-    background-image: url("project://database/Assets/FoxEdit/Editor/Icons/foxidle1.png?fileID=2800000&guid=820b241376ceae246875a222e45355f4&type=3#foxidle1");
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/foxidle1.png?fileID=2800000&guid=820b241376ceae246875a222e45355f4&type=3#foxidle1");
     position: absolute;
     right: -14px;
     width: 50px;
@@ -167,4 +167,27 @@
     font-size: 25px;
     background-color: rgb(69, 29, 29);
     -unity-font-style: bold;
+}
+
+.animation-play-pause-button {
+    width: 25px;
+    height: 25px;
+}
+
+#animation-play-pause > #icon {
+    width: 100%;
+    height: 100%;
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/play.png?fileID=2800000&guid=f23ff9c3417edfc4d93b86bff6516090&type=3#play");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.animation-play-pause-button__running > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/pause.png?fileID=2800000&guid=cc6776a6b99bc27498e546446552329c&type=3#pause");
+}
+
+#animation-stop > #icon {
+    background-image: url("project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/stop-button.png?fileID=2800000&guid=89ce62891fe4c5c49b1861253f78ef28&type=3#stop-button");
+    width: 100%;
+    height: 100%;
+    -unity-background-scale-mode: scale-to-fit;
 }
