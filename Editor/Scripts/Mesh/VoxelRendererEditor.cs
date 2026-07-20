@@ -41,7 +41,9 @@ namespace FoxEdit
             PaletteIndexOverrideDisplay();
             StaticRenderDisplay();
             if (!Application.isPlaying && GUILayout.Button("Edit Voxel"))
+            {
                 FoxEditManager.StartEditVoxelObject(_voxelRenderer);
+            }
         }
 
         private void VoxelObjectDisplay()

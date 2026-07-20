@@ -27,11 +27,10 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
 
         public void StopEditVoxelObject()
         {
+            OnStopEditVoxelObject();
             _voxelEditor = null;
             _voxelRenderer = null;
             _voxelObject = null;
-
-            OnStopEditVoxelObject();
         }
 
         protected abstract void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer, VoxelEditor voxelEditor);
