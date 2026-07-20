@@ -10,6 +10,7 @@ namespace FoxEdit.WindowPanels
 {
     public class VoxelObjectEditorPanel
     {
+        private const string PlayRunningClassName = "animation-play-pause-button__running";
         private VisualElement root;
 
         private Button stopButton;
@@ -21,6 +22,8 @@ namespace FoxEdit.WindowPanels
         private ColorPaletteElement colorSelector;
         private FrameSelectorElement frameSelector;
         private AnimationSelectorSubPanel animationSelector;
+        private Button playPauseAnimButton;
+        private Button stopAnimButton;
 
         private VoxelObject voxelObject;
         private VoxelRenderer voxelRenderer;
@@ -76,6 +79,8 @@ namespace FoxEdit.WindowPanels
             saveAsButton = root.Q<Button>("save-as-button");
             saveButton = root.Q<Button>("save-button");
             animationSelector = new AnimationSelectorSubPanel(root.Q("animation-selector-container"));
+            playPauseAnimButton  = root.Q<Button>("animation-play-pause");
+            stopAnimButton  = root.Q<Button>("animation-stop");
         }
 
         #region Callbacks
@@ -93,6 +98,8 @@ namespace FoxEdit.WindowPanels
             frameSelector.OnDuplicateFrame += OnDuplicateFrame;
             frameSelector.OnNewFrame += OnNewFrame;
             frameSelector.OnDeleteFrame += OnDeleteFrame;
+            playPauseAnimButton.clicked += OnTogglePlayPause;
+            stopAnimButton.clicked += OnStopAnimation;
 
             animationSelector.OnAddAnimation += OnAddAnimationFromAnimSelector;
             animationSelector.OnDeleteAnimation += OnDeleteAnimationFromAnimSelector;
@@ -105,6 +112,23 @@ namespace FoxEdit.WindowPanels
             FoxEditManager.OnStartEditVoxelObject += OnStartEditVoxelObject;
             FoxEditManager.OnStopEditVoxelObject += OnStopEditVoxelObject;
         }
+
+        private void OnTogglePlayPause()
+        {
+            if (voxelEditor.IsAnimationPreviewPlay)
+                voxelEditor.PauseAnimation();
+            else
+                voxelEditor.PlayAnimation();
+
+            UpdatePlayPauseButton();
+        }
+
+        private void OnStopAnimation()
+        {
+            voxelEditor.StopAnimation();
+            UpdatePlayPauseButton();
+        }
+
 
         private void OnSelectAnimationFromAnimSelector(int animationIndex)
         {
@@ -227,6 +251,7 @@ namespace FoxEdit.WindowPanels
 
             SetupFields();
             UpdateFrameSelector();
+            UpdatePlayPauseButton();
         }
 
         private void OnAnimationIndexChanged(int newAnimationIndex)
@@ -284,5 +309,12 @@ namespace FoxEdit.WindowPanels
         {
             root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
+
+        private void UpdatePlayPauseButton()
+        {
+            playPauseAnimButton.EnableInClassList(PlayRunningClassName, voxelEditor.IsAnimationPreviewPlay);
+            stopAnimButton.SetEnabled(voxelEditor.CanStopAnimationPreview);
+        }
+
     }
 }
