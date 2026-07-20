@@ -155,6 +155,20 @@ namespace FoxEdit
             }
         }
 
+        internal static void RefreshColorBuffer(int index)
+        {
+            if (index >= _colorsBuffers.Count)
+                return;
+
+            _colorsBuffers[index]?.Dispose();
+
+            VoxelPalette[] palettes = _settings.Palettes;
+            ColorData[] colors = CreateColorBufferFromPalette(palettes[index]);
+            GraphicsBuffer colorBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, colors.Length, sizeof(float) * 7);
+            colorBuffer.SetData(colors);
+            _colorsBuffers[index] = colorBuffer;
+        }
+
         private static void DisposeColorsBuffers()
         {
             if (_colorsBuffers == null)
