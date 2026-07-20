@@ -88,6 +88,7 @@ namespace FoxEdit
         private double _animationPreviewTimer = 0.0d;
         private int _previewAnimationIndex = 0;
         private bool _isAnimationPreviewPaused = false;
+        private bool _canStopAnimationPreview = false;
 
         public event Action<int> OnFrameIndexChanged;
         private VoxelEditorFrame lastVisibleEditorFrame = null;
@@ -136,6 +137,9 @@ namespace FoxEdit
                 return _animationList[_selectedAnimationIndex];
             }
         }
+
+        public bool IsAnimationPreviewPlay => _canStopAnimationPreview && !_isAnimationPreviewPaused;
+        public bool CanStopAnimationPreview => _canStopAnimationPreview;
 
         //Scene editor voxels
         private List<VoxelEditorAnimation> _animationList;
@@ -320,6 +324,7 @@ namespace FoxEdit
         public void PlayAnimation()
         {
             EditorApplication.update += AnimationPreview;
+            _canStopAnimationPreview = true;
             _animationPreviewTimer = 0.0f;
             _lastEditorTime = EditorApplication.timeSinceStartup;
             _previewAnimationIndex = 0;
@@ -340,6 +345,7 @@ namespace FoxEdit
         public void StopAnimation()
         {
             EditorApplication.update -= AnimationPreview;
+            _canStopAnimationPreview = false;
             _preview.ChangeFrame(CurrentFrame);
         }
 
