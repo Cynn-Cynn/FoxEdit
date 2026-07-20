@@ -79,7 +79,7 @@ namespace FoxEdit.WindowPanels
             saveAsButton = root.Q<Button>("save-as-button");
             saveButton = root.Q<Button>("save-button");
             animationSelector = new AnimationSelectorSubPanel(root.Q("animation-selector-container"));
-            playPauseAnimButton  = root.Q<Button>("animation-play-pause");
+            playPauseAnimButton = root.Q<Button>("animation-play-pause");
             stopAnimButton  = root.Q<Button>("animation-stop");
         }
 
