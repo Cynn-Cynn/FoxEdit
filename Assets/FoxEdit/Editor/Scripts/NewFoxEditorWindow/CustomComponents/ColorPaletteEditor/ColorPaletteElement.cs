@@ -44,7 +44,6 @@ namespace FoxEdit.WindowComponents
         public event Action<int> OnIndexChanged;
 
         private VisualElement itemsContainer = null;
-        private VoxelPalette voxelPalette = null;
         private List<PaletteItem> _paletteItems = new List<PaletteItem>();
         private PaletteItem lastSelectedPaletteItem = null;
         private VisualElement addColorButton;
@@ -155,15 +154,6 @@ namespace FoxEdit.WindowComponents
             ItemIndex = paletteItemIndex;
         }
 
-        public void Setup(VoxelPalette voxelPalette)
-        {
-            ClearPaletteItems();
-            foreach (VoxelColor voxelColor in voxelPalette.Colors)
-                AddPaletteItem(voxelColor);
-            _paletteSize = voxelPalette.Colors.Length;
-            this.voxelPalette = voxelPalette;
-        }
-
         public void AddPaletteItem(VoxelColor voxelColor)
         {
             int newPaletteItemIndex = _paletteItems.Count;
@@ -173,7 +163,6 @@ namespace FoxEdit.WindowComponents
             paletteItem.Setup(voxelColor, newPaletteItemIndex);
             _paletteItems.Add(paletteItem);
             itemsContainer.Add(paletteItem);
-
             addColorButton.BringToFront();
         }
     }
