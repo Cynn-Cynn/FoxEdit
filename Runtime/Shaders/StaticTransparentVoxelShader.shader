@@ -80,6 +80,7 @@ Shader "Voxel/StaticTransparentVoxel"
             };
 
             StructuredBuffer<ColorData> _Colors;
+            uint _ColorCount;
 
             v2f vert(appdata v)
             {
@@ -166,6 +167,13 @@ Shader "Voxel/StaticTransparentVoxel"
             float4 frag(v2f i) : SV_TARGET
             {
                 ColorData color = _Colors[i.colorIndex];
+                if (i.colorIndex >= _ColorCount)
+                {
+                    color.color = float4(1,0,1,1);
+                    color.emissive = (sin(_Time.y * 10) * 0.5f + 0.5f) * 50;
+                    color.metallic = 0.0f;
+                    color.smoothness = 0.0f;
+                }
 
                 SurfaceData surfaceData = createSurfaceData(i, color);
                 InputData inputData = createInputData(i, surfaceData.normalTS);
