@@ -194,7 +194,7 @@ namespace FoxEdit
                 }
                 else if (index == _voxelObject.PaletteIndex)
                 {
-                    _meshRenderer.SetMaterials(new List<Material>{ _voxelObject.StaticOpaqueMaterial, _voxelObject.StaticTransparentMaterial });
+                    _meshRenderer.SetMaterials(new List<Material> { _voxelObject.StaticOpaqueMaterial, _voxelObject.StaticTransparentMaterial });
                     _staticOpaqueMaterialInstance = null;
                     _staticTransparentMaterialInstance = null;
                     _paletteIndexOverride = -1;
@@ -217,7 +217,7 @@ namespace FoxEdit
 
             _staticTransparentMaterialInstance = new Material(_voxelObject.StaticTransparentMaterial);
             _staticTransparentMaterialInstance.name = _voxelObject.StaticTransparentMaterial.name + "_Instance";
-            
+
             _meshRenderer.SetMaterials(new List<Material> { _staticOpaqueMaterialInstance, _staticTransparentMaterialInstance });
         }
 
@@ -266,7 +266,9 @@ namespace FoxEdit
         private void SetColorBufferParam(GraphicsBuffer colorsBuffer)
         {
             _opaqueRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
+            _opaqueRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
             _transparentRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
+            _transparentRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
         }
 
         private void SetVoxelBuffers()
@@ -386,15 +388,21 @@ namespace FoxEdit
 
         private void StaticRender()
         {
+            GraphicsBuffer colorBuffer = VoxelSharedData.GetColorBuffer(GetPaletteIndex());
+
             if (_staticOpaqueMaterialInstance != null)
             {
-                _staticOpaqueMaterialInstance.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
-                _staticTransparentMaterialInstance.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+                _staticOpaqueMaterialInstance.SetBuffer("_Colors", colorBuffer);
+                _staticOpaqueMaterialInstance.SetInt("_ColorCount", colorBuffer.count);
+                _staticTransparentMaterialInstance.SetBuffer("_Colors", colorBuffer);
+                _staticTransparentMaterialInstance.SetInt("_ColorCount", colorBuffer.count);
             }
             else
             {
-                _voxelObject.StaticOpaqueMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
-                _voxelObject.StaticTransparentMaterial.SetBuffer("_Colors", VoxelSharedData.GetColorBuffer(GetPaletteIndex()));
+                _voxelObject.StaticOpaqueMaterial.SetBuffer("_Colors", colorBuffer);
+                _voxelObject.StaticOpaqueMaterial.SetInt("_ColorCount", colorBuffer.count);
+                _voxelObject.StaticTransparentMaterial.SetBuffer("_Colors", colorBuffer);
+                _voxelObject.StaticTransparentMaterial.SetInt("_ColorCount", colorBuffer.count);
             }
         }
 
