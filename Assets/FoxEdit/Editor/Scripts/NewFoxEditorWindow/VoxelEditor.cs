@@ -281,10 +281,6 @@ namespace FoxEdit
         {
             if (_animationList.Count <= 1)
                 return;
-            foreach (VoxelEditorFrame voxelEditorFrame in _animationList[index].frames)
-            {
-                GameObject.DestroyImmediate(voxelEditorFrame.VoxelTransform.gameObject);
-            }
             lastVisibleEditorFrame = null;
 
             _animationList.RemoveAt(index);
@@ -357,7 +353,6 @@ namespace FoxEdit
 
             if (_animationPreviewTimer < CurrentAnimation.FrameDuration)
                 return;
-
             _animationPreviewTimer -= CurrentAnimation.FrameDuration;
             _preview.ChangeFrame(CurrentAnimation.frames[_previewAnimationIndex]);
             _previewAnimationIndex = (_previewAnimationIndex + 1) % CurrentAnimation.frames.Count;

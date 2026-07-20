@@ -1,8 +1,5 @@
-using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
-using UnityEngine.Experimental.GlobalIllumination;
 using UnityEngine.SceneManagement;
 
 namespace FoxEdit.EditorUtils
@@ -31,7 +28,6 @@ namespace FoxEdit.EditorUtils
             Light bottomLight = CreateLight("Bottom Light", new Vector3(-90, 0, 0));
             Light sideLight = CreateLight("Side light", new Vector3(50, -30, 0));
             Light otherSideLight = CreateLight("Side light light", new Vector3(50, -120, 0));
-
             string objectName = null;
 
             if (voxelObject == null)
@@ -105,5 +101,6 @@ namespace FoxEdit.EditorUtils
             if (StageUtility.GetCurrentStage() is VoxelStage)
                 StageUtility.GetMainStage();
         }
+
     }
 }

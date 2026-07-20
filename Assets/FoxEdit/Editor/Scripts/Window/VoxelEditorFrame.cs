@@ -62,7 +62,7 @@ namespace FoxEdit
 
         internal VoxelEditorFrame GetCopy(int newFrameIndex, int paletteIndex)
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(VoxelTransform.parent, newFrameIndex, _editWindow);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(VoxelTransform, newFrameIndex, _editWindow);
             Grid3D otherGrid = new Grid3D();
 
             foreach (Vector3Int gridPosition in _grid.Keys)

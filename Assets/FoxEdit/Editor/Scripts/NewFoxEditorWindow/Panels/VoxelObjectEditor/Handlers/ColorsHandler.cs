@@ -1,6 +1,8 @@
 
+using System.Diagnostics;
 using System.Linq;
 using FoxEdit.WindowComponents;
+using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
@@ -62,6 +64,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
                 return;
             VoxelEditor.PaletteIndex = index;
             UpdateColorSelector();
+            SceneView.RepaintAll();
         }
 
         private void OnChangeColor(int colorIndex)
