@@ -1,14 +1,10 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using FoxEdit.EditorUtils;
-using FoxEdit.VoxelTools;
 using UnityEditor;
 using UnityEditor.EditorTools;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.SceneManagement;
 
 namespace FoxEdit
 {
@@ -19,7 +15,6 @@ namespace FoxEdit
         internal static VoxelEditor VoxelEditor { get; private set; }
 
 
-        private static VoxelStage _voxelStage = null;
         private static VoxelRenderer _voxelRenderer = null;
         private static VoxelObject _voxelObject = null;
 
@@ -32,8 +27,7 @@ namespace FoxEdit
             EnsureFoxEditWindowIsOpen();
             if (voxelRenderer == null)
             {
-                _voxelStage = VoxelStageUtility.OpenVoxelStage(voxelObject);
-                FoxEditManager._voxelRenderer = _voxelStage.VoxelRenderer;
+                FoxEditManager._voxelRenderer = VoxelEditorScene.Open(voxelObject);
             }
             else
             {
@@ -42,9 +36,9 @@ namespace FoxEdit
 
             FoxEditManager._voxelObject = voxelObject;
             Selection.activeGameObject = _voxelRenderer.gameObject;
-            FocusGameObject(FoxEditManager._voxelRenderer.gameObject);
             VoxelEditor = new VoxelEditor(_voxelRenderer);
             OnStartEditVoxelObject?.Invoke(voxelObject, _voxelRenderer, VoxelEditor);
+            FocusGameObject(_voxelRenderer.gameObject);
             return VoxelEditor;
         }
 
@@ -62,11 +56,11 @@ namespace FoxEdit
                 if (!DisplaySaveDialog())
                     return;
             }
+            if (VoxelEditorScene.IsOpen)
+                VoxelEditorScene.Close();
+
             _voxelObject = null;
             _voxelRenderer = null;
-            if (_voxelStage != null)
-                StageUtility.GoToMainStage();
-            _voxelStage = null;
             if (VoxelEditor != null)
                 VoxelEditor.Dispose();
             if (ToolManager.activeToolType == typeof(VoxelEditorTool))
