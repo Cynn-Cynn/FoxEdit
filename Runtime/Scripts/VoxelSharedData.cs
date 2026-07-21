@@ -198,7 +198,7 @@ namespace FoxEdit
             return _colorsBuffers[index];
         }
 
-        public static void SetupMaterialVoxelData(Material material, int paletteIndex, int colorIndex)
+        public static void SetupMaterialVoxelData(Material material, int paletteIndex)
         {
             GraphicsBuffer colorBuffer = VoxelSharedData.GetColorBuffer(paletteIndex);
             if (colorBuffer == null)
@@ -206,7 +206,6 @@ namespace FoxEdit
 
             material.SetBuffer("_Colors", colorBuffer);
             material.SetInt("_ColorCount", colorBuffer.count);
-            material.SetInt("_ColorIndex", colorIndex);
         }
 
         #endregion Colors
