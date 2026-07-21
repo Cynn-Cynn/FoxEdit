@@ -213,6 +213,34 @@ namespace FoxEdit
             material.SetInt("_ColorCount", colorBuffer.count);
         }
 
+        public static void SetupMeshRendererVoxelData(MeshRenderer meshRenderer, int paletteIndex)
+        {
+            GraphicsBuffer colorBuffer = VoxelSharedData.GetColorBuffer(paletteIndex);
+            if (colorBuffer == null)
+                return;
+
+            foreach (Material material in meshRenderer.sharedMaterials)
+            {
+                material.SetBuffer("_Colors", colorBuffer);
+                material.SetInt("_ColorCount", colorBuffer.count);
+            }
+        }
+
+        public static void SetupParticleSystemVoxelData(ParticleSystem particleSystem, int paletteIndex)
+        {
+            GraphicsBuffer colorBuffer = VoxelSharedData.GetColorBuffer(paletteIndex);
+            if (colorBuffer == null)
+                return;
+            foreach (ParticleSystemRenderer system in particleSystem.GetComponentsInChildren<ParticleSystemRenderer>())
+            {
+                foreach (Material material in system.sharedMaterials)
+                {
+                    material.SetBuffer("_Colors", colorBuffer);
+                    material.SetInt("_ColorCount", colorBuffer.count);
+                }
+            }
+        }
+
 #if HAS_VFX_GRAPH
         public static void SetupVisualEffectVoxelData(VisualEffect visualEffect, int paletteIndex)
         {
@@ -225,7 +253,7 @@ namespace FoxEdit
         }
 #endif
 
-#endregion Colors
+        #endregion Colors
 
         #region Palettes
 
