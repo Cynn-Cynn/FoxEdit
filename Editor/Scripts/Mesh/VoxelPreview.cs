@@ -133,7 +133,9 @@ namespace FoxEdit
             if (colorsBuffer != null)
             {
                 _opaqueRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
+                _opaqueRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
                 _transparentRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
+                _transparentRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
             }
         }
 
