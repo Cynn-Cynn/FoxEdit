@@ -191,3 +191,7 @@
     height: 100%;
     -unity-background-scale-mode: scale-to-fit;
 }
+
+#animator-selector-rename-field {
+    flex-grow: 1;
+}
