@@ -160,6 +160,13 @@ namespace FoxEdit
             }
         }
 
+        [MenuItem("FoxEdit/Refresh Colors")]
+        internal static void RefreshAllColorBuffers()
+        {
+            for (int i = 0; i < _colorsBuffers.Count; i++)
+                RefreshColorBuffer(i);
+        }
+
         internal static void RefreshColorBuffer(int index)
         {
             if (index >= _colorsBuffers.Count)
@@ -172,6 +179,7 @@ namespace FoxEdit
             GraphicsBuffer colorBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, colors.Length, sizeof(float) * 7);
             colorBuffer.SetData(colors);
             _colorsBuffers[index] = colorBuffer;
+            Refresh();
         }
 
         private static void DisposeColorsBuffers()

@@ -1,4 +1,5 @@
 
+using System;
 using System.Diagnostics;
 using System.Linq;
 using FoxEdit.WindowComponents;
@@ -30,8 +31,11 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
         {
             _paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             _colorSelector.OnIndexChanged += OnColorSelectorValueChanged;
+            _colorSelector.OnEditPaletteItem += OnPressEditPaletteItem;
+            _colorSelector.OnDeletePaletteItem += OnPressDeletePaletteItem;
             VoxelEditor.OnChangeColor += OnChangeColor;
         }
+
 
         public override void UnregisterCallbacks()
         {
@@ -54,6 +58,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             for (int i = 0; i < selectedPalette.Colors.Length; i++)
                 _colorSelector.AddPaletteItem(selectedPalette.Colors[i]);
             _colorSelector.SetIndexValue(VoxelEditor.ColorIndex, false);
+            _colorSelector.UpdatePaletteItemsManipulators();
         }
 
         private void OnPaletteValueChanged(ChangeEvent<string> evt)
@@ -65,6 +70,31 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             VoxelEditor.PaletteIndex = index;
             UpdateColorSelector();
             SceneView.RepaintAll();
+        }
+
+        private void OnPressDeletePaletteItem(int paletteItemIndex)
+        {
+            if (EditorUtility.DisplayDialog("Delete Color", "This will permanently remove the selected color from the palette. This action cannot be undone. Do you want to continue ?", "Delete", "Cancel"))
+            {
+                VoxelEditor.CurrentPalette.RemoveAt(paletteItemIndex);
+                VoxelSharedData.RefreshColorBuffer(VoxelEditor.PaletteIndex);
+                EditorUtility.SetDirty(VoxelEditor.CurrentPalette);
+            }
+            UpdateColorSelector();
+        }
+
+        private void OnPressEditPaletteItem(int paletteItemIndex)
+        {
+            ColorEditorPopUp.Open((newColor) => ApplyEditPaletteItem(paletteItemIndex, newColor),
+            VoxelEditor.CurrentPalette.Colors[paletteItemIndex], true, true);
+        }
+
+        private void ApplyEditPaletteItem(int paletteItemIndex, VoxelColor newVoxelColor)
+        {
+            _colorSelector.SetPaletteItemColor(paletteItemIndex, newVoxelColor);
+            VoxelEditor.CurrentPalette.SetColor(paletteItemIndex, newVoxelColor);
+            VoxelSharedData.RefreshColorBuffer(VoxelEditor.PaletteIndex);
+            EditorUtility.SetDirty(VoxelEditor.CurrentPalette);
         }
 
         private void OnChangeColor(int colorIndex)
