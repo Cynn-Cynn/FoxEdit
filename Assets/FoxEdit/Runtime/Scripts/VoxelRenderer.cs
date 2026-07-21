@@ -74,9 +74,7 @@ namespace FoxEdit
             if (_meshFilter != null)
                 return;
 
-            _meshFilter = GetComponent<MeshFilter>();
-            _meshRenderer = GetComponent<MeshRenderer>();
-            _animator = GetComponent<Animator>();
+            GetUsedComponents();
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
@@ -85,6 +83,13 @@ namespace FoxEdit
                 AssetDatabase.SaveAssets();
             }
 #endif
+        }
+
+        public void GetUsedComponents()
+        {
+            _meshFilter = GetComponent<MeshFilter>();
+            _meshRenderer = GetComponent<MeshRenderer>();
+            _animator = GetComponent<Animator>();
         }
 
         internal void Initialize(bool setupForRender = false)

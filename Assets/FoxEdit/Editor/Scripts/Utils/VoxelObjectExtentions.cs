@@ -14,9 +14,10 @@ namespace FoxEdit
         {
             GameObject voxelRendererGO = new GameObject("Preview voxel");
             VoxelRenderer voxelRenderer = voxelRendererGO.AddComponent<VoxelRenderer>();
+            voxelRenderer.GetUsedComponents();
             voxelRenderer.SetVoxelObject(obj);
             voxelRenderer.Initialize(true);
-            //voxelRenderer.RenderSwap();
+            voxelRenderer.RenderSwap();
 
             await Task.Delay(1000);
 
