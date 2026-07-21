@@ -42,8 +42,9 @@ namespace FoxEdit.WindowComponents
         }
 
         public event Action<int> OnIndexChanged;
-        public event Action<int> OnEditPaletteItem;
-        public event Action<int> OnDeletePaletteItem;
+        public event Action<int> OnPressEditPaletteItem;
+        public event Action<int> OnPressDeletePaletteItem;
+        public event Action OnPressAddPaletteItem;
 
         private VisualElement itemsContainer = null;
         private List<PaletteItem> _paletteItems = new List<PaletteItem>();
@@ -120,7 +121,7 @@ namespace FoxEdit.WindowComponents
 
         private void OnClickAddColor(ClickEvent clickEvent)
         {
-            ColorEditorPopUp.Open(AddPaletteItem, false, false);
+            OnPressAddPaletteItem?.Invoke();
         }
 
         private void UpdatePaletteSize()
@@ -186,8 +187,8 @@ namespace FoxEdit.WindowComponents
                     _paletteItems[i].RemoveManipulator(manipulators[i]);
                 IManipulator newManipulator = new ContextualMenuManipulator(e => 
                 {
-                    e.menu.AppendAction("Edit", action => OnEditPaletteItem?.Invoke(index));
-                    e.menu.AppendAction("Delete", action => OnDeletePaletteItem?.Invoke(index), index == _paletteItems.Count - 1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+                    e.menu.AppendAction("Edit", action => OnPressEditPaletteItem?.Invoke(index));
+                    e.menu.AppendAction("Delete", action => OnPressDeletePaletteItem?.Invoke(index), index == _paletteItems.Count - 1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
                 });
                 _paletteItems[i].AddManipulator(newManipulator);
                 paletteItemsManipulators.Add(newManipulator);

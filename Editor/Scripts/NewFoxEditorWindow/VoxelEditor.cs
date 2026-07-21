@@ -359,6 +359,10 @@ namespace FoxEdit
             SceneView.RepaintAll();
         }
 
+        public void RefreshPreviewColors()
+        {
+            _preview.RefreshColors();
+        }
         #endregion
         #region Helpers
 
