@@ -4,11 +4,32 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-
+#if HAS_VFX_GRAPH
+using UnityEngine.VFX;
+#endif
 namespace FoxEdit
 {
     public static class VoxelSharedData
     {
+#if HAS_VFX_GRAPH
+        [VFXType(VFXTypeAttribute.Usage.GraphicsBuffer)]
+#endif
+        private struct ColorData
+        {
+            public Vector4 Color;
+            public float Emissive;
+            public float Metallic;
+            public float Smoothness;
+
+            public ColorData(Vector4 color, float emissive, float metallic, float smoothness)
+            {
+                Color = color;
+                Emissive = emissive;
+                Metallic = metallic;
+                Smoothness = smoothness;
+            }
+        }
+
         private static bool _isInitialized = false;
 
         private static FoxEditSettings _settings = null;
@@ -41,22 +62,6 @@ namespace FoxEdit
         };
 
         #endregion Vertices
-
-        private struct ColorData
-        {
-            private Vector4 Color;
-            float Emissive;
-            float Metallic;
-            float Smoothness;
-
-            public ColorData(Vector4 color, float emissive, float metallic, float smoothness)
-            {
-                Color = color;
-                Emissive = emissive;
-                Metallic = metallic;
-                Smoothness = smoothness;
-            }
-        }
 
         [RuntimeInitializeOnLoadMethod]
         public static void Initialize()
@@ -208,7 +213,19 @@ namespace FoxEdit
             material.SetInt("_ColorCount", colorBuffer.count);
         }
 
-        #endregion Colors
+#if HAS_VFX_GRAPH
+        public static void SetupVisualEffectVoxelData(VisualEffect visualEffect, int paletteIndex)
+        {
+            GraphicsBuffer colorBuffer = VoxelSharedData.GetColorBuffer(paletteIndex);
+            if (colorBuffer == null)
+                return;
+
+            visualEffect.SetGraphicsBuffer("_Colors", colorBuffer);
+            visualEffect.SetInt("_ColorCount", colorBuffer.count);
+        }
+#endif
+
+#endregion Colors
 
         #region Palettes
 

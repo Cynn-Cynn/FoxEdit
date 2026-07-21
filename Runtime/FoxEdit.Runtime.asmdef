@@ -4,7 +4,8 @@
     "references": [
         "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
         "GUID:2b82e46c4ca0a4eb697ab8ccdfb39af1",
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:d04eb9c554ad44ceab303cecf0c0cf82"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,6 +14,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.visualeffectgraph",
+            "expression": "",
+            "define": "HAS_VFX_GRAPH"
+        }
+    ],
     "noEngineReferences": false
 }
