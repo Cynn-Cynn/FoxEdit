@@ -112,16 +112,16 @@ public class ColorEditorPopUp : EditorWindow
 
     private void Apply()
     {
+        Close();
         newColorCallback?.Invoke(newVoxelColor);
         newColorCallback = null;
-        Close();
     }
 
     private void Cancel()
     {
+        Close();
         if (invokeOnCancel)
             newColorCallback?.Invoke(startVoxelColor);
         newColorCallback = null;
-        Close();
     }
 }

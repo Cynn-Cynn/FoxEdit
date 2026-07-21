@@ -28,6 +28,7 @@ namespace FoxEdit.WindowPanels.SubPanels
             this.root = root;
             GetElements();
             RegisterCallbacks();
+            SetRenameDisplay(false);
         }
 
         ~AnimationSelectorSubPanel()
@@ -98,6 +99,11 @@ namespace FoxEdit.WindowPanels.SubPanels
             renameField.SetValueWithoutNotify(animationSelector.value);
             renameField.RegisterCallback<KeyDownEvent>(RenameFieldKeyDownEvent);
             renameField.RegisterCallback<FocusOutEvent>(RenameFieldFocusOutEvent);
+            renameField.focusable = true;
+            renameField.schedule.Execute(() => {
+                renameField.Focus();
+                renameField.SelectAll();
+            });
             SetRenameDisplay(true);
         }
 
