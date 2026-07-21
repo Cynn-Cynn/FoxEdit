@@ -68,12 +68,15 @@ namespace FoxEdit
 
         private void InitializeStaticRenderer()
         {
+            if (_paletteIndexOverride != _voxelObject.PaletteIndex)
+                CreateStaticMaterialInstances();
+
+            if (_meshFilter != null)
+                return;
+
             _meshFilter = GetComponent<MeshFilter>();
             _meshRenderer = GetComponent<MeshRenderer>();
             _animator = GetComponent<Animator>();
-
-            if (_paletteIndexOverride != _voxelObject.PaletteIndex)
-                CreateStaticMaterialInstances();
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
