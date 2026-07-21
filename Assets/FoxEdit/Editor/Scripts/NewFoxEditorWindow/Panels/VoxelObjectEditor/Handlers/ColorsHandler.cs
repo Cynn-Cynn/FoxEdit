@@ -31,8 +31,9 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
         {
             _paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             _colorSelector.OnIndexChanged += OnColorSelectorValueChanged;
-            _colorSelector.OnEditPaletteItem += OnPressEditPaletteItem;
-            _colorSelector.OnDeletePaletteItem += OnPressDeletePaletteItem;
+            _colorSelector.OnPressEditPaletteItem += OnPressEditPaletteItem;
+            _colorSelector.OnPressDeletePaletteItem += OnPressDeletePaletteItem;
+            _colorSelector.OnPressAddPaletteItem += OnPressAddPaletteItem;
             VoxelEditor.OnChangeColor += OnChangeColor;
         }
 
@@ -41,6 +42,8 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
         {
             _paletteDropdown.RegisterValueChangedCallback<string>(OnPaletteValueChanged);
             _colorSelector.OnIndexChanged -= OnColorSelectorValueChanged;
+            _colorSelector.OnPressEditPaletteItem -= OnPressEditPaletteItem;
+            _colorSelector.OnPressDeletePaletteItem -= OnPressDeletePaletteItem;
             VoxelEditor.OnChangeColor -= OnChangeColor;
         }
 
@@ -72,6 +75,20 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             SceneView.RepaintAll();
         }
 
+        private void OnPressAddPaletteItem()
+        {
+            ColorEditorPopUp.Open(ApplyAddColor, false, false);
+        }
+
+        private void ApplyAddColor(VoxelColor newVoxelColor)
+        {
+            VoxelEditor.CurrentPalette.AddColor(newVoxelColor);
+            EditorUtility.SetDirty(VoxelEditor.CurrentPalette);
+            VoxelSharedData.RefreshColorBuffer(VoxelEditor.PaletteIndex);
+            _voxelEditor.RefreshPreviewColors();
+            UpdateColorSelector();
+        }
+
         private void OnPressDeletePaletteItem(int paletteItemIndex)
         {
             if (EditorUtility.DisplayDialog("Delete Color", "This will permanently remove the selected color from the palette. This action cannot be undone. Do you want to continue ?", "Delete", "Cancel"))
@@ -79,6 +96,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
                 VoxelEditor.CurrentPalette.RemoveAt(paletteItemIndex);
                 VoxelSharedData.RefreshColorBuffer(VoxelEditor.PaletteIndex);
                 EditorUtility.SetDirty(VoxelEditor.CurrentPalette);
+                _voxelEditor.RefreshPreviewColors();
             }
             UpdateColorSelector();
         }
@@ -95,6 +113,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             VoxelEditor.CurrentPalette.SetColor(paletteItemIndex, newVoxelColor);
             VoxelSharedData.RefreshColorBuffer(VoxelEditor.PaletteIndex);
             EditorUtility.SetDirty(VoxelEditor.CurrentPalette);
+            _voxelEditor.RefreshPreviewColors();
         }
 
         private void OnChangeColor(int colorIndex)

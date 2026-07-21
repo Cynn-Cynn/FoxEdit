@@ -51,7 +51,7 @@ public class ColorEditorPopUp : EditorWindow
             newVoxelColor.Color = newColor;
             updatable = true;
         }
-        newEmissive = EditorGUILayout.FloatField("Emissive", newVoxelColor.EmissiveIntensity);
+        newEmissive = Mathf.Max(EditorGUILayout.FloatField("Emissive", newVoxelColor.EmissiveIntensity), 0);
         if (newEmissive != newVoxelColor.EmissiveIntensity)
         {
             newVoxelColor.EmissiveIntensity = newEmissive;
@@ -70,7 +70,17 @@ public class ColorEditorPopUp : EditorWindow
             updatable = true;
         }
         if (liveUpdate)
-            liveUpdateOn = EditorGUILayout.Toggle("Live Update", liveUpdateOn);
+        {
+            bool newLiveUpdateOn = EditorGUILayout.Toggle("Live Update", liveUpdateOn);
+            if (newLiveUpdateOn != liveUpdateOn)
+            {
+                if (newLiveUpdateOn)
+                    newColorCallback?.Invoke(newVoxelColor);
+                else
+                    newColorCallback?.Invoke(startVoxelColor);
+                liveUpdateOn = newLiveUpdateOn;
+            }
+        }
         GUILayout.EndVertical();
 
         EditorGUILayout.Space();
@@ -109,6 +119,8 @@ public class ColorEditorPopUp : EditorWindow
 
     private void Cancel()
     {
+        if (invokeOnCancel)
+            newColorCallback?.Invoke(startVoxelColor);
         newColorCallback = null;
         Close();
     }
