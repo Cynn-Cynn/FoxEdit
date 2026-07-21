@@ -127,6 +127,11 @@ namespace FoxEdit
             _transparentRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
         }
 
+        internal void RefreshColors()
+        {
+            SetColorBuffer();
+        }
+
         private void SetColorBuffer()
         {
             GraphicsBuffer colorsBuffer = VoxelSharedData.GetColorBuffer(_paletteIndex);
