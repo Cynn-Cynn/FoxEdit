@@ -42,11 +42,14 @@ namespace FoxEdit.WindowComponents
         }
 
         public event Action<int> OnIndexChanged;
+        public event Action<int> OnEditPaletteItem;
+        public event Action<int> OnDeletePaletteItem;
 
         private VisualElement itemsContainer = null;
         private List<PaletteItem> _paletteItems = new List<PaletteItem>();
         private PaletteItem lastSelectedPaletteItem = null;
         private VisualElement addColorButton;
+        private List<IManipulator> paletteItemsManipulators = new List<IManipulator>();
 
         private int _itemIndex = -1;
         public int ItemIndex
@@ -166,5 +169,29 @@ namespace FoxEdit.WindowComponents
             addColorButton.BringToFront();
         }
 
+        public void SetPaletteItemColor(int paletteItemIndex, VoxelColor voxelColor)
+        {
+            _paletteItems[paletteItemIndex].Color = voxelColor;
+        }
+
+        public void UpdatePaletteItemsManipulators()
+        {
+            List<IManipulator> manipulators = new List<IManipulator>(paletteItemsManipulators);
+            paletteItemsManipulators.Clear();
+
+            for (int i = 0; i < _paletteItems.Count; i++)
+            {
+                int index = i;
+                if (i < manipulators.Count)
+                    _paletteItems[i].RemoveManipulator(manipulators[i]);
+                IManipulator newManipulator = new ContextualMenuManipulator(e => 
+                {
+                    e.menu.AppendAction("Edit", action => OnEditPaletteItem?.Invoke(index));
+                    e.menu.AppendAction("Delete", action => OnDeletePaletteItem?.Invoke(index), index == _paletteItems.Count - 1 ? DropdownMenuAction.Status.Normal : DropdownMenuAction.Status.Disabled);
+                });
+                _paletteItems[i].AddManipulator(newManipulator);
+                paletteItemsManipulators.Add(newManipulator);
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using FoxEdit;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ColorEditorPopUp : EditorWindow
 {
@@ -13,9 +14,7 @@ public class ColorEditorPopUp : EditorWindow
     public static void Open(Action<VoxelColor> newColorCallback, VoxelColor startVoxelColor, bool liveUpdate, bool invokeOnCancel)
     {
         ColorEditorPopUp colorEditorPopUp = EditorWindow.CreateInstance<ColorEditorPopUp>();
-        Vector2 mouse = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
 
-        colorEditorPopUp.position = new Rect(mouse.x, mouse.y, 300, 200);
         colorEditorPopUp.ShowPopup();
         colorEditorPopUp.Setup(newColorCallback, startVoxelColor, liveUpdate, invokeOnCancel);
     }
@@ -58,7 +57,7 @@ public class ColorEditorPopUp : EditorWindow
             newVoxelColor.EmissiveIntensity = newEmissive;
             updatable = true;
         }
-        newMetallic = EditorGUILayout.Slider("Metallic", newVoxelColor.EmissiveIntensity, 0f, 1f);
+        newMetallic = EditorGUILayout.Slider("Metallic", newVoxelColor.Metallic, 0f, 1f);
         if (newMetallic != newVoxelColor.Metallic)
         {
             newVoxelColor.Metallic = newMetallic;
@@ -67,23 +66,21 @@ public class ColorEditorPopUp : EditorWindow
         newSmoothness = EditorGUILayout.Slider("Smothness", newVoxelColor.Smoothness, 0f, 1f);
         if (newSmoothness != newVoxelColor.Smoothness)
         {
-            newSmoothness = newVoxelColor.Smoothness;
+            newVoxelColor.Smoothness = newSmoothness;
             updatable = true;
         }
+        if (liveUpdate)
+            liveUpdateOn = EditorGUILayout.Toggle("Live Update", liveUpdateOn);
         GUILayout.EndVertical();
+
         EditorGUILayout.Space();
+
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Apply"))
             Apply();
         if (GUILayout.Button("Cancel"))
             Cancel();
         GUILayout.EndHorizontal();
-        if (liveUpdate)
-        {
-            GUILayout.BeginVertical();
-            liveUpdateOn = EditorGUILayout.Toggle("Live Update", liveUpdateOn);
-            GUILayout.EndVertical();
-        }
 
         SetWindowHeight();
         if (liveUpdateOn && updatable)
@@ -114,10 +111,5 @@ public class ColorEditorPopUp : EditorWindow
     {
         newColorCallback = null;
         Close();
-    }
-
-    void OnLostFocus()
-    {
-        Cancel();
     }
 }
