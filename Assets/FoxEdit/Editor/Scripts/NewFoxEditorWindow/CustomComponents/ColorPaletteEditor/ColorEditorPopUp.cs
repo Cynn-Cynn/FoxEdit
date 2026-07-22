@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 
 public class ColorEditorPopUp : EditorWindow
 {
+    private static Rect lastPosition = new Rect(0f, 0f, 400f, 100f);
     public static void Open(Action<VoxelColor> newColorCallback, bool liveUpdate, bool invokeOnCancel)
     {
         Open(newColorCallback, VoxelColor.GetRandomColor(), liveUpdate, invokeOnCancel);
@@ -15,7 +16,9 @@ public class ColorEditorPopUp : EditorWindow
     {
         ColorEditorPopUp colorEditorPopUp = EditorWindow.CreateInstance<ColorEditorPopUp>();
 
-        colorEditorPopUp.ShowPopup();
+        colorEditorPopUp.ShowAuxWindow();
+        colorEditorPopUp.position = lastPosition;
+
         colorEditorPopUp.Setup(newColorCallback, startVoxelColor, liveUpdate, invokeOnCancel);
     }
 
@@ -45,6 +48,7 @@ public class ColorEditorPopUp : EditorWindow
     private void OnGUI()
     {
         GUILayout.BeginVertical();
+        lastPosition = position;
         newColor = EditorGUILayout.ColorField(newVoxelColor.Color);
         if (newColor != newVoxelColor.Color)
         {
