@@ -127,12 +127,17 @@ namespace FoxEdit
             string defaultPath = FoxEditEditorSettings.Instance.DefaultSavePath.Value;
             if (!Directory.Exists(defaultPath))
                 Directory.CreateDirectory(defaultPath);
+            
+            string defaultFileName = "New Voxel object";
+
+            if (_voxelObject != null)
+                defaultFileName = _voxelObject.name;
 
             string path = EditorUtility.SaveFilePanelInProject(
-                string.Format("Save {0} voxel object", _voxelObject.name),
-                _voxelObject.name,
+                string.Format("Save {0} voxel object", defaultFileName),
+                defaultFileName,
                 "asset",
-                string.Format("Save {0} voxel object", _voxelObject.name),
+                string.Format("Save {0} voxel object", defaultFileName),
                 defaultPath);
 
             if (string.IsNullOrEmpty(path))
