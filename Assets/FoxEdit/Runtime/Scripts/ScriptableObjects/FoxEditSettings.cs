@@ -1,7 +1,4 @@
-using FoxEdit;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 namespace FoxEdit
@@ -30,29 +27,6 @@ namespace FoxEdit
                 _palettes.Add(palette);
         }
 
-        public void RemovePaletteAt(int paletteIndex)
-        {
-            VoxelPalette voxelPalette = _palettes[paletteIndex];
-
-            if (voxelPalette == null)
-            {
-                Debug.LogError("The palette you try to duplicate is null");
-                return;
-            }
-
-            string palettePath = AssetDatabase.GetAssetPath(voxelPalette);
-
-            if (palettePath == null || palettePath == string.Empty)
-            {
-                Debug.LogError("The palette path is not found");
-                return;
-            }
-
-            AssetDatabase.DeleteAsset(palettePath);
-            AssetDatabase.Refresh();
-            _palettes.RemoveAt(paletteIndex);
-        }
-
         public void SetPalette(VoxelPalette palette, int index)
         {
             if (index >= _palettes.Count)
@@ -61,62 +35,19 @@ namespace FoxEdit
             _palettes[index] = palette;
         }
 
-        public bool RenamePaletteAt(int paletteIndex, string newName)
+        public void RemovePalette(VoxelPalette voxelPalette)
         {
-            if (paletteIndex >= _palettes.Count)
-                return false;
-
-            VoxelPalette voxelPalette = _palettes[paletteIndex];
-
-            if (voxelPalette == null)
-            {
-                Debug.LogError("The palette you try to rename is null");
-                return false;
-            }
-
-            string palettePath = AssetDatabase.GetAssetPath(voxelPalette);
-
-            if (palettePath == null || palettePath == string.Empty)
-            {
-                Debug.LogError("The palette path is not found");
-                return false;
-            }
-
-            string result = AssetDatabase.RenameAsset(palettePath, newName);
-            if (result != string.Empty)
-            {
-                Debug.LogFormat("An error occured when you tried to rename the palette {0}", voxelPalette.name);
-                return false;
-            }
-
-            AssetDatabase.Refresh();
-
-            return true;
+            if (!_palettes.Contains(voxelPalette))
+                return;
+            _palettes.Remove(voxelPalette);
         }
 
-        public void DuplicatePalette(int paletteIndex)
+        public void RemovePaletteAt(int voxelPaletteIndex)
         {
-            VoxelPalette voxelPalette = _palettes[paletteIndex];
-
-            if (voxelPalette == null)
-            {
-                Debug.LogError("The palette you try to duplicate is null");
+            if (voxelPaletteIndex >= _palettes.Count)
                 return;
-            }
 
-            string palettePath = AssetDatabase.GetAssetPath(voxelPalette);
-
-            if (palettePath == null || palettePath == string.Empty)
-            {
-                Debug.LogError("The palette path is not found");
-                return;
-            }
-
-            string destinationPath = AssetDatabase.GenerateUniqueAssetPath(palettePath);
-            AssetDatabase.CopyAsset(palettePath, destinationPath);
-            AssetDatabase.Refresh();
-
-            AddPalette(AssetDatabase.LoadAssetAtPath<VoxelPalette>(destinationPath));
+            _palettes.RemoveAt(voxelPaletteIndex);
         }
 
         public static FoxEditSettings GetSettings()
