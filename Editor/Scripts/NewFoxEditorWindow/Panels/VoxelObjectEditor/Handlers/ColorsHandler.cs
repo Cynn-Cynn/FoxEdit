@@ -168,7 +168,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             if (EditorUtility.DisplayDialog("Delete Palette", "This will permanently remove the selected palette. This action cannot be undone. Do you want to continue ?", "Delete", "Cancel"))
             {
                 int oldIndex = _paletteDropdown.index;
-                _foxEditSettings.RemovePaletteAt(_paletteDropdown.index);
+                VoxelPalettesHelper.RemovePaletteAt(_paletteDropdown.index);
                 _paletteDropdown.choices = VoxelSharedData.GetPaletteNames().ToList();
                 _paletteDropdown.index = Mathf.Clamp(oldIndex, 0, _paletteDropdown.choices.Count() - 1);
                 EditorUtility.SetDirty(_foxEditSettings);
@@ -182,7 +182,6 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
 
         private void StartRename()
         {
-            UnityEngine.Debug.Log("start rename");
             _paletteSelectionContainer.style.display = DisplayStyle.None;
             _renameField.SetValueWithoutNotify(_paletteDropdown.value);
             _renameField.style.display = DisplayStyle.Flex;
@@ -200,7 +199,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
         {
             if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
             {
-                _foxEditSettings.RenamePaletteAt(_paletteDropdown.index, _renameField.text);
+                VoxelPalettesHelper.RenamePaletteAt(_paletteDropdown.index, _renameField.text);
                 _paletteDropdown.choices = VoxelSharedData.GetPaletteNames().ToList();
                 _paletteDropdown.value = _renameField.value;
                 StopRename();
@@ -220,7 +219,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
 
         private void OnPressAddPalette()
         {
-            _foxEditSettings.DuplicatePalette(_paletteDropdown.index);
+            VoxelPalettesHelper.DuplicatePalette(_paletteDropdown.index);
             _paletteDropdown.choices = VoxelSharedData.GetPaletteNames().ToList();
             _paletteDropdown.index = _paletteDropdown.choices.Count - 1;
         }
