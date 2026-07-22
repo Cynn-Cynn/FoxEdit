@@ -58,7 +58,7 @@ namespace FoxEdit
 
                 if (GUILayout.Button("Remove"))
                 {
-                    _settings.RemoveAt(i);
+                    _settings.RemovePaletteAt(i);
                     _palettes = _settings.Palettes;
                     break;
                 }
