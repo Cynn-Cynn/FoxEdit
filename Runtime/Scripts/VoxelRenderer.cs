@@ -67,13 +67,15 @@ namespace FoxEdit
 
         private void InitializeStaticRenderer()
         {
+            if (_meshFilter == null)
+            {
+                GetUsedComponents();
+                _meshFilter.mesh = _voxelObject.StaticMesh;
+                _animator.runtimeAnimatorController = _voxelObject.AnimatorController;
+            }
+
             if (_paletteIndexOverride != _voxelObject.PaletteIndex)
                 CreateStaticMaterialInstances();
-
-            if (_meshFilter != null)
-                return;
-
-            GetUsedComponents();
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
@@ -84,7 +86,7 @@ namespace FoxEdit
 #endif
         }
 
-        public void GetUsedComponents()
+        internal void GetUsedComponents()
         {
             _meshFilter = GetComponent<MeshFilter>();
             _meshRenderer = GetComponent<MeshRenderer>();
@@ -93,6 +95,9 @@ namespace FoxEdit
 
         internal void Initialize(bool setupForRender = false)
         {
+            if (_voxelObject == null)
+                return;
+
             InitializeStaticRenderer();
 #if UNITY_EDITOR
             if (Application.isPlaying || setupForRender)
