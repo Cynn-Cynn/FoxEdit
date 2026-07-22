@@ -29,8 +29,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
 
         protected override void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer, VoxelEditor voxelEditor)
         {
-            animationSelector.SetAnimationNames(voxelEditor.GetAnimationNames());
-            animationSelector.SetAnimationIndex(0);
+            animationSelector.SetAnimationIndex(0, voxelEditor.GetAnimationNames());
 
             voxelEditor.OnFramesThumbnailsUpdated += OnFrameThumnbailUpdated;
             voxelEditor.OnFrameIndexChanged += OnFrameIndexChanged;
@@ -52,7 +51,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
 
         private void OnAnimationIndexChanged(int newAnimationIndex)
         {
-            animationSelector.SetAnimationIndex(newAnimationIndex);
+            animationSelector.SetAnimationIndex(newAnimationIndex, _voxelEditor.GetAnimationNames());
             frameSelector.FramesCount = _voxelEditor.CurrentAnimation.FramesCount;
         }
 

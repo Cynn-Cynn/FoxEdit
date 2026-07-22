@@ -166,8 +166,9 @@ namespace FoxEdit.WindowPanels.SubPanels
             UpdateDeleteButtonVisibility();
         }
 
-        public void SetAnimationIndex(int index, bool notify = true)
+        public void SetAnimationIndex(int index, List<string> animationNames, bool notify = true)
         {
+            SetAnimationNames(animationNames);
             string choice = animationSelector.choices[index];
             if (notify)
                 animationSelector.value = choice;
