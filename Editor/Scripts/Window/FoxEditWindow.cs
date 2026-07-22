@@ -1,12 +1,9 @@
-using NaughtyAttributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using Autodesk.Fbx;
 using System.Reflection;
-using UnityEngine.UIElements;
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 using UnityEngine.InputSystem;
 #endif
