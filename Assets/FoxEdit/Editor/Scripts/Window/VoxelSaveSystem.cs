@@ -581,34 +581,19 @@ namespace FoxEdit
                     isXAxis ? 0 : isYAxis ? height : 0
                 ) * 0.1f;
 
-                if (axis == 0 || axis == 2 || axis == 5)
+                int[] vertexOrder = axis == 0 || axis == 2 || axis == 5 ? new int[4] { 3, 0, 1, 2 } : new int[4] { 0, 3, 2, 1 };
+
+                List<Vector3> vertexPositions = new List<Vector3>(4)
                 {
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+                    voxelPosition,
+                    voxelPosition + widthVector,
+                    voxelPosition + widthVector + heightVector,
+                    voxelPosition + heightVector,
+                };
 
-                    voxelPosition += heightVector;
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
-
-                    voxelPosition -= heightVector;
-                    voxelPosition += widthVector;
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
-
-                    voxelPosition += heightVector;
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
-                }
-                else
+                for (int v = 0; v < 4; v++)
                 {
-                    voxelPosition += widthVector;
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
-
-                    voxelPosition += heightVector;
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
-
-                    voxelPosition -= widthVector;
-                    voxelPosition -= heightVector;
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
-
-                    voxelPosition += heightVector;
-                    AddVertex(voxelPosition, ref vertices, ref quads, opacity);
+                    AddVertex(vertexPositions[vertexOrder[v]], ref vertices, ref quads, opacity);
                 }
 
                 quads[opacity].Add(color);
@@ -807,23 +792,23 @@ namespace FoxEdit
                         fbxMesh.SetControlPointAt(new FbxVector4(-voxelPosition.x, voxelPosition.y, voxelPosition.z), vertexIndex + y);
                     }
 
-                    Vector3 faceNormal = GetFaceNormal(frameVertices[opacity][frameQuads[opacity][i]], frameVertices[opacity][frameQuads[opacity][i + 1]], frameVertices[opacity][frameQuads[opacity][i + 2]]);
+                    Vector3 faceNormal = GetFaceNormal(frameVertices[opacity][frameQuads[opacity][i + 2]], frameVertices[opacity][frameQuads[opacity][i + 1]], frameVertices[opacity][frameQuads[opacity][i]]);
                     int normalIndex = normals.IndexOf(faceNormal);
                     int colorIndex = colors.IndexOf(frameQuads[opacity][i + 4]);
 
                     fbxMesh.BeginPolygon(opacity);
-                    fbxMesh.AddPolygon(vertexIndex);
-                    fbxMesh.AddPolygon(vertexIndex + 1);
                     fbxMesh.AddPolygon(vertexIndex + 2);
+                    fbxMesh.AddPolygon(vertexIndex + 1);
+                    fbxMesh.AddPolygon(vertexIndex);
                     fbxMesh.EndPolygon();
                     materialArray.Add(opacity);
                     normalIndexArray.Add(normalIndex);
                     uvIndexArray.Add(colorIndex);
 
                     fbxMesh.BeginPolygon(opacity);
-                    fbxMesh.AddPolygon(vertexIndex + 1);
                     fbxMesh.AddPolygon(vertexIndex + 3);
                     fbxMesh.AddPolygon(vertexIndex + 2);
+                    fbxMesh.AddPolygon(vertexIndex);
                     fbxMesh.EndPolygon();
                     materialArray.Add(opacity);
                     normalIndexArray.Add(normalIndex);

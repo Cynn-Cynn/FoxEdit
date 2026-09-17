@@ -57,8 +57,8 @@ namespace FoxEdit
 
         private static int[] _faceTriangles =
         {
-            0, 2, 1,
-            1, 2, 3
+            0, 1, 2,
+            0, 2, 3
         };
 
         #endregion Vertices
