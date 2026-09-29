@@ -17,6 +17,10 @@ MonoBehaviour:
   StaticTransparentMaterial: {fileID: 2100000, guid: e7be1beca1f3b834d8403eb01feaba1b, type: 2}
   StaticMesh: {fileID: -3394617356442485732, guid: 6e41e5f9adf880843b77e4213526d416, type: 3}
   AnimatorController: {fileID: 9100000, guid: bc1dc906f0acb5241bf7ca812b450baa, type: 2}
+  MaxOpaqueVerticesCount: 563
+  MaxOpaqueQuadsCount: 2520
+  MaxTransparentVerticesCount: 563
+  MaxTransparentQuadsCount: 270
   Animations:
   - AnimName: Idle
     FrameCount: 2

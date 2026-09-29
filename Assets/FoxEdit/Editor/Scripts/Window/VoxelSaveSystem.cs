@@ -85,6 +85,10 @@ namespace FoxEdit
         {
             bool[] isColorTransparent = palette.GetColorOpacities();
             AnimationFrames[] animations = new AnimationFrames[editorAnimations.Count];
+            int maxOpaqueVerticesCount = 0;
+            int maxOpaqueQuadsCount = 0;
+            int maxTransparentVerticesCount = 0;
+            int maxTransparentQuadsCount = 0;
 
             for (int animationIndex = 0; animationIndex < editorAnimations.Count; animationIndex++)
             {
@@ -149,6 +153,8 @@ namespace FoxEdit
                     animations[animationIndex].OpaqueMesh.InstanceCount = instanceCounts[0].ToArray();
                     animations[animationIndex].OpaqueMesh.Vertices = animationVertices[0].ToArray();
                     animations[animationIndex].OpaqueMesh.Quads = animationQuads[0].ToArray();
+                    maxOpaqueVerticesCount = Mathf.Max(maxOpaqueVerticesCount, animationVertices[0].Count);
+                    maxOpaqueQuadsCount = Mathf.Max(maxOpaqueQuadsCount, animationQuads[0].Count);
                 }
                 else
                 {
@@ -165,6 +171,8 @@ namespace FoxEdit
                     animations[animationIndex].TransparentMesh.Vertices = animationVertices[1].ToArray();
                     animations[animationIndex].TransparentMesh.Quads = animationQuads[1].ToArray();
                     animations[animationIndex].HasTransparentFaces = true;
+                    maxTransparentVerticesCount = Mathf.Max(maxOpaqueVerticesCount, animationVertices[1].Count);
+                    maxTransparentQuadsCount = Mathf.Max(maxTransparentQuadsCount, animationQuads[1].Count);
                 }
                 else
                 {
@@ -182,6 +190,10 @@ namespace FoxEdit
 
             voxelObject.PaletteIndex = paletteIndex;
             voxelObject.Animations = animations;
+            voxelObject.MaxOpaqueVerticesCount = maxOpaqueVerticesCount;
+            voxelObject.MaxOpaqueQuadsCount = maxOpaqueQuadsCount;
+            voxelObject.MaxTransparentVerticesCount = maxTransparentVerticesCount;
+            voxelObject.MaxTransparentQuadsCount = maxTransparentQuadsCount;
 
             return voxelObject;
         }

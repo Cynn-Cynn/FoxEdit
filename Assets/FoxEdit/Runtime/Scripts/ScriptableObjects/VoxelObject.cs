@@ -43,6 +43,10 @@ namespace FoxEdit
         public Mesh StaticMesh = null;
         public RuntimeAnimatorController AnimatorController = null;
 
+        public int MaxOpaqueVerticesCount = 0;
+        public int MaxOpaqueQuadsCount = 0;
+        public int MaxTransparentVerticesCount = 0;
+        public int MaxTransparentQuadsCount = 0;
         public AnimationFrames[] Animations = null;
     }
 }
