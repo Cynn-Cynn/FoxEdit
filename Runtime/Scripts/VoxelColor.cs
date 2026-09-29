@@ -27,9 +27,9 @@ namespace FoxEdit
         {
             VoxelColor color = new VoxelColor();
             color.Color = FoxEditColorUtility.GetRandomColor();
-            color.EmissiveIntensity = UnityEngine.Random.Range(0.0f, 1.0f);
-            color.Metallic = UnityEngine.Random.Range(0.0f, 1.0f);
-            color.Smoothness = UnityEngine.Random.Range(0.0f, 1.0f);
+            color.EmissiveIntensity = 0;
+            color.Metallic = 0f;
+            color.Smoothness = 0f;
             return color;
         }
     }
