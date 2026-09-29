@@ -244,12 +244,19 @@ namespace FoxEdit
             _animationIndex = animationIndex;
             _animationTimer = 0.0f;
             _frameIndex = 0;
-            SetVoxelBuffers();
+            //SetVoxelBuffers();
             SetWorldBounds();
+
             if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
+            {
                 _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceStartIndices[_frameIndex]);
+                SetBufferData(OpacityType.Opaque);
+            }
             if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
+            {
                 _transparentRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceStartIndices[_frameIndex]);
+                SetBufferData(OpacityType.Transparent);
+            }
         }
 
         #endregion UserEditable
@@ -301,9 +308,9 @@ namespace FoxEdit
 
         private void SetVoxelBuffers()
         {
-            if (_opaqueVerticesBuffer != null && (_opaqueVerticesBuffer.count != _voxelObject.Animations[_animationIndex].OpaqueMesh.Vertices.Length || _opaqueQuadsBuffer.count != _voxelObject.Animations[_animationIndex].OpaqueMesh.Quads.Length))
+            if (_opaqueVerticesBuffer != null)
                 DisposeBuffers(OpacityType.Opaque);
-            if (_transparentVerticesBuffer != null && (_transparentVerticesBuffer.count != _voxelObject.Animations[_animationIndex].TransparentMesh.Vertices.Length || _transparentQuadsBuffer.count != _voxelObject.Animations[_animationIndex].TransparentMesh.Quads.Length))
+            if (_transparentVerticesBuffer != null)
                 DisposeBuffers(OpacityType.Transparent);
 
             if (_opaqueVerticesBuffer == null && _voxelObject.Animations[_animationIndex].HasOpaqueFaces)
@@ -344,13 +351,13 @@ namespace FoxEdit
         {
             if (opacityType == OpacityType.Opaque)
             {
-                _opaqueVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Animations[_animationIndex].OpaqueMesh.Vertices.Length, sizeof(float) * 3);
-                _opaqueQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Animations[_animationIndex].OpaqueMesh.Quads.Length, sizeof(int));
+                _opaqueVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxOpaqueVerticesCount, sizeof(float) * 3);
+                _opaqueQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxOpaqueQuadsCount, sizeof(int));
             }
             else if (opacityType == OpacityType.Transparent)
             {
-                _transparentVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Animations[_animationIndex].TransparentMesh.Vertices.Length, sizeof(float) * 3);
-                _transparentQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.Animations[_animationIndex].TransparentMesh.Quads.Length, sizeof(int));
+                _transparentVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentVerticesCount, sizeof(float) * 3);
+                _transparentQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentQuadsCount, sizeof(int));
             }
         }
 
