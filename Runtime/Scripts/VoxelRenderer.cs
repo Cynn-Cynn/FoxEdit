@@ -234,10 +234,22 @@ namespace FoxEdit
             if (animationIndex == _animationIndex || animationIndex >= _voxelObject.Animations.Length)
                 return;
 
+            StartCoroutine(SetAnimationBuffered(animationIndex));
+        }
+
+        private IEnumerator SetAnimationBuffered(int animationIndex)
+        {
+            yield return new WaitForEndOfFrame();
+
             _animationIndex = animationIndex;
             _animationTimer = 0.0f;
+            _frameIndex = 0;
             SetVoxelBuffers();
             SetWorldBounds();
+            if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
+                _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceStartIndices[_frameIndex]);
+            if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
+                _transparentRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceStartIndices[_frameIndex]);
         }
 
         #endregion UserEditable
