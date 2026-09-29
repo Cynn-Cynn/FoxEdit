@@ -309,7 +309,7 @@ namespace FoxEdit
             for (int i = 0; i < _edgeQuads.Count; i += 5)
             {
                 Vector3 corner1 = localToWorld.MultiplyPoint(_edgeVertices[_edgeQuads[i]]);
-                Vector3 corner2 = localToWorld.MultiplyPoint(_edgeVertices[_edgeQuads[i + 3]]);
+                Vector3 corner2 = localToWorld.MultiplyPoint(_edgeVertices[_edgeQuads[i + 2]]);
                 Vector3 distance = corner2 - corner1;
 
                 int xSign = (int)(1 * Mathf.Sign(distance.x));
