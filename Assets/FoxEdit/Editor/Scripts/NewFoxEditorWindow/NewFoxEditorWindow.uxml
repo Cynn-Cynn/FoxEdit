@@ -12,6 +12,14 @@
                 <ui:VisualElement name="toolbars">
                     <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.vxAction, FoxEdit.Editor" name="actions" Tooltips="Add voxel(s) |  Remove voxel(s) | Paint voxel(s)"/>
                     <FoxEdit.WindowComponents.ToolbarElement EnumType="FoxEdit.VoxelTools.vxTool, FoxEdit.Editor" index="1" Index="1" name="tools" Tooltips="Apply on one voxel | Apply on a full surface" style="flex-direction: row;"/>
+                    <ui:VisualElement name="undo-redo" class="toolbar">
+                        <ui:Button text="" name="undo-button" class="toolbar-button toolbar-button-first">
+                            <ui:VisualElement class="toolbar-button-icon" style="background-image: url(&quot;project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/undo.png?fileID=2800000&amp;guid=5817b8aeb40460f4c835cb5b8310bd14&amp;type=3#undo&quot;);"/>
+                        </ui:Button>
+                        <ui:Button text="" name="redo-button" class="toolbar-button toolbar-button-last">
+                            <ui:VisualElement class="toolbar-button-icon" style="background-image: url(&quot;project://database/Assets/FoxEdit/Editor/Editor%20Default%20Resources/Icons/undo.png?fileID=2800000&amp;guid=5817b8aeb40460f4c835cb5b8310bd14&amp;type=3#undo&quot;); scale: -1 1;"/>
+                        </ui:Button>
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="color-palette" class="window-segment">

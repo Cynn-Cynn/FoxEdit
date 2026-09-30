@@ -131,7 +131,7 @@ namespace FoxEdit
             {
                 if (VoxelEditor.Tool == vxTool.Fill)
                 {
-                    if (voxelEditorFrame.TryGetLayerToRremove(out editedVoxels, gridPosition, direction))
+                    if (voxelEditorFrame.TryGetLayerToRemove(out editedVoxels, gridPosition, direction))
                         return editedVoxels;
                 }
             }

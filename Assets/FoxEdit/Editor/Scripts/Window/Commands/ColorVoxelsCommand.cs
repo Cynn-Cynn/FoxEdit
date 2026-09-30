@@ -16,7 +16,7 @@ namespace FoxEdit.Commands
             _newColor = newColor;
         }
 
-        public ColorVoxelsCommand(Grid3D grid, List<Vector3Int> editedVoxels, int newColor, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
+        public ColorVoxelsCommand(Grid3D grid, HashSet<Vector3Int> editedVoxels, int newColor, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
         {
             foreach (Vector3Int editedVoxel in editedVoxels)
                 _baseVoxelsColor.Add(grid[editedVoxel].ColorIndex);
@@ -28,22 +28,28 @@ namespace FoxEdit.Commands
             foreach (Vector3Int editedVoxel in _editedVoxels)
             {
                 if (!_grid.IsEmpty(editedVoxel))
+                {
                     _grid[editedVoxel].SetColor(_newColor);
+                    Debug.LogFormat("Set color {0}", _newColor);
+                }
             }
         }
 
         public override void Undo()
         {
-            Vector3Int position = Vector3Int.zero;
             int color = -1;
+            int i = 0;
 
-            for (int i = 0; i < _editedVoxels.Count; i++)
+            foreach (Vector3Int position in _editedVoxels)
             {
-                position = _editedVoxels[i];
                 color = _baseVoxelsColor[i];
 
                 if (!_grid.IsEmpty(position))
+                {
                     _grid[position].SetColor(color);
+                    Debug.LogFormat("Set color {0}", color);
+                }
+                i++;
             }
         }
     }
