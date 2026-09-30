@@ -12,7 +12,7 @@ namespace FoxEdit.Commands
             _colors = new List<int>() { grid[editedVoxel].ColorIndex };
         }
 
-        public RemoveVoxelsCommand(Grid3D grid, List<Vector3Int> editedVoxels, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
+        public RemoveVoxelsCommand(Grid3D grid, HashSet<Vector3Int> editedVoxels, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
         {
             foreach (Vector3Int position in editedVoxels)
             {
@@ -31,12 +31,12 @@ namespace FoxEdit.Commands
 
         public override void Undo()
         {
-            Vector3Int position = Vector3Int.zero;
-            for (int i = 0; i < _editedVoxels.Count; i++)
+            int i = 0;
+            foreach (Vector3Int position in _editedVoxels)
             {
-                position = _editedVoxels[i];
                 _grid[position] = CreateVoxelObject(position);
                 _grid[position].SetColor(_colors[i]);
+                i++;
             }
         }
     }

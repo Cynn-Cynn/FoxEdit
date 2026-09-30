@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FoxEdit.Commands;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -13,7 +14,10 @@ namespace FoxEdit
         public Transform VoxelTransform { get; private set; }
         private VoxelEditor _editWindow = null;
         private Grid3D _grid = null;
-        public Texture2D thumbnail = null;
+        private VoxelPreview _preview;
+        public Texture2D _thumbnail = null;
+
+        private VoxelEditorCommandHandler _commandHandler = new VoxelEditorCommandHandler();
 
         public bool VoxelRaycast(Ray ray, out VoxelEditorObject voxel, out Vector3 faceNormal)
         {
@@ -37,11 +41,11 @@ namespace FoxEdit
 
         #region Initialization
 
-        internal VoxelEditorFrame(Transform voxelTransform, int frameIndex, VoxelEditor editWindow)
+        internal VoxelEditorFrame(Transform voxelTransform, int frameIndex, VoxelEditor editWindow, Action OnUndoRedo)
         {
             VoxelTransform = voxelTransform;
             _editWindow = editWindow;
-
+            _commandHandler.OnUndoRedo = OnUndoRedo;
             _grid = new Grid3D();
         }
 
@@ -51,7 +55,7 @@ namespace FoxEdit
             {
                 Vector3Int position = editorVoxels.VoxelPositions[i];
                 _grid[position] = CreateVoxelObject(position);
-                SetColor(position, paletteIndex, editorVoxels.ColorIndices[i]);
+                _grid[position].SetColor(editorVoxels.ColorIndices[i]);
             }
         }
 
@@ -62,7 +66,7 @@ namespace FoxEdit
 
         internal VoxelEditorFrame GetCopy(int newFrameIndex, int paletteIndex)
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(VoxelTransform, newFrameIndex, _editWindow);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(VoxelTransform, newFrameIndex, _editWindow, _commandHandler.OnUndoRedo);
             Grid3D otherGrid = new Grid3D();
 
             foreach (Vector3Int gridPosition in _grid.Keys)
@@ -95,9 +99,7 @@ namespace FoxEdit
         {
             if (CanAddVoxel(out Vector3Int newGridPosition, gridPosition, direction))
             {
-                _grid[newGridPosition] = CreateVoxelObject(newGridPosition);
-                SetColor(newGridPosition, paletteIndex, colorIndex);
-
+                _commandHandler.ExecuteCommand(new AddVoxelsCommand(_grid, gridPosition, colorIndex, VoxelTransform));
                 return true;
             }
 
@@ -124,19 +126,15 @@ namespace FoxEdit
                 return false;
 
             int baseColorIndex = _grid[gridPosition].ColorIndex;
-            HashSet<Vector3Int> voxelsToAdd = new HashSet<Vector3Int>();
+            HashSet<Vector3Int> layerVoxels = new HashSet<Vector3Int>();
 
-            if (AddLayer(ref voxelsToAdd, gridPosition, direction, baseColorIndex))
+            if (AddLayer(ref layerVoxels, gridPosition, direction, baseColorIndex))
             {
-                foreach (Vector3Int newGridPosition in voxelsToAdd)
-                {
-                    Vector3Int newGridPositionOffset = newGridPosition + direction;
-                    if (_grid.IsEmpty(newGridPositionOffset))
-                    {
-                        _grid[newGridPositionOffset] = CreateVoxelObject(newGridPositionOffset);
-                        SetColor(newGridPositionOffset, paletteIndex, colorIndex);
-                    }
-                }
+                HashSet<Vector3Int> offsetedVoxels = new HashSet<Vector3Int>();
+                foreach (Vector3Int newGridPosition in layerVoxels)
+                    offsetedVoxels.Add(newGridPosition + direction);
+
+                _commandHandler.ExecuteCommand(new AddVoxelsCommand(_grid, offsetedVoxels, VoxelTransform));
                 return true;
             }
 
@@ -191,7 +189,7 @@ namespace FoxEdit
             if (_grid.IsEmpty(gridPosition) || _grid.Count == 1)
                 return false;
 
-            _grid.Remove(gridPosition);
+            _commandHandler.ExecuteCommand(new RemoveVoxelsCommand(_grid, gridPosition, VoxelTransform));
             return true;
         }
 
@@ -205,16 +203,13 @@ namespace FoxEdit
 
             if (RemoveLayer(ref voxelsToRemove, gridPosition, direction, colorIndex))
             {
-                foreach (Vector3Int voxelToRemove in voxelsToRemove)
-                {
-                    _grid.Remove(voxelToRemove);
-                }
+                _commandHandler.ExecuteCommand(new RemoveVoxelsCommand(_grid, voxelsToRemove, VoxelTransform));
                 return true;
             }
             return false;
         }
 
-        internal bool TryGetLayerToRremove(out List<Vector3Int> editedVoxels, Vector3Int gridPosition, Vector3Int direction)
+        internal bool TryGetLayerToRemove(out List<Vector3Int> editedVoxels, Vector3Int gridPosition, Vector3Int direction)
         {
             editedVoxels = null;
             if (_grid.IsEmpty(gridPosition))
@@ -254,7 +249,7 @@ namespace FoxEdit
             if (_grid.IsEmpty(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
                 return false;
 
-            SetColor(gridPosition, paletteIndex, colorIndex);
+            _commandHandler.ExecuteCommand(new ColorVoxelsCommand(_grid, gridPosition, colorIndex, VoxelTransform));
             return true;
         }
 
@@ -268,10 +263,7 @@ namespace FoxEdit
 
             if (FillColor(ref voxelsToColor, gridPosition, colorIndex, baseColorIndex))
             {
-                foreach (Vector3Int coloredVoxelPosition in voxelsToColor)
-                {
-                    SetColor(coloredVoxelPosition, paletteIndex, colorIndex);
-                }
+                _commandHandler.ExecuteCommand(new ColorVoxelsCommand(_grid, voxelsToColor, colorIndex, VoxelTransform));
                 return true;
             }
 
@@ -531,14 +523,6 @@ namespace FoxEdit
             return voxelObject;
         }
 
-        private void SetColor(Vector3Int gridPosition, int paletteIndex, int colorIndex)
-        {
-            if (_grid.IsEmpty(gridPosition))
-                return;
-
-            _grid[gridPosition].SetColor(colorIndex);
-        }
-
         public void UpdatePalette(int paletteIndex)
         {
             int colorIndex = -1;
@@ -627,6 +611,16 @@ namespace FoxEdit
         }
 
         #endregion SaveSystem
+
+        #region Undo/Redo
+        public Action<bool> OnCanUndoChanged => _commandHandler.OnCanUndoChanged;
+        public Action<bool> OnCanRedoChanged => _commandHandler.OnCanUndoChanged;
+        public bool CanUndo() => _commandHandler.CanUndo();
+        public bool CanRedo() => _commandHandler.CanRedo();
+        public void Undo() => _commandHandler.Undo();
+        public void Redo() => _commandHandler.Redo();
+        public void ForceSendUndoRedoEvents() => _commandHandler.SendCanEvents();
+        #endregion
 
 #if UNITY_EDITOR
         #region Debug

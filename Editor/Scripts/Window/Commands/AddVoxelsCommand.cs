@@ -12,7 +12,7 @@ namespace FoxEdit.Commands
             _color = color;
         }
 
-        public AddVoxelsCommand(Grid3D grid, List<Vector3Int> editedVoxels, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
+        public AddVoxelsCommand(Grid3D grid, HashSet<Vector3Int> editedVoxels, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
         {
         }
 
@@ -33,7 +33,9 @@ namespace FoxEdit.Commands
             foreach (Vector3Int editedVoxel in _editedVoxels)
             {
                 if (!_grid.IsEmpty(editedVoxel))
+                {
                     _grid.Remove(editedVoxel);
+                }
             }
         }
     }

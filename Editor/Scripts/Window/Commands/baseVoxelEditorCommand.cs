@@ -1,16 +1,17 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace FoxEdit.Commands
 {
     internal abstract class baseVoxelEditorCommand : ICommand
     {
         protected Grid3D _grid;
-        protected List<Vector3Int> _editedVoxels;
+        protected HashSet<Vector3Int> _editedVoxels;
         protected Transform _voxelTransform;
 
-        public baseVoxelEditorCommand(Grid3D grid, List<Vector3Int> editedVoxels, Transform voxelTransform)
+        public baseVoxelEditorCommand(Grid3D grid, HashSet<Vector3Int> editedVoxels, Transform voxelTransform)
         {
             _grid = grid;
             _editedVoxels = editedVoxels;
@@ -21,7 +22,7 @@ namespace FoxEdit.Commands
         public baseVoxelEditorCommand(Grid3D grid, Vector3Int editedVoxel, Transform voxelTransform)
         {
             _grid = grid;
-            _editedVoxels = new List<Vector3Int>() { editedVoxel };
+            _editedVoxels = new HashSet<Vector3Int>() { editedVoxel };
             _voxelTransform = voxelTransform;
         }
 

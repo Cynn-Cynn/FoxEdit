@@ -18,6 +18,8 @@ namespace FoxEdit
         public static event Action<vxAction> OnChangeAction;
         public static event Action<int> OnChangeColor;
         public static event Action<int> OnChangePalette;
+        public static event Action<bool> CanRedoChanged;
+        public static event Action<bool> CanUndoChanged;
 
         private static vxAction _action = vxAction.Paint;
         public static vxAction Action
@@ -100,9 +102,16 @@ namespace FoxEdit
             {
                 _selectedFrameIndex = value;
                 OnFrameIndexChanged?.Invoke(_selectedFrameIndex);
-                _preview.ChangeFrame(CurrentFrame);
+                if (CurrentFrame != null)
+                {
+                    _preview.ChangeFrame(CurrentFrame);
+                    CanRedoChanged = CurrentFrame.OnCanRedoChanged;
+                    CanUndoChanged = CurrentFrame.OnCanUndoChanged;
+                    CurrentFrame.ForceSendUndoRedoEvents();
+                }
             }
         }
+
         public VoxelEditorFrame CurrentFrame
         {
             get
@@ -204,7 +213,7 @@ namespace FoxEdit
                     _animationList.Add(new VoxelEditorAnimation(voxelObject.Animations[animation].AnimName, voxelObject.Animations[animation].FrameDuration));
                     for (int i = 0; i < voxelObject.Animations[animation].FrameCount; i++)
                     {
-                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelRenderer.transform, i, this);
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelRenderer.transform, i, this, OnUndoRedo);
                         frame.LoadFromSave(voxelObject.Animations[animation].EditorVoxels[i], PaletteIndex);
                         if (i != _selectedFrameIndex || animation != 0)
                             frame.Hide();
@@ -375,7 +384,7 @@ namespace FoxEdit
         #region Frames
         public void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelRenderer.transform, _animationList.Count, this);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelRenderer.transform, _animationList.Count, this, OnUndoRedo);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, PaletteIndex, 0);
             CurrentAnimation.AddFrame(newFrame);
             ChangeFrame(CurrentAnimation.FramesCount - 1);
@@ -383,6 +392,10 @@ namespace FoxEdit
             IsDirty = true;
         }
 
+        private void OnUndoRedo()
+        {
+            _preview?.Refresh();
+        }
 
         private void OnPaletteChanged(int paletteColor)
         {
@@ -438,7 +451,16 @@ namespace FoxEdit
 
         #endregion
 
-        #region Frames Thumbnails
+        #region Undo/Redo
+        public void Undo()
+        {
+            CurrentFrame.Undo();
+        }
+
+        public void Redo()
+        {
+            CurrentFrame.Redo();
+        }
         #endregion
         private void UpdateColors()
         {

@@ -300,7 +300,7 @@ namespace FoxEdit
                     _frameList.Add(new List<VoxelEditorFrame>());
                     for (int i = 0; i < voxelObject.Animations[animation].FrameCount; i++)
                     {
-                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, new VoxelEditor(null));
+                        VoxelEditorFrame frame = new VoxelEditorFrame(_voxelParent, i, new VoxelEditor(null), null);
                         frame.LoadFromSave(voxelObject.Animations[animation].EditorVoxels[i], _selectedPalette);
                         if (i != _selectedFrame)
                             frame.Hide();
@@ -438,7 +438,7 @@ namespace FoxEdit
 
         private void NewFrame()
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, null);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(_voxelParent, _frameList.Count, null, null);
             newFrame.TryAddVoxelNextTo(Vector3Int.zero, Vector3Int.zero, _selectedPalette, 0);
             _frameList[_selectedAnimation].Add(newFrame);
 
