@@ -33,6 +33,12 @@ namespace FoxEdit
 
         public override void OnInspectorGUI()
         {
+            if (FoxEditManager.VoxelEditor != null)
+            {
+                GUILayout.Label("Editor window is open");
+                return;
+            }
+
             VoxelObjectDisplay();
 
             if (_voxelRenderer.VoxelObject == null)

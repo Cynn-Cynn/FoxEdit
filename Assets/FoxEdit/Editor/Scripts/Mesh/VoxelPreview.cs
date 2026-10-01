@@ -5,28 +5,16 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using static FoxEdit.VoxelRenderer;
 
 namespace FoxEdit
 {
     internal class VoxelPreview
     {
-        private enum OpacityType
-        {
-            Both,
-            Opaque,
-            Transparent
-        }
-
         private VoxelEditorFrame _frameToPreview = null;
-        VoxelObjectPackedFrameData _frameData = default;
-
-        private GraphicsBuffer _opaqueVerticesBuffer = null;
-        private GraphicsBuffer _transparentVerticesBuffer = null;
-        private GraphicsBuffer _opaqueQuadsBuffer = null;
-        private GraphicsBuffer _transparentQuadsBuffer = null;
-
-        private RenderParams _opaqueRenderParams;
-        private RenderParams _transparentRenderParams;
+        private VoxelObjectPackedFrameData _frameData = default;
+        private VoxelRenderer.VoxelBuffers _buffers = null;
+        private VoxelRenderParams _renderParams = null;
 
         private bool _hasOpaqueFaces = false;
         private bool _hasTransparentFaces = false;
@@ -35,60 +23,42 @@ namespace FoxEdit
 
         private int _paletteIndex = -1;
 
-        private bool _drawEdges = true;
-        private List<Vector3> _edgeVertices = null;
-        private List<int> _edgeQuads = null;
-        private Color _edgeColor = Color.black;
+        private bool _drawGrid = true;
+        private List<Vector3> _gridVertices = null;
+        private List<int> _gridQuads = null;
+        private Color _gridColor = Color.black;
 
-        internal VoxelPreview(VoxelEditorFrame frame, int paletteIndex, Color edgeColor, bool drawEdge = false)
+        #region Initialize
+
+        internal VoxelPreview(VoxelEditorFrame frame, int paletteIndex, Color gridColor, bool drawGrid = false)
         {
             _frameToPreview = frame;
             _paletteIndex = paletteIndex;
 
-            _edgeColor = edgeColor;
-            _drawEdges = drawEdge;
-            _edgeVertices = new List<Vector3>();
-            _edgeQuads = new List<int>();
+            _gridColor = gridColor;
+            _drawGrid = drawGrid;
+            _gridVertices = new List<Vector3>();
+            _gridQuads = new List<int>();
+            _renderParams = new VoxelRenderParams();
 
             Initialize();
-        }
-
-        internal void Refresh()
-        {
-            GreedyMeshing();
-            SetWorldBounds();
-            SetVoxelBuffers();
-            DrawPreview();
-        }
-
-        internal void ChangeFrame(VoxelEditorFrame frame)
-        {
-            _frameToPreview = frame;
-            Initialize();
-        }
-
-        internal void Destroy()
-        {
-            DisposeBuffers(OpacityType.Both);
-        }
-
-        internal void SetPaletteIndex(int index)
-        {
-            _paletteIndex = index;
-            SetColorBuffer();
         }
 
         private void Initialize()
         {
+            SetColorBuffer();
+
             if (_frameToPreview == null)
                 return;
 
             GreedyMeshing();
-            SetRenderParams();
+            CreateBuffers();
             SetWorldBounds();
-            SetColorBuffer();
-            SetVoxelBuffers();
         }
+
+        #endregion Initialize
+
+        #region GreedyMeshing
 
         private void GreedyMeshing()
         {
@@ -122,23 +92,12 @@ namespace FoxEdit
             };
             _hasTransparentFaces = instancesCount.Item2 != 0;
 
-            GreedyMeshingForEdges();
-
+            GreedyMeshingForGrid();
         }
 
-        internal void SetDrawEdges(bool value)
+        private void GreedyMeshingForGrid()
         {
-            if (value == _drawEdges)
-                return;
-
-            _drawEdges = value;
-            if (_drawEdges)
-                GreedyMeshingForEdges();
-        }
-
-        private void GreedyMeshingForEdges()
-        {
-            if (!_drawEdges)
+            if (!_drawGrid)
                 return;
 
             List<Vector3>[] vertices = new List<Vector3>[2];
@@ -149,39 +108,51 @@ namespace FoxEdit
             quads[1] = new List<int>(); //transparent
 
             (int, int) instancesCount = VoxelSaveSystem.GreedyMeshing(_frameData, new bool[1] { false }, ref vertices, ref quads, true);
-            _edgeVertices = vertices[0];
-            _edgeQuads = quads[0];
+            _gridVertices = vertices[0];
+            _gridQuads = quads[0];
         }
 
-        internal void SetEdgeColor(Color color)
+        #endregion GreedyMeshing
+
+        #region Actions
+
+        internal void ChangeFrame(VoxelEditorFrame frame)
         {
-            _edgeColor = color;
+            _frameToPreview = frame;
+            Refresh();
         }
 
-        private void SetRenderParams()
+        internal void SetPaletteIndex(int index)
         {
-            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
-            Material voxelMaterial = foxEditSettings.Materials.voxelLitMaterial;
+            _paletteIndex = index;
+            SetColorBuffer();
+        }
 
-            _opaqueRenderParams = new RenderParams(new Material(voxelMaterial));
-            _opaqueRenderParams.matProps = new MaterialPropertyBlock();
-            _opaqueRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            _opaqueRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
-            _opaqueRenderParams.material.SetInt("_SrcBlend", (int)BlendMode.One);
-            _opaqueRenderParams.material.SetInt("_DstBlend", (int)BlendMode.Zero);
-            _opaqueRenderParams.material.SetInt("_ZWrite", 1);
-            _opaqueRenderParams.material.SetOverrideTag("RenderType", "Opaque");
-            _opaqueRenderParams.material.renderQueue = (int)RenderQueue.Geometry;
+        internal void SetDrawGrid(bool value)
+        {
+            if (value == _drawGrid)
+                return;
 
-            _transparentRenderParams = new RenderParams(new Material(voxelMaterial));
-            _transparentRenderParams.matProps = new MaterialPropertyBlock();
-            _transparentRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            _transparentRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
-            _transparentRenderParams.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
-            _transparentRenderParams.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
-            _transparentRenderParams.material.SetInt("_ZWrite", 0);
-            _transparentRenderParams.material.SetOverrideTag("RenderType", "Transparent");
-            _transparentRenderParams.material.renderQueue = (int)RenderQueue.Transparent;
+            _drawGrid = value;
+            if (_drawGrid)
+                GreedyMeshingForGrid();
+        }
+
+        internal void SetGridColor(Color color)
+        {
+            _gridColor = color;
+        }
+
+        internal void Refresh()
+        {
+            if (_frameToPreview == null)
+                return;
+
+            GreedyMeshing();
+            SetWorldBounds();
+            DisposeBuffers();
+            CreateBuffers();
+            DrawPreview();
         }
 
         internal void RefreshColors(bool refreshGreedyMeshing)
@@ -189,22 +160,62 @@ namespace FoxEdit
             if (refreshGreedyMeshing)
             {
                 GreedyMeshing();
-                DisposeBuffers(OpacityType.Both);
-                SetVoxelBuffers();
+                DisposeBuffers();
+                CreateBuffers();
             }
             SetColorBuffer();
+        }
+
+        internal void Destroy()
+        {
+            DisposeBuffers();
+        }
+
+        #endregion Actions
+
+        #region Buffers
+
+        private void CreateBuffers()
+        {
+            if (_buffers != null)
+                return;
+
+            _buffers = new VoxelBuffers();
+            if (_hasOpaqueFaces)
+            {
+                _buffers.OpaqueVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _opaquePreview.Vertices.Length, sizeof(float) * 3);
+                _buffers.OpaqueQuads = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _opaquePreview.Quads.Length, sizeof(int));
+                _buffers.OpaqueVertices.SetData(_opaquePreview.Vertices);
+                _buffers.OpaqueQuads.SetData(_opaquePreview.Quads);
+            }
+            if (_hasTransparentFaces)
+            {
+                _buffers.TransparentVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _transparentPreview.Vertices.Length, sizeof(float) * 3);
+                _buffers.TransparentQuads = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _transparentPreview.Quads.Length, sizeof(int));
+                _buffers.TransparentVertices.SetData(_transparentPreview.Vertices);
+                _buffers.TransparentQuads.SetData(_transparentPreview.Quads);
+            }
+
+            _renderParams.SetVerticesAndQuads(_hasOpaqueFaces, _hasTransparentFaces, _buffers);
+        }
+
+        private void DisposeBuffers()
+        {
+            if (_buffers == null)
+                return;
+
+            _buffers.OpaqueVertices?.Dispose();
+            _buffers.OpaqueQuads?.Dispose();
+            _buffers.TransparentVertices?.Dispose();
+            _buffers.TransparentQuads?.Dispose();
+
+            _buffers = null;
         }
 
         private void SetColorBuffer()
         {
             GraphicsBuffer colorsBuffer = VoxelSharedData.GetColorBuffer(_paletteIndex);
-            if (colorsBuffer != null)
-            {
-                _opaqueRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-                _opaqueRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
-                _transparentRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-                _transparentRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
-            }
+            _renderParams.SetColorsBuffer(colorsBuffer);
         }
 
         private void SetWorldBounds()
@@ -224,104 +235,34 @@ namespace FoxEdit
             size.z = Mathf.Abs(size.z) + 1;
 
             bounds.extents = new Vector3((float)size.x / 2.0f, (float)size.y / 2.0f, (float)size.z / 2.0f) * 0.1f;
-
             bounds.center += _frameToPreview.VoxelTransform.position;
-            _opaqueRenderParams.worldBounds = bounds;
-            _transparentRenderParams.worldBounds = bounds;
-
-            _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.VoxelTransform.localToWorldMatrix);
-            _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", _frameToPreview.VoxelTransform.localToWorldMatrix);
+            _renderParams.SetWorldBounds(bounds);
+            _renderParams.SetObjectToWorldMatrix(_frameToPreview.VoxelTransform.localToWorldMatrix);
         }
 
-        private void SetVoxelBuffers()
-        {
-            if (_opaqueVerticesBuffer != null && (_opaqueVerticesBuffer.count != _opaquePreview.Vertices.Length || _opaqueQuadsBuffer.count != _opaquePreview.Quads.Length))
-                DisposeBuffers(OpacityType.Opaque);
-            if (_transparentVerticesBuffer != null && (_transparentVerticesBuffer.count != _transparentPreview.Vertices.Length || _transparentQuadsBuffer.count != _transparentPreview.Quads.Length))
-                DisposeBuffers(OpacityType.Transparent);
+        #endregion Buffers
 
-            if (_opaqueVerticesBuffer == null && _hasOpaqueFaces)
-                CreateBuffers(OpacityType.Opaque);
-            if (_transparentVerticesBuffer == null && _hasTransparentFaces)
-                CreateBuffers(OpacityType.Transparent);
-
-            if (_hasOpaqueFaces)
-                SetBufferData(OpacityType.Opaque);
-            if (_hasTransparentFaces)
-                SetBufferData(OpacityType.Transparent);
-        }
-
-        private void CreateBuffers(OpacityType opacityType)
-        {
-            if (opacityType == OpacityType.Opaque)
-            {
-                _opaqueVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _opaquePreview.Vertices.Length, sizeof(float) * 3);
-                _opaqueQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _opaquePreview.Quads.Length, sizeof(int));
-            }
-            else if (opacityType == OpacityType.Transparent)
-            {
-                _transparentVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _transparentPreview.Vertices.Length, sizeof(float) * 3);
-                _transparentQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _transparentPreview.Quads.Length, sizeof(int));
-            }
-        }
-
-        private void SetBufferData(OpacityType opacityType)
-        {
-            if (opacityType == OpacityType.Opaque)
-            {
-                _opaqueVerticesBuffer.SetData(_opaquePreview.Vertices);
-                _opaqueQuadsBuffer.SetData(_opaquePreview.Quads);
-                _opaqueRenderParams.matProps.SetBuffer("_Vertices", _opaqueVerticesBuffer);
-                _opaqueRenderParams.matProps.SetBuffer("_Quads", _opaqueQuadsBuffer);
-            }
-            else if (opacityType == OpacityType.Transparent)
-            {
-                _transparentVerticesBuffer.SetData(_transparentPreview.Vertices);
-                _transparentQuadsBuffer.SetData(_transparentPreview.Quads);
-                _transparentRenderParams.matProps.SetBuffer("_Vertices", _transparentVerticesBuffer);
-                _transparentRenderParams.matProps.SetBuffer("_Quads", _transparentQuadsBuffer);
-            }
-        }
-
-        private void DisposeBuffers(OpacityType opacityType)
-        {
-            if (opacityType == OpacityType.Both || opacityType == OpacityType.Opaque)
-            {
-                _opaqueVerticesBuffer?.Dispose();
-                _opaqueVerticesBuffer = null;
-
-                _opaqueQuadsBuffer?.Dispose();
-                _opaqueQuadsBuffer = null;
-            }
-            if (opacityType == OpacityType.Both || opacityType == OpacityType.Transparent)
-            {
-                _transparentVerticesBuffer?.Dispose();
-                _transparentVerticesBuffer = null;
-
-                _transparentQuadsBuffer?.Dispose();
-                _transparentQuadsBuffer = null;
-            }
-        }
+        #region Draw
 
         internal void DrawPreview()
         {
             if (_hasOpaqueFaces)
-                Graphics.RenderPrimitivesIndexed(_opaqueRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _opaquePreview.InstanceCount[0]);
+                Graphics.RenderPrimitivesIndexed(_renderParams.OpaqueRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _opaquePreview.InstanceCount[0]);
             if (_hasTransparentFaces)
-                Graphics.RenderPrimitivesIndexed(_transparentRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _transparentPreview.InstanceCount[0]);
+                Graphics.RenderPrimitivesIndexed(_renderParams.TransparentRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _transparentPreview.InstanceCount[0]);
 
-            if (_drawEdges)
-                DrawEdges();
+            if (_drawGrid)
+                DrawGrid();
         }
 
-        private void DrawEdges()
+        private void DrawGrid()
         {
             Matrix4x4 localToWorld = _frameToPreview.VoxelTransform.localToWorldMatrix;
 
-            for (int i = 0; i < _edgeQuads.Count; i += 5)
+            for (int i = 0; i < _gridQuads.Count; i += 5)
             {
-                Vector3 corner1 = localToWorld.MultiplyPoint(_edgeVertices[_edgeQuads[i]]);
-                Vector3 corner2 = localToWorld.MultiplyPoint(_edgeVertices[_edgeQuads[i + 2]]);
+                Vector3 corner1 = localToWorld.MultiplyPoint(_gridVertices[_gridQuads[i]]);
+                Vector3 corner2 = localToWorld.MultiplyPoint(_gridVertices[_gridQuads[i + 2]]);
                 Vector3 distance = corner2 - corner1;
 
                 int xSign = (int)(1 * Mathf.Sign(distance.x));
@@ -332,7 +273,7 @@ namespace FoxEdit
                     {
                         Vector3 point1 = corner1 + new Vector3(x * 0.1f, 0, 0);
                         Vector3 point2 = corner1 + new Vector3(x * 0.1f, distance.y, distance.z);
-                        Debug.DrawLine(point1, point2, _edgeColor, 0.01f, true);
+                        Debug.DrawLine(point1, point2, _gridColor, 0.01f, true);
                     }
                 }
 
@@ -344,7 +285,7 @@ namespace FoxEdit
                     {
                         Vector3 point1 = corner1 + new Vector3(0, y * 0.1f, 0);
                         Vector3 point2 = corner1 + new Vector3(distance.x, y * 0.1f, distance.z);
-                        Debug.DrawLine(point1, point2, _edgeColor, 0.01f, true);
+                        Debug.DrawLine(point1, point2, _gridColor, 0.01f, true);
                     }
                 }
 
@@ -356,10 +297,12 @@ namespace FoxEdit
                     {
                         Vector3 point1 = corner1 + new Vector3(0, 0, z * 0.1f);
                         Vector3 point2 = corner1 + new Vector3(distance.x, distance.y, z * 0.1f);
-                        Debug.DrawLine(point1, point2, _edgeColor, 0.01f, true);
+                        Debug.DrawLine(point1, point2, _gridColor, 0.01f, true);
                     }
                 }
             }
         }
+
+        #endregion Draw
     }
 }
