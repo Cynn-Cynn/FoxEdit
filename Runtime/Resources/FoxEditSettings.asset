@@ -16,6 +16,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2018349bc5077014daddb8178c4c004f, type: 2}
   - {fileID: 11400000, guid: 413abcab50e67f84e815dd0e271eef34, type: 2}
   Materials:
+    voxelLitMaterial: {fileID: 2100000, guid: 0eb7b18364552904f8ddb03a685946de, type: 2}
     animatedOpaqueMaterial: {fileID: 2100000, guid: 3f0281ad1cf83de4795cd67224e84cb6, type: 2}
     animatedTransparentMaterial: {fileID: 2100000, guid: ae95496115f95704689ae2cf81997c4f, type: 2}
     staticOpaqueMaterial: {fileID: 2100000, guid: 90c432c76eaa99648809ebe571f57d1e, type: 2}

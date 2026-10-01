@@ -10,8 +10,9 @@ namespace FoxEdit
         [System.Serializable]
         public class MaterialsSettings
         {
-            public Material animatedOpaqueMaterial;
-            public Material animatedTransparentMaterial;
+            public Material voxelLitMaterial;
+            //public Material animatedOpaqueMaterial;
+            //public Material animatedTransparentMaterial;
             public Material staticOpaqueMaterial;
             public Material staticTransparentMaterial;
         }

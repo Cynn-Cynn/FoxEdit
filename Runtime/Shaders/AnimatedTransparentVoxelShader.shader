@@ -17,6 +17,7 @@ Shader "Voxel/AnimatedTransparentVoxel"
         {
             Cull Back
             Blend SrcAlpha OneMinusSrcAlpha
+            ZWrite Off
 
             Tags{
                 "LightMode" = "UniversalForward"
