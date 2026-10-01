@@ -1,4 +1,4 @@
-Shader "Voxel/AnimatedTransparentVoxel"
+Shader "Voxel/Lit"
 {
     Properties
     {
@@ -8,16 +8,16 @@ Shader "Voxel/AnimatedTransparentVoxel"
     {
         Tags
         {
-            "RenderType" = "Transparent"
-            "Queue" = "Transparent"
+            "RenderType" = "Opaque"
+            "Queue" = "Geometry"
             "RenderPipeline" = "UniversalPipeline"
         }
 
         Pass
         {
             Cull Back
-            Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite Off
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
 
             Tags{
                 "LightMode" = "UniversalForward"
@@ -60,12 +60,13 @@ Shader "Voxel/AnimatedTransparentVoxel"
             {
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD1;
-                nointerpolation float3 normalWS : TEXCOORD2;
-                nointerpolation float4 tangentWS : TEXCOORD3;
+                float3 normalWS : TEXCOORD2;
+                float4 tangentWS : TEXCOORD3;
                 float4 shadowCoord : TEXCOORD4;
                 DECLARE_LIGHTMAP_OR_SH(staticLightmapUV, vertexSH, 5);
                 float2 dynamicLightmapUV : TEXCOORD6;
                 int colorIndex : TEXCOORD7;
+                float2 uv : TEXCOORD8;
             };
 
             struct ColorData
@@ -97,6 +98,20 @@ Shader "Voxel/AnimatedTransparentVoxel"
                 uint nextVertexID = (localVertexID + 1) % 4;
                 uint previousVertexID = (localVertexID - 1 + 4) % 4;
                 
+                o.uv = float2(1,1);
+                if (localVertexID % 4 == 1)
+                {
+                    o.uv = float2(1,0);
+                }
+                else if (localVertexID % 4 == 2)
+                {
+                    o.uv = float2(0,0);
+                }
+                else if (localVertexID % 4 == 3)
+                {
+                    o.uv = float2(0,1);
+                }
+
                 localVertexID = _Quads[faceID * 5 + localVertexID];
                 nextVertexID = _Quads[faceID * 5 + nextVertexID];
                 previousVertexID = _Quads[faceID * 5 + previousVertexID];
@@ -105,16 +120,16 @@ Shader "Voxel/AnimatedTransparentVoxel"
                 float4 nextPositionOS = float4(_Vertices[nextVertexID], 1.0f);
                 float4 previousPositionOS = float4(_Vertices[previousVertexID], 1.0f);
 
-                float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), 1.0f);
+                float3 tangeantOS = normalize(nextPositionOS.xyz - positionOS.xyz);
                 float3 bitangeantOS = normalize(previousPositionOS.xyz - positionOS.xyz);
 
-                float3 normalOS = cross(tangeantOS.xyz, bitangeantOS);
+                float3 normalOS = cross(tangeantOS, bitangeantOS);
 
                 float4 vertexPositionOS = float4(_Vertices[_Quads[faceID * 5 + vertexID]], 1.0f);
                 o.positionWS = mul(_ObjectToWorld, vertexPositionOS);
                 o.positionCS = TransformWorldToHClip(o.positionWS.xyz);
-                o.normalWS = mul(_ObjectToWorld, normalOS).xyz;
-                o.tangentWS = mul(_ObjectToWorld, tangeantOS);
+                o.normalWS = normalize(mul(_ObjectToWorld, normalOS).xyz);
+                o.tangentWS = float4(mul(_ObjectToWorld, float4(tangeantOS, 0)).xyz, 1);
                 o.shadowCoord = TransformWorldToShadowCoord(o.positionWS.xyz);
 
                 OUTPUT_LIGHTMAP_UV(v.staticLightmapUV, unity_LightmapST, o.staticLightmapUV);
@@ -164,7 +179,7 @@ Shader "Voxel/AnimatedTransparentVoxel"
                 float3 tangeant = normalize(i.tangentWS.xyz);
 
                 float3 bitangent = normalize(cross(normal, tangeant));
-                inputData.tangentToWorld = float3x3(i.tangentWS.xyz, bitangent, normal);
+                inputData.tangentToWorld = float3x3(tangeant, bitangent, normal);
                 inputData.normalWS = normal;
 
                 inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(i.positionWS.xyz);
@@ -251,7 +266,7 @@ Shader "Voxel/AnimatedTransparentVoxel"
                     uint localVertexID = vertexID;
                     uint nextVertexID = (localVertexID + 1) % 4;
                     uint nextNextVertexID = (localVertexID - 1 + 4) % 4;
-                
+                    
                     localVertexID = _Quads[faceID * 5 + localVertexID];
                     nextVertexID = _Quads[faceID * 5 + nextVertexID];
                     nextNextVertexID = _Quads[faceID * 5 + nextNextVertexID];

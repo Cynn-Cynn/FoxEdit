@@ -12,14 +12,7 @@ namespace FoxEdit
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(Animator))]
     public class VoxelRenderer : MonoBehaviour
     {
-        private enum OpacityType
-        {
-            Both,
-            Opaque,
-            Transparent
-        }
-
-        private class VoxelBuffers
+        internal class VoxelBuffers
         {
             public GraphicsBuffer OpaqueVertices = null;
             public GraphicsBuffer TransparentVertices = null;
@@ -43,10 +36,6 @@ namespace FoxEdit
         private string _currentAnimationName { get { return _voxelObject.name + "_" + _voxelObject.Animations[_animationIndex].AnimName; } }
 
         private static Dictionary<string, VoxelBuffers> _buffers = null;
-        private GraphicsBuffer _opaqueVerticesBuffer = null;
-        private GraphicsBuffer _transparentVerticesBuffer = null;
-        private GraphicsBuffer _opaqueQuadsBuffer = null;
-        private GraphicsBuffer _transparentQuadsBuffer = null;
         private Material _staticOpaqueMaterialInstance = null;
         private Material _staticTransparentMaterialInstance = null;
 
@@ -54,25 +43,13 @@ namespace FoxEdit
         private int _animationIndex = 0;
         private int _frameIndex = 0;
 
-        private RenderParams _opaqueRenderParams;
-        private RenderParams _transparentRenderParams;
+        private VoxelRenderParams _renderParams = null;
 
         #region Initialization
 
         private void InitializeAnimatedRenderer()
         {
-            FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
-
-            _opaqueRenderParams = new RenderParams(foxEditSettings.Materials.animatedOpaqueMaterial);
-            _opaqueRenderParams.matProps = new MaterialPropertyBlock();
-            _opaqueRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            _opaqueRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
-
-            _transparentRenderParams = new RenderParams(foxEditSettings.Materials.animatedTransparentMaterial);
-            _transparentRenderParams.matProps = new MaterialPropertyBlock();
-            _transparentRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            _transparentRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
-
+            _renderParams = new VoxelRenderParams();
             SetWorldBounds();
         }
 
@@ -148,10 +125,8 @@ namespace FoxEdit
                 _meshRenderer.enabled = _staticRender;
                 if (_staticRender)
                     DisposeBuffers();
-                //DisposeBuffers(OpacityType.Both);
                 else
                     SetBufferData();
-                    //SetVoxelBuffers();
 #if UNITY_EDITOR
             }
 #endif
@@ -169,7 +144,6 @@ namespace FoxEdit
             if (_meshRenderer != null)
                 _meshRenderer.enabled = true;
         }
-
 
         public int GetPaletteIndex()
         {
@@ -190,7 +164,7 @@ namespace FoxEdit
 #if UNITY_EDITOR
                 if (Application.isPlaying)
 #endif
-                    SetColorBufferParam(colorsBuffer);
+                    _renderParams.SetColorsBuffer(colorsBuffer);
 
                 if (index == _voxelObject.PaletteIndex)
                 {
@@ -259,19 +233,10 @@ namespace FoxEdit
             _animationIndex = animationIndex;
             _animationTimer = 0.0f;
             _frameIndex = 0;
-            //SetVoxelBuffers();
             SetWorldBounds();
 
-            if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
-            {
-                _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceStartIndices[_frameIndex]);
-                //SetBufferData(OpacityType.Opaque);
-            }
-            if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
-            {
-                _transparentRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceStartIndices[_frameIndex]);
-                //SetBufferData(OpacityType.Transparent);
-            }
+            _renderParams.SetInstanceStartIndex(_voxelObject.Animations[_animationIndex], _frameIndex);
+
             SetBufferData();
         }
 
@@ -306,40 +271,13 @@ namespace FoxEdit
 #endif
                 GraphicsBuffer colorsBuffer = VoxelSharedData.GetColorBuffer(GetPaletteIndex());
                 if (colorsBuffer != null)
-                    SetColorBufferParam(colorsBuffer);
+                    _renderParams.SetColorsBuffer(colorsBuffer);
                 if (!_staticRender)
                     SetBufferData();
-                    //SetVoxelBuffers();
 #if UNITY_EDITOR
             }
 #endif
         }
-
-        private void SetColorBufferParam(GraphicsBuffer colorsBuffer)
-        {
-            _opaqueRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-            _opaqueRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
-            _transparentRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-            _transparentRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
-        }
-
-        //private void SetVoxelBuffers()
-        //{
-        //    if (_opaqueVerticesBuffer != null)
-        //        DisposeBuffers(OpacityType.Opaque);
-        //    if (_transparentVerticesBuffer != null)
-        //        DisposeBuffers(OpacityType.Transparent);
-
-        //    if (_opaqueVerticesBuffer == null && _voxelObject.Animations[_animationIndex].HasOpaqueFaces)
-        //        CreateBuffers(OpacityType.Opaque);
-        //    if (_transparentVerticesBuffer == null && _voxelObject.Animations[_animationIndex].HasTransparentFaces)
-        //        CreateBuffers(OpacityType.Transparent);
-
-        //    if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
-        //        SetBufferData(OpacityType.Opaque);
-        //    if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
-        //        SetBufferData(OpacityType.Transparent);
-        //}
 
         private void SetWorldBounds()
         {
@@ -349,8 +287,7 @@ namespace FoxEdit
 #endif
                 Bounds bounds = _voxelObject.Animations[_animationIndex].Bounds;
                 bounds.center += transform.position;
-                _opaqueRenderParams.worldBounds = bounds;
-                _transparentRenderParams.worldBounds = bounds;
+                _renderParams.SetWorldBounds(bounds);
 #if UNITY_EDITOR
             }
 #endif
@@ -362,7 +299,6 @@ namespace FoxEdit
             if (Application.isPlaying)
 #endif
                 DisposeBuffers();
-            //DisposeBuffers(OpacityType.Both);
         }
 
         private void CreateBuffers()
@@ -379,45 +315,13 @@ namespace FoxEdit
                 buffers.OpaqueVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxOpaqueVerticesCount, sizeof(float) * 3);
                 buffers.OpaqueQuads = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxOpaqueQuadsCount, sizeof(int));
             }
-            else if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
+            if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
             {
                 buffers.TransparentVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentVerticesCount, sizeof(float) * 3);
                 buffers.TransparentQuads = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentQuadsCount, sizeof(int));
             }
             _buffers.Add(bufferKey, buffers);
         }
-
-        //private void CreateBuffers(OpacityType opacityType)
-        //{
-        //    if (opacityType == OpacityType.Opaque)
-        //    {
-        //        _opaqueVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxOpaqueVerticesCount, sizeof(float) * 3);
-        //        _opaqueQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxOpaqueQuadsCount, sizeof(int));
-        //    }
-        //    else if (opacityType == OpacityType.Transparent)
-        //    {
-        //        _transparentVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentVerticesCount, sizeof(float) * 3);
-        //        _transparentQuadsBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentQuadsCount, sizeof(int));
-        //    }
-        //}
-
-        //private void SetBufferData(OpacityType opacityType)
-        //{
-        //    if (opacityType == OpacityType.Opaque)
-        //    {
-        //        _opaqueVerticesBuffer.SetData(_voxelObject.Animations[_animationIndex].OpaqueMesh.Vertices);
-        //        _opaqueQuadsBuffer.SetData(_voxelObject.Animations[_animationIndex].OpaqueMesh.Quads);
-        //        _opaqueRenderParams.matProps.SetBuffer("_Vertices", _opaqueVerticesBuffer);
-        //        _opaqueRenderParams.matProps.SetBuffer("_Quads", _opaqueQuadsBuffer);
-        //    }
-        //    else if (opacityType == OpacityType.Transparent)
-        //    {
-        //        _transparentVerticesBuffer.SetData(_voxelObject.Animations[_animationIndex].TransparentMesh.Vertices);
-        //        _transparentQuadsBuffer.SetData(_voxelObject.Animations[_animationIndex].TransparentMesh.Quads);
-        //        _transparentRenderParams.matProps.SetBuffer("_Vertices", _transparentVerticesBuffer);
-        //        _transparentRenderParams.matProps.SetBuffer("_Quads", _transparentQuadsBuffer);
-        //    }
-        //}
 
         private void SetBufferData()
         {
@@ -434,46 +338,16 @@ namespace FoxEdit
                     buffers.OpaqueVertices.SetData(_voxelObject.Animations[_animationIndex].OpaqueMesh.Vertices);
                     buffers.OpaqueQuads.SetData(_voxelObject.Animations[_animationIndex].OpaqueMesh.Quads);
                 }
-                else if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
+                if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
                 {
                     buffers.TransparentVertices.SetData(_voxelObject.Animations[_animationIndex].TransparentMesh.Vertices);
                     buffers.TransparentQuads.SetData(_voxelObject.Animations[_animationIndex].TransparentMesh.Quads);
                 }
             }
 
-            if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
-            {
-                _opaqueRenderParams.matProps.SetBuffer("_Vertices", buffers.OpaqueVertices);
-                _opaqueRenderParams.matProps.SetBuffer("_Quads", buffers.OpaqueQuads);
-            }
-            else if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
-            {
-                _transparentRenderParams.matProps.SetBuffer("_Vertices", buffers.TransparentVertices);
-                _transparentRenderParams.matProps.SetBuffer("_Quads", buffers.TransparentQuads);
-            }
-
+            _renderParams.SetVerticesAndQuads(_voxelObject.Animations[_animationIndex], buffers);
             buffers.UseCount += 1;
         }
-
-        //private void DisposeBuffers(OpacityType opacityType)
-        //{
-        //    if (opacityType == OpacityType.Both || opacityType == OpacityType.Opaque)
-        //    {
-        //        _opaqueVerticesBuffer?.Dispose();
-        //        _opaqueVerticesBuffer = null;
-
-        //        _opaqueQuadsBuffer?.Dispose();
-        //        _opaqueQuadsBuffer = null;
-        //    }
-        //    if (opacityType == OpacityType.Both || opacityType == OpacityType.Transparent)
-        //    {
-        //        _transparentVerticesBuffer?.Dispose();
-        //        _transparentVerticesBuffer = null;
-
-        //        _transparentQuadsBuffer?.Dispose();
-        //        _transparentQuadsBuffer = null;
-        //    }
-        //}
 
         private void DisposeBuffers()
         {
@@ -549,18 +423,14 @@ namespace FoxEdit
             {
                 _frameIndex = (_frameIndex + 1) % _voxelObject.Animations[_animationIndex].FrameCount;
                 _animationTimer -= _voxelObject.Animations[_animationIndex].FrameDuration;
-                if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
-                    _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceStartIndices[_frameIndex]);
-                if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
-                    _transparentRenderParams.matProps.SetInteger("_InstanceStartIndex", _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceStartIndices[_frameIndex]);
+                _renderParams.SetInstanceStartIndex(_voxelObject.Animations[_animationIndex], _frameIndex);
             }
 
             if (transform.hasChanged)
             {
                 transform.hasChanged = false;
                 SetWorldBounds();
-                _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix);
-                _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", transform.localToWorldMatrix);
+                _renderParams.SetObjectToWorldMatrix(transform.localToWorldMatrix);
             }
 
 #if UNITY_EDITOR
@@ -569,9 +439,9 @@ namespace FoxEdit
 #endif
 
             if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
-                Graphics.RenderPrimitivesIndexed(_opaqueRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceCount[_frameIndex]);
+                Graphics.RenderPrimitivesIndexed(_renderParams.OpaqueRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceCount[_frameIndex]);
             if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
-                Graphics.RenderPrimitivesIndexed(_transparentRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceCount[_frameIndex]);
+                Graphics.RenderPrimitivesIndexed(_renderParams.TransparentRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceCount[_frameIndex]);
         }
 
         #endregion Rendering

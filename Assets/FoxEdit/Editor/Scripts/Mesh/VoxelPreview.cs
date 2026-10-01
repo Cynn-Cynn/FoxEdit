@@ -4,6 +4,7 @@ using log4net.Util;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace FoxEdit
 {
@@ -160,16 +161,27 @@ namespace FoxEdit
         private void SetRenderParams()
         {
             FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
+            Material voxelMaterial = foxEditSettings.Materials.voxelLitMaterial;
 
-            _opaqueRenderParams = new RenderParams(foxEditSettings.Materials.animatedOpaqueMaterial);
+            _opaqueRenderParams = new RenderParams(new Material(voxelMaterial));
             _opaqueRenderParams.matProps = new MaterialPropertyBlock();
             _opaqueRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _opaqueRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
+            _opaqueRenderParams.material.SetInt("_SrcBlend", (int)BlendMode.One);
+            _opaqueRenderParams.material.SetInt("_DstBlend", (int)BlendMode.Zero);
+            _opaqueRenderParams.material.SetInt("_ZWrite", 1);
+            _opaqueRenderParams.material.SetOverrideTag("RenderType", "Opaque");
+            _opaqueRenderParams.material.renderQueue = (int)RenderQueue.Geometry;
 
-            _transparentRenderParams = new RenderParams(foxEditSettings.Materials.animatedTransparentMaterial);
+            _transparentRenderParams = new RenderParams(new Material(voxelMaterial));
             _transparentRenderParams.matProps = new MaterialPropertyBlock();
             _transparentRenderParams.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             _transparentRenderParams.matProps.SetBuffer("_VertexPositions", VoxelSharedData.FaceVertexBuffer);
+            _transparentRenderParams.material.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            _transparentRenderParams.material.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            _transparentRenderParams.material.SetInt("_ZWrite", 0);
+            _transparentRenderParams.material.SetOverrideTag("RenderType", "Transparent");
+            _transparentRenderParams.material.renderQueue = (int)RenderQueue.Transparent;
         }
 
         internal void RefreshColors(bool refreshGreedyMeshing)
