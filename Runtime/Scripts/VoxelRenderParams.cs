@@ -72,6 +72,20 @@ internal class VoxelRenderParams
         }
     }
 
+    internal void SetVerticesAndQuads(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.VoxelBuffers buffers)
+    {
+        if (hasOpaqueFaces)
+        {
+            _opaqueRenderParams.matProps.SetBuffer("_Vertices", buffers.OpaqueVertices);
+            _opaqueRenderParams.matProps.SetBuffer("_Quads", buffers.OpaqueQuads);
+        }
+        if (hasTransparentFaces)
+        {
+            _transparentRenderParams.matProps.SetBuffer("_Vertices", buffers.TransparentVertices);
+            _transparentRenderParams.matProps.SetBuffer("_Quads", buffers.TransparentQuads);
+        }
+    }
+
     internal void SetObjectToWorldMatrix(Matrix4x4 objectToWorld)
     {
         _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", objectToWorld);
