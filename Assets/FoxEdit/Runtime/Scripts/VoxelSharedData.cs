@@ -84,6 +84,9 @@ namespace FoxEdit
             if (state == PlayModeStateChange.ExitingPlayMode)
             {
                 Unload();
+            }
+            if (state == PlayModeStateChange.EnteredEditMode)
+            {
                 Initialize();
             }
         }
@@ -117,7 +120,9 @@ namespace FoxEdit
         private static void DisposeBuffers()
         {
             _faceTriangleBuffer?.Dispose();
+            _faceTriangleBuffer = null;
             _faceVertexBuffer?.Dispose();
+            _faceVertexBuffer = null;
 
             DisposeColorsBuffers();
 
@@ -191,6 +196,8 @@ namespace FoxEdit
             {
                 _colorsBuffers[i]?.Dispose();
             }
+
+            _colorsBuffers.Clear();
         }
 
         private static ColorData[] CreateColorBufferFromPalette(VoxelPalette palette)
