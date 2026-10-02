@@ -58,22 +58,10 @@ namespace FoxEdit
 
             FoxEditSettings foxEditSettings = FoxEditSettings.GetSettings();
 
-            Material staticOpaqueMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.staticOpaqueMaterial);
-            AssetDatabase.CreateAsset(staticOpaqueMaterialInstance, GetAssetPath($"M_{meshName}_Static_Opaque", saveDirectory, "mat"));
-            voxelObject.StaticOpaqueMaterial = staticOpaqueMaterialInstance;
-
-            Material staticTransparentMaterialInstance = GameObject.Instantiate(foxEditSettings.Materials.staticTransparentMaterial);
-            AssetDatabase.CreateAsset(staticTransparentMaterialInstance, GetAssetPath($"M_{meshName}_Static_Transparent", saveDirectory, "mat"));
-            voxelObject.StaticTransparentMaterial = staticTransparentMaterialInstance;
-
-            MeshRenderer staticRenderer = voxelRenderer.GetComponent<MeshRenderer>();
-            staticRenderer.SetMaterials(new List<Material> { staticOpaqueMaterialInstance, staticTransparentMaterialInstance });
-
             AnimatorController animator = AnimatorController.CreateAnimatorControllerAtPath(GetAssetPath($"AC_{meshName}", saveDirectory, "controller"));
             voxelObject.AnimatorController = animator;
 
             EditorUtility.SetDirty(animator);
-            EditorUtility.SetDirty(staticRenderer);
             EditorUtility.SetDirty(voxelRenderer);
             EditorUtility.SetDirty(voxelObject);
             AssetDatabase.SaveAssets();

@@ -45,15 +45,24 @@ Shader "Voxel/Lit"
             #pragma multi_compile_local _ LIGHTMAP_ON
             #pragma multi_compile_local _ DYNAMICLIGHTMAP_ON
 
+            #pragma multi_compile_local _ ANIMATED_VOXEL
+
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceData.hlsl"
 
             struct appdata
             {
+#if ANIMATED_VOXEL
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+#else
+                float4 positionOS : POSITION;
+                float2 uv : TEXCOORD0;
+                float3 normalOS : NORMAL;
+                float4 tangentOS : TANGENT;
+#endif
                 float2 staticLightmapUV : TEXCOORD1;
                 float2 dynamicLightmapUV : TEXCOORD2;
-                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
@@ -66,7 +75,6 @@ Shader "Voxel/Lit"
                 DECLARE_LIGHTMAP_OR_SH(staticLightmapUV, vertexSH, 5);
                 float2 dynamicLightmapUV : TEXCOORD6;
                 int colorIndex : TEXCOORD7;
-                float2 uv : TEXCOORD8;
             };
 
             struct ColorData
@@ -78,15 +86,20 @@ Shader "Voxel/Lit"
             };
 
             UNITY_INSTANCING_BUFFER_START(Props)
+#if ANIMATED_VOXEL
                 uint _InstanceStartIndex;
                 float4x4 _ObjectToWorld;
+#endif
+                uint _ColorCount;
             UNITY_INSTANCING_BUFFER_END(Props)
 
+#if ANIMATED_VOXEL
             StructuredBuffer<float3> _Vertices;
             StructuredBuffer<int> _Quads;
+#endif
             StructuredBuffer<ColorData> _Colors;
-            uint _ColorCount;
             
+#if ANIMATED_VOXEL
             v2f vert(appdata v, uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
             {
                 UNITY_SETUP_INSTANCE_ID(v);
@@ -97,20 +110,6 @@ Shader "Voxel/Lit"
                 uint localVertexID = vertexID - (vertexID % 4);
                 uint nextVertexID = (localVertexID + 1) % 4;
                 uint previousVertexID = (localVertexID - 1 + 4) % 4;
-                
-                o.uv = float2(1,1);
-                if (localVertexID % 4 == 1)
-                {
-                    o.uv = float2(1,0);
-                }
-                else if (localVertexID % 4 == 2)
-                {
-                    o.uv = float2(0,0);
-                }
-                else if (localVertexID % 4 == 3)
-                {
-                    o.uv = float2(0,1);
-                }
 
                 localVertexID = _Quads[faceID * 5 + localVertexID];
                 nextVertexID = _Quads[faceID * 5 + nextVertexID];
@@ -132,13 +131,29 @@ Shader "Voxel/Lit"
                 o.tangentWS = float4(mul(_ObjectToWorld, float4(tangeantOS, 0)).xyz, 1);
                 o.shadowCoord = TransformWorldToShadowCoord(o.positionWS.xyz);
 
-                OUTPUT_LIGHTMAP_UV(v.staticLightmapUV, unity_LightmapST, o.staticLightmapUV);
- #ifdef DYNAMICLIGHTMAP_ON
-                 o.dynamicLightmapUV = v.dynamicLightmapUV.xy * unityDynamicLightmapST.xy + unityDynamicLightmapST.zw;
- #endif
-                OUTPUT_SH(o.normalWS.xyz, o.vertexSH);
-                
                 o.colorIndex = _Quads[faceID * 5 + 4];
+#else
+            v2f vert(appdata v)
+            {
+                v2f o;
+                
+                VertexPositionInputs vertexInput = GetVertexPositionInputs(v.positionOS.xyz);
+                VertexNormalInputs normalInput = GetVertexNormalInputs(v.normalOS, v.tangentOS);
+
+                o.positionWS = vertexInput.positionWS;
+                o.positionCS = vertexInput.positionCS;
+                o.colorIndex = v.uv.x;
+
+                o.normalWS = normalInput.normalWS;
+                float sign = v.tangentOS.w;
+                o.tangentWS = float4(normalInput.tangentWS.xyz, sign);
+                o.shadowCoord = GetShadowCoord(vertexInput);
+#endif
+                OUTPUT_LIGHTMAP_UV(v.staticLightmapUV, unity_LightmapST, o.staticLightmapUV);
+#ifdef DYNAMICLIGHTMAP_ON
+                 o.dynamicLightmapUV = v.dynamicLightmapUV.xy * unityDynamicLightmapST.xy + unityDynamicLightmapST.zw;
+#endif
+                OUTPUT_SH(o.normalWS.xyz, o.vertexSH);
 
                 return o;
             }
@@ -178,12 +193,15 @@ Shader "Voxel/Lit"
                 float3 normal = normalize(i.normalWS);
                 float3 tangeant = normalize(i.tangentWS.xyz);
 
+#if ANIMATED_VOXEL
                 float3 bitangent = normalize(cross(normal, tangeant));
+#else
+                float3 bitangent = i.tangentWS.w * cross(normal, tangeant);
+#endif
                 inputData.tangentToWorld = float3x3(tangeant, bitangent, normal);
                 inputData.normalWS = normal;
 
                 inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(i.positionWS.xyz);
-
                 inputData.shadowCoord = TransformWorldToShadowCoord(inputData.positionWS);
 
 #if defined(DYNAMICLIGHTMAP_ON)
@@ -223,8 +241,8 @@ Shader "Voxel/Lit"
             ZWrite On
             ZTest LEqual
             ColorMask 0
-
             HLSLPROGRAM
+#if ANIMATED_VOXEL
                 #pragma vertex vert
                 #pragma fragment frag
                 #pragma multi_compile_instancing
@@ -291,6 +309,14 @@ Shader "Voxel/Lit"
                 {
                     return 0;
                 }
+#else
+                #pragma vertex ShadowPassVertex
+                #pragma fragment ShadowPassFragment
+                #pragma multi_compile_instancing
+
+                #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
+                #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+#endif
             ENDHLSL
         }
     }
