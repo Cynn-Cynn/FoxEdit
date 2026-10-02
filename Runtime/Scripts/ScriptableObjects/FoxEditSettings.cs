@@ -11,10 +11,6 @@ namespace FoxEdit
         public class MaterialsSettings
         {
             public Material voxelLitMaterial;
-            //public Material animatedOpaqueMaterial;
-            //public Material animatedTransparentMaterial;
-            public Material staticOpaqueMaterial;
-            public Material staticTransparentMaterial;
         }
 
         [SerializeField] private List<VoxelPalette> _palettes;

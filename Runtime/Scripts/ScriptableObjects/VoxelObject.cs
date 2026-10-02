@@ -38,8 +38,6 @@ namespace FoxEdit
         }
 
         public int PaletteIndex = 0;
-        public Material StaticOpaqueMaterial = null;
-        public Material StaticTransparentMaterial = null;
         public Mesh StaticMesh = null;
         public RuntimeAnimatorController AnimatorController = null;
 

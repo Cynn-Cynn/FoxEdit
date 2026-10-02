@@ -48,6 +48,9 @@ namespace FoxEdit
             {
                 VoxelRenderer voxelRenderer = go.AddComponent<VoxelRenderer>();
                 voxelRenderer.SetVoxelObject(voxelObject);
+                UnityEditorInternal.ComponentUtility.MoveComponentUp(voxelRenderer);
+                UnityEditorInternal.ComponentUtility.MoveComponentUp(voxelRenderer);
+                UnityEditorInternal.ComponentUtility.MoveComponentUp(voxelRenderer);
             }
         }
     }

@@ -1,9 +1,11 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using System.Reflection;
+using UnityEditor;
+#endif
 
 //TODO: fix light dans shader
 namespace FoxEdit
@@ -36,8 +38,6 @@ namespace FoxEdit
         private string _currentAnimationName { get { return _voxelObject.name + "_" + _voxelObject.Animations[_animationIndex].AnimName; } }
 
         private static Dictionary<string, VoxelBuffers> _buffers = null;
-        private Material _staticOpaqueMaterialInstance = null;
-        private Material _staticTransparentMaterialInstance = null;
 
         private float _animationTimer = 0.0f;
         private int _animationIndex = 0;
@@ -49,7 +49,7 @@ namespace FoxEdit
 
         private void InitializeAnimatedRenderer()
         {
-            _renderParams = new VoxelRenderParams();
+            _renderParams.CreateAnimatedParams();
             SetWorldBounds();
         }
 
@@ -61,6 +61,11 @@ namespace FoxEdit
                 _meshRenderer = GetComponent<MeshRenderer>();
                 _animator = GetComponent<Animator>();
             }
+            else
+            {
+                Material[] materials = _meshRenderer.sharedMaterials;
+                _renderParams.SetStaticMaterials(materials.FirstOrDefault(m => m.name.Contains("Opaque")), materials.FirstOrDefault(m => m.name.Contains("Transparent")));
+            }
 
 #if UNITY_EDITOR
             if (!Application.isPlaying)
@@ -68,9 +73,31 @@ namespace FoxEdit
 #endif
         }
 
-        private void Initialize()
+#if UNITY_EDITOR
+        private void CheckDuplication()
         {
+            PropertyInfo inspectorModeInfo = typeof(SerializedObject).GetProperty("inspectorMode", BindingFlags.NonPublic | BindingFlags.Instance);
+            SerializedObject serializedObject = new SerializedObject(this);
+            inspectorModeInfo.SetValue(serializedObject, InspectorMode.Debug, null);
+            SerializedProperty localIdProp = serializedObject.FindProperty("m_LocalIdentfierInFile");
+            int localId = localIdProp.intValue;
+
+            if (localId == 0)
+                _meshRenderer.sharedMaterial = null;
+        }
+#endif
+
+        void Awake()
+        {
+            if (_buffers == null)
+                _buffers = new Dictionary<string, VoxelBuffers>();
+            _renderParams = new VoxelRenderParams();
             GetUsedComponents();
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                CheckDuplication();
+#endif
 
             if (_voxelObject == null)
                 return;
@@ -80,13 +107,6 @@ namespace FoxEdit
                 InitializeAnimatedRenderer();
             Setup();
             StaticRender();
-        }
-
-        void Awake()
-        {
-            if (_buffers == null)
-                _buffers = new Dictionary<string, VoxelBuffers>();
-            Initialize();
         }
 
         #endregion Initialization
@@ -167,17 +187,9 @@ namespace FoxEdit
                     _renderParams.SetColorsBuffer(colorsBuffer);
 
                 if (index == _voxelObject.PaletteIndex)
-                {
-                    _staticOpaqueMaterialInstance = null;
-                    _staticTransparentMaterialInstance = null;
                     _paletteIndexOverride = -1;
-                }
                 else if (index != -1)
-                {
                     _paletteIndexOverride = index;
-                }
-
-                SetupMaterials();
             }
 
 #if UNITY_EDITOR
@@ -191,31 +203,24 @@ namespace FoxEdit
 
         private void SetupMaterials()
         {
-            if (_paletteIndexOverride != -1 && _paletteIndexOverride != _voxelObject.PaletteIndex)
-                CreateStaticMaterialInstances();
+            if (_renderParams == null)
+                _renderParams = new VoxelRenderParams();
+
+            bool opaque = _voxelObject.Animations[0].HasOpaqueFaces;
+            bool transparent = _voxelObject.Animations[0].HasTransparentFaces;
+
+            Material[] materials = _meshRenderer.sharedMaterials;
+            if (materials != null && materials.Length > 0 && materials[0] != null)
+                _renderParams.SetStaticMaterials(materials.FirstOrDefault(m => m.name.Contains("Opaque")), materials.FirstOrDefault(m => m.name.Contains("Transparent")));
             else
-                SetDefaultStaticMaterials();
-        }
+                _renderParams.CreateStaticMaterial(opaque, transparent);
 
-        private void SetDefaultStaticMaterials()
-        {
-            if (_voxelObject.Animations[0].HasOpaqueFaces && _voxelObject.Animations[0].HasTransparentFaces)
-                _meshRenderer.SetMaterials(new List<Material> { _voxelObject.StaticOpaqueMaterial, _voxelObject.StaticTransparentMaterial });
-            else if (_voxelObject.Animations[0].HasOpaqueFaces)
-                _meshRenderer.SetMaterials(new List<Material> { _voxelObject.StaticOpaqueMaterial });
-            else if (_voxelObject.Animations[0].HasTransparentFaces)
-                _meshRenderer.SetMaterials(new List<Material> { _voxelObject.StaticTransparentMaterial });
-        }
-
-        private void CreateStaticMaterialInstances()
-        {
-            _staticOpaqueMaterialInstance = new Material(_voxelObject.StaticOpaqueMaterial);
-            _staticOpaqueMaterialInstance.name = _voxelObject.StaticOpaqueMaterial.name + "_Instance";
-
-            _staticTransparentMaterialInstance = new Material(_voxelObject.StaticTransparentMaterial);
-            _staticTransparentMaterialInstance.name = _voxelObject.StaticTransparentMaterial.name + "_Instance";
-
-            _meshRenderer.SetMaterials(new List<Material> { _staticOpaqueMaterialInstance, _staticTransparentMaterialInstance });
+            if (opaque && transparent)
+                _meshRenderer.SetMaterials(new List<Material> { _renderParams.StaticOpaqueMaterial, _renderParams.StaticTransparentMaterial });
+            else if (opaque)
+                _meshRenderer.SetMaterials(new List<Material> { _renderParams.StaticOpaqueMaterial });
+            else if (transparent)
+                _meshRenderer.SetMaterials(new List<Material> { _renderParams.StaticTransparentMaterial });
         }
 
         public void SetAnimation(int animationIndex)
@@ -399,20 +404,7 @@ namespace FoxEdit
             if (colorBuffer == null)
                 return;
 
-            if (_staticOpaqueMaterialInstance != null)
-            {
-                _staticOpaqueMaterialInstance.SetBuffer("_Colors", colorBuffer);
-                _staticOpaqueMaterialInstance.SetInt("_ColorCount", colorBuffer.count);
-                _staticTransparentMaterialInstance.SetBuffer("_Colors", colorBuffer);
-                _staticTransparentMaterialInstance.SetInt("_ColorCount", colorBuffer.count);
-            }
-            else
-            {
-                _voxelObject.StaticOpaqueMaterial.SetBuffer("_Colors", colorBuffer);
-                _voxelObject.StaticOpaqueMaterial.SetInt("_ColorCount", colorBuffer.count);
-                _voxelObject.StaticTransparentMaterial.SetBuffer("_Colors", colorBuffer);
-                _voxelObject.StaticTransparentMaterial.SetInt("_ColorCount", colorBuffer.count);
-            }
+            _renderParams.UpdateStaticMaterials(colorBuffer); ;
         }
 
         private void AnimationRender()
