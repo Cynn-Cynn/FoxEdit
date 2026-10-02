@@ -242,11 +242,12 @@ Shader "Voxel/Lit"
             ZTest LEqual
             ColorMask 0
             HLSLPROGRAM
-#if ANIMATED_VOXEL
-                #pragma vertex vert
-                #pragma fragment frag
+                #pragma vertex ShadowPassVertex
+                #pragma fragment ShadowPassFragment
                 #pragma multi_compile_instancing
+                #pragma multi_compile_local _ ANIMATED_VOXEL
 
+#if ANIMATED_VOXEL
                 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
                 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
@@ -271,33 +272,34 @@ Shader "Voxel/Lit"
 #else
                     positionCS.z = max(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
 #endif
-     
                     return positionCS;
                 }
 
-                v2f vert(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
+                v2f ShadowPassVertex(uint vertexID : SV_VertexID, uint instanceID : SV_InstanceID)
                 {
                     v2f o;
 
                     uint faceID = _InstanceStartIndex + instanceID;
 
-                    uint localVertexID = vertexID;
+                    uint localVertexID = vertexID - (vertexID % 4);
                     uint nextVertexID = (localVertexID + 1) % 4;
-                    uint nextNextVertexID = (localVertexID - 1 + 4) % 4;
-                    
+                    uint previousVertexID = (localVertexID - 1 + 4) % 4;
+
                     localVertexID = _Quads[faceID * 5 + localVertexID];
                     nextVertexID = _Quads[faceID * 5 + nextVertexID];
-                    nextNextVertexID = _Quads[faceID * 5 + nextNextVertexID];
+                    previousVertexID = _Quads[faceID * 5 + previousVertexID];
 
                     float4 positionOS = float4(_Vertices[localVertexID], 1.0f);
                     float4 nextPositionOS = float4(_Vertices[nextVertexID], 1.0f);
-                    float4 nextNextPositionOS = float4(_Vertices[nextNextVertexID], 1.0f);
+                    float4 previousPositionOS = float4(_Vertices[previousVertexID], 1.0f);
 
-                    float4 tangeantOS = float4(normalize(nextPositionOS.xyz - positionOS.xyz), 1.0f);
-                    float3 bitangeantOS = normalize(nextNextPositionOS.xyz - positionOS.xyz);
-                    float3 normalOS = cross(tangeantOS.xyz, bitangeantOS);
+                    float3 tangeantOS = normalize(nextPositionOS.xyz - positionOS.xyz);
+                    float3 bitangeantOS = normalize(previousPositionOS.xyz - positionOS.xyz);
 
-                    float3 positionWS = mul(_ObjectToWorld, positionOS).xyz;
+                    float3 normalOS = cross(tangeantOS, bitangeantOS);
+
+                    float4 vertexPositionOS = float4(_Vertices[_Quads[faceID * 5 + vertexID]], 1.0f);
+                    float3 positionWS = mul(_ObjectToWorld, vertexPositionOS).xyz;
                     float3 normalWS = mul(_ObjectToWorld, normalOS).xyz;
 
                     o.positionCS = GetShadowPositionHClip(positionWS, normalWS);
@@ -305,15 +307,11 @@ Shader "Voxel/Lit"
                     return o;
                 }
 
-                float4 frag(v2f i) : SV_TARGET
+                float4 ShadowPassFragment(v2f i) : SV_TARGET
                 {
                     return 0;
                 }
 #else
-                #pragma vertex ShadowPassVertex
-                #pragma fragment ShadowPassFragment
-                #pragma multi_compile_instancing
-
                 #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
                 #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
 #endif
