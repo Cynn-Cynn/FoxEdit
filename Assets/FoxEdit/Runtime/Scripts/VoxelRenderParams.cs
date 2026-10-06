@@ -1,6 +1,7 @@
 using FoxEdit;
 using UnityEngine;
 using UnityEngine.Rendering;
+using static Codice.CM.WorkspaceServer.DataStore.WkTree.WriteWorkspaceTree;
 
 internal class VoxelRenderParams
 {
@@ -112,15 +113,21 @@ internal class VoxelRenderParams
         _staticTransparentMaterial?.SetInt("_ColorCount", colorsBuffer.count);
     }
 
-    internal void SetInstanceStartIndex(VoxelObject.AnimationFrames animation, int frameIndex)
+    internal void SetInstancesData(VoxelObject.AnimationFrames animation, int frameIndex)
     {
         if (!_hasAnimatedParams)
             return;
 
         if (animation.HasOpaqueFaces)
+        {
             _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", animation.OpaqueMesh.InstanceStartIndices[frameIndex]);
+            _opaqueRenderParams.matProps.SetInt("_FacesCount", animation.OpaqueMesh.InstanceCount[frameIndex]);
+        }
         if (animation.HasTransparentFaces)
+        {
             _transparentRenderParams.matProps.SetInteger("_InstanceStartIndex", animation.TransparentMesh.InstanceStartIndices[frameIndex]);
+            _transparentRenderParams.matProps.SetInt("_FacesCount", animation.TransparentMesh.InstanceCount[frameIndex]);
+        }
     }
 
     internal void SetColorsBuffer(GraphicsBuffer colorsBuffer)
@@ -151,7 +158,7 @@ internal class VoxelRenderParams
         _transparentRenderParams.worldBounds = bounds;
     }
 
-    internal void SetVerticesAndQuads(VoxelObject.AnimationFrames animation, VoxelRenderer.VoxelBuffers buffers)
+    internal void SetBuffers(VoxelObject.AnimationFrames animation, VoxelRenderer.VoxelBuffers buffers)
     {
         if (!_hasAnimatedParams)
             return;
@@ -160,11 +167,13 @@ internal class VoxelRenderParams
         {
             _opaqueRenderParams.matProps.SetBuffer("_Vertices", buffers.OpaqueVertices);
             _opaqueRenderParams.matProps.SetBuffer("_Quads", buffers.OpaqueQuads);
+            _opaqueRenderParams.matProps.SetBuffer("_ObjectToWorldMatrices", buffers.Matrices);
         }
         if (animation.HasTransparentFaces)
         {
             _transparentRenderParams.matProps.SetBuffer("_Vertices", buffers.TransparentVertices);
             _transparentRenderParams.matProps.SetBuffer("_Quads", buffers.TransparentQuads);
+            _transparentRenderParams.matProps.SetBuffer("_ObjectToWorldMatrices", buffers.Matrices);
         }
     }
 

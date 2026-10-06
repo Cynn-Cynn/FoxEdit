@@ -20,6 +20,10 @@ namespace FoxEdit
             public GraphicsBuffer TransparentVertices = null;
             public GraphicsBuffer OpaqueQuads = null;
             public GraphicsBuffer TransparentQuads = null;
+            public GraphicsBuffer Matrices = null;
+            public List<Matrix4x4> ObjectToWorldMatrices = null;
+            public bool UpdateMatricesBuffer = false;
+            public VoxelRenderer Drawer = null;
             public int UseCount = 0;
         }
 
@@ -234,13 +238,12 @@ namespace FoxEdit
         private IEnumerator SetAnimationBuffered(int animationIndex)
         {
             yield return new WaitForEndOfFrame();
+            DisposeBuffers();
 
             _animationIndex = animationIndex;
             _animationTimer = 0.0f;
             _frameIndex = 0;
             SetWorldBounds();
-
-            _renderParams.SetInstanceStartIndex(_voxelObject.Animations[_animationIndex], _frameIndex);
 
             SetBufferData();
         }
@@ -306,15 +309,12 @@ namespace FoxEdit
                 DisposeBuffers();
         }
 
-        private void CreateBuffers()
+        private void CreateVoxelBuffers()
         {
-            VoxelBuffers buffers = null;
-            string bufferKey = _currentAnimationName;
+            VoxelBuffers buffers = new VoxelBuffers();
+            buffers.ObjectToWorldMatrices = new List<Matrix4x4>();
+            buffers.Drawer = this;
 
-            if (_buffers.TryGetValue(bufferKey, out buffers))
-                return;
-
-            buffers = new VoxelBuffers();
             if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
             {
                 buffers.OpaqueVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxOpaqueVerticesCount, sizeof(float) * 3);
@@ -325,7 +325,30 @@ namespace FoxEdit
                 buffers.TransparentVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentVerticesCount, sizeof(float) * 3);
                 buffers.TransparentQuads = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _voxelObject.MaxTransparentQuadsCount, sizeof(int));
             }
-            _buffers.Add(bufferKey, buffers);
+            _buffers.Add(_currentAnimationName, buffers);
+        }
+
+        private void SetMatricesBuffer(VoxelBuffers buffers)
+        {
+            if (buffers.UpdateMatricesBuffer)
+            {
+                buffers.Matrices?.Dispose();
+                buffers.Matrices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, buffers.ObjectToWorldMatrices.Count, sizeof(float) * 16);
+                buffers.Matrices.SetData(buffers.ObjectToWorldMatrices.ToArray());
+                buffers.UpdateMatricesBuffer = false;
+            }
+        }
+
+        private void AddMatrix(VoxelBuffers buffers)
+        {
+            buffers.ObjectToWorldMatrices.Add(transform.localToWorldMatrix);
+            buffers.UpdateMatricesBuffer = true;
+        }
+
+        private void RemoveMatrix(VoxelBuffers buffers)
+        {
+            buffers.ObjectToWorldMatrices.Remove(transform.localToWorldMatrix);
+            buffers.UpdateMatricesBuffer = true;
         }
 
         private void SetBufferData()
@@ -335,7 +358,7 @@ namespace FoxEdit
 
             if (!_buffers.TryGetValue(bufferKey, out buffers))
             {
-                CreateBuffers();
+                CreateVoxelBuffers();
                 buffers = _buffers[bufferKey];
 
                 if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
@@ -350,21 +373,26 @@ namespace FoxEdit
                 }
             }
 
-            _renderParams.SetVerticesAndQuads(_voxelObject.Animations[_animationIndex], buffers);
             buffers.UseCount += 1;
+            AddMatrix(buffers);
+
+            _renderParams.SetBuffers(_voxelObject.Animations[_animationIndex], buffers);
+            _renderParams.SetInstancesData(_voxelObject.Animations[_animationIndex], _frameIndex);
         }
 
         private void DisposeBuffers()
         {
             VoxelBuffers buffers;
             string bufferKey = _currentAnimationName;
-
             if (!_buffers.TryGetValue(bufferKey, out buffers))
                 return;
 
             if (buffers.UseCount > 1)
             {
                 buffers.UseCount -= 1;
+                RemoveMatrix(buffers);
+                if (buffers.Drawer == this)
+                    buffers.Drawer = null;
                 return;
             }
 
@@ -372,6 +400,7 @@ namespace FoxEdit
             buffers.OpaqueQuads?.Dispose();
             buffers.TransparentVertices?.Dispose();
             buffers.TransparentQuads?.Dispose();
+            buffers.Matrices?.Dispose();
 
             _buffers.Remove(bufferKey);
         }
@@ -409,13 +438,23 @@ namespace FoxEdit
 
         private void AnimationRender()
         {
+            VoxelBuffers buffers = null;
+            if (!_buffers.TryGetValue(_currentAnimationName, out buffers))
+                return;
+
+            if (buffers.Drawer == null)
+                buffers.Drawer = this;
+
+            if (buffers.Drawer != this)
+                return;
+
             _animationTimer += Time.deltaTime;
 
             if (_animationTimer >= _voxelObject.Animations[_animationIndex].FrameDuration)
             {
                 _frameIndex = (_frameIndex + 1) % _voxelObject.Animations[_animationIndex].FrameCount;
                 _animationTimer -= _voxelObject.Animations[_animationIndex].FrameDuration;
-                _renderParams.SetInstanceStartIndex(_voxelObject.Animations[_animationIndex], _frameIndex);
+                _renderParams.SetInstancesData(_voxelObject.Animations[_animationIndex], _frameIndex);
             }
 
             if (transform.hasChanged)
@@ -429,11 +468,12 @@ namespace FoxEdit
             if (VoxelSharedData.FaceTriangleBuffer == null)
                 return;
 #endif
-
+            SetMatricesBuffer(buffers);
+            _renderParams.SetBuffers(_voxelObject.Animations[_animationIndex], buffers);
             if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
-                Graphics.RenderPrimitivesIndexed(_renderParams.OpaqueRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceCount[_frameIndex]);
+                Graphics.RenderPrimitivesIndexed(_renderParams.OpaqueRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].OpaqueMesh.InstanceCount[_frameIndex] * buffers.UseCount);
             if (_voxelObject.Animations[_animationIndex].HasTransparentFaces)
-                Graphics.RenderPrimitivesIndexed(_renderParams.TransparentRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceCount[_frameIndex]);
+                Graphics.RenderPrimitivesIndexed(_renderParams.TransparentRenderParams, MeshTopology.Triangles, VoxelSharedData.FaceTriangleBuffer, 6 /* 2 triangles */, instanceCount: _voxelObject.Animations[_animationIndex].TransparentMesh.InstanceCount[_frameIndex] * buffers.UseCount);
         }
 
         #endregion Rendering
