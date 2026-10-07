@@ -89,7 +89,6 @@ Shader "Voxel/Lit"
 #if ANIMATED_VOXEL
                 uint _InstanceStartIndex;
                 uint _FacesCount;
-                float4x4 _ObjectToWorld;
 #endif
                 uint _ColorCount;
             UNITY_INSTANCING_BUFFER_END(Props)
@@ -263,9 +262,13 @@ Shader "Voxel/Lit"
 
                 StructuredBuffer<float3> _Vertices;
                 StructuredBuffer<int> _Quads;
+                StructuredBuffer<float4x4> _ObjectToWorldMatrices;
 
+UNITY_INSTANCING_BUFFER_START(Props)
                 uint _InstanceStartIndex;
-                float4x4 _ObjectToWorld;
+                uint _FacesCount;
+UNITY_INSTANCING_BUFFER_END(Props)
+
 
                 float4 GetShadowPositionHClip(float3 positionWS, float3 normalWS)
                 {
@@ -284,7 +287,9 @@ Shader "Voxel/Lit"
                 {
                     v2f o;
 
-                    uint faceID = _InstanceStartIndex + instanceID;
+                    uint objectID = instanceID / _FacesCount;
+                    uint instaceIDLooped = instanceID % _FacesCount;
+                    uint faceID = _InstanceStartIndex + instaceIDLooped;
 
                     uint localVertexID = vertexID - (vertexID % 4);
                     uint nextVertexID = (localVertexID + 1) % 4;
@@ -303,9 +308,10 @@ Shader "Voxel/Lit"
 
                     float3 normalOS = cross(tangeantOS, bitangeantOS);
 
+                    float4x4 objectToWorld = _ObjectToWorldMatrices[objectID];
                     float4 vertexPositionOS = float4(_Vertices[_Quads[faceID * 5 + vertexID]], 1.0f);
-                    float3 positionWS = mul(_ObjectToWorld, vertexPositionOS).xyz;
-                    float3 normalWS = mul(_ObjectToWorld, normalOS).xyz;
+                    float3 positionWS = mul(objectToWorld, vertexPositionOS).xyz;
+                    float3 normalWS = mul(objectToWorld, normalOS).xyz;
 
                     o.positionCS = GetShadowPositionHClip(positionWS, normalWS);
 
