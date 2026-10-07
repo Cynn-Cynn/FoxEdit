@@ -11,6 +11,7 @@ namespace FoxEdit
         private VoxelRenderer _voxelRenderer = null;
 
         private bool _staticRender = false;
+        private bool _areBuffersBatched = false;
         private SerializedProperty _frameDurationProperty = null;
 
         private string[] _paletteNames = null;
@@ -21,6 +22,7 @@ namespace FoxEdit
             _voxelRenderer = target as VoxelRenderer;
 
             _staticRender = serializedObject.FindProperty("_staticRender").boolValue;
+            _areBuffersBatched = serializedObject.FindProperty("_areBuffersBatched").boolValue;
 
             PaletteSetup();
         }
@@ -46,9 +48,12 @@ namespace FoxEdit
 
             PaletteIndexOverrideDisplay();
             StaticRenderDisplay();
-            if (!Application.isPlaying && GUILayout.Button("Edit Voxel"))
+
+            if (!Application.isPlaying)
             {
-                FoxEditManager.StartEditVoxelObject(_voxelRenderer);
+                SwitchBatchMode();
+                if (GUILayout.Button("Edit Voxel"))
+                    FoxEditManager.StartEditVoxelObject(_voxelRenderer);
             }
         }
 
@@ -90,6 +95,17 @@ namespace FoxEdit
             {
                 _voxelRenderer.RenderSwap();
                 _staticRender = !_staticRender;
+                Save();
+            }
+        }
+
+        private void SwitchBatchMode()
+        {
+            string buttonText = "Switch to " + (_areBuffersBatched ? "standalone" : "batched") + " render";
+            if (GUILayout.Button(buttonText))
+            {
+                _voxelRenderer.SwitchBatchMode();
+                _areBuffersBatched = !_areBuffersBatched;
                 Save();
             }
         }
