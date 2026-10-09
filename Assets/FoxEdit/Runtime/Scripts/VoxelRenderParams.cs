@@ -158,7 +158,7 @@ internal class VoxelRenderParams
         _transparentRenderParams.worldBounds = bounds;
     }
 
-    internal void SetBuffers(VoxelObject.AnimationFrames animation, VoxelRenderer.VoxelBuffers buffers)
+    internal void SetBuffers(VoxelObject.AnimationFrames animation, VoxelRenderer.AnimatedMeshData buffers)
     {
         if (!_hasAnimatedParams)
             return;
@@ -177,7 +177,7 @@ internal class VoxelRenderParams
         }
     }
 
-    internal void SetVerticesAndQuads(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.VoxelBuffers buffers)
+    internal void SetVerticesAndQuads(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.AnimatedMeshData buffers)
     {
         if (!_hasAnimatedParams)
             return;

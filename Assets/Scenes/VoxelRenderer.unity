@@ -235,6 +235,24 @@ MonoBehaviour:
   _paletteIndexOverride: -1
   _staticRender: 0
   _areBuffersBatched: 1
+  _animationEvents:
+  - AnimationIndex: 0
+    FrameIndex: 0
+    Events:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 329318197}
+          m_TargetAssemblyTypeName: UnityEngine.Animator, UnityEngine
+          m_MethodName: SetTrigger
+          m_Mode: 5
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: Test
+            m_BoolArgument: 0
+          m_CallState: 2
   _meshFilter: {fileID: 329318199}
   _meshRenderer: {fileID: 329318198}
   _animator: {fileID: 329318197}
@@ -626,7 +644,8 @@ MonoBehaviour:
   _voxelObject: {fileID: 11400000, guid: bcadf864770f44944b4019e022bd081e, type: 2}
   _paletteIndexOverride: 1
   _staticRender: 1
-  _areBuffersBatched: 1
+  _areBuffersBatched: 0
+  _animationEvents: []
   _meshFilter: {fileID: 566471701}
   _meshRenderer: {fileID: 566471700}
   _animator: {fileID: 566471699}
@@ -906,6 +925,24 @@ MonoBehaviour:
   _paletteIndexOverride: -1
   _staticRender: 0
   _areBuffersBatched: 1
+  _animationEvents:
+  - AnimationIndex: 0
+    FrameIndex: 1
+    Events:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 1095831829}
+          m_TargetAssemblyTypeName: FoxEdit.VoxelRenderer, FoxEdit.Runtime
+          m_MethodName: SetPalette
+          m_Mode: 3
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 1
+            m_FloatArgument: 0
+            m_StringArgument: Test
+            m_BoolArgument: 0
+          m_CallState: 2
   _meshFilter: {fileID: 1095831828}
   _meshRenderer: {fileID: 1095831827}
   _animator: {fileID: 1095831826}
