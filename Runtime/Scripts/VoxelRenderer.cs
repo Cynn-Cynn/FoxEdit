@@ -61,8 +61,6 @@ namespace FoxEdit
         private AnimatedMeshData _animatedMeshData = null;
 
         private int _animationIndex = 0;
-        //private float _animationTimer = 0.0f;
-        //private int _frameIndex = 0;
 
         private VoxelRenderParams _renderParams = null;
 
@@ -165,7 +163,7 @@ namespace FoxEdit
 #endif
                 _meshRenderer.enabled = _staticRender;
                 if (_staticRender)
-                    DisposeBuffers();
+                    DisposeBuffers(out _);
                 else
                     SetBufferData();
 #if UNITY_EDITOR
@@ -212,6 +210,13 @@ namespace FoxEdit
                     _paletteIndexOverride = index;
             }
 
+            if (_areBuffersBatched)
+            {
+                int frameIndex = -1;
+                DisposeBuffers(out frameIndex);
+                SetBufferData(frameIndex);
+            }
+
 #if UNITY_EDITOR
             if (!Application.isPlaying)
             {
@@ -254,7 +259,7 @@ namespace FoxEdit
         private IEnumerator SetAnimationBuffered(int animationIndex)
         {
             yield return new WaitForEndOfFrame();
-            DisposeBuffers();
+            DisposeBuffers(out _);
 
             _animationIndex = animationIndex;
             SetWorldBounds();
@@ -320,7 +325,7 @@ namespace FoxEdit
 #if UNITY_EDITOR
             if (Application.isPlaying)
 #endif
-                DisposeBuffers();
+                DisposeBuffers(out _);
         }
 
         private void CreateVoxelBuffers()
@@ -380,7 +385,7 @@ namespace FoxEdit
             return true;
         }
 
-        private void SetBufferData()
+        private void SetBufferData(int startFrameIndex = -1)
         {
             if (!GetActiveBuffers())
             {
@@ -396,6 +401,9 @@ namespace FoxEdit
                     _animatedMeshData.TransparentVertices.SetData(_voxelObject.Animations[_animationIndex].TransparentMesh.Vertices);
                     _animatedMeshData.TransparentQuads.SetData(_voxelObject.Animations[_animationIndex].TransparentMesh.Quads);
                 }
+
+                if (startFrameIndex != -1)
+                    _animatedMeshData.FrameIndex = startFrameIndex;
             }
 
             _animatedMeshData.UseCount += 1;
@@ -407,10 +415,15 @@ namespace FoxEdit
             CheckForFrameEvents(_animationIndex, _animatedMeshData.FrameIndex);
         }
 
-        private void DisposeBuffers()
+        private void DisposeBuffers(out int frameIndex)
         {
             if (_animatedMeshData == null)
+            {
+                frameIndex = -1;
                 return;
+            }
+
+            frameIndex = _animatedMeshData.FrameIndex;
 
             if (_areBuffersBatched)
             {
