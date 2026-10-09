@@ -13,7 +13,7 @@ namespace FoxEdit
     {
         private VoxelEditorFrame _frameToPreview = null;
         private VoxelObjectPackedFrameData _frameData = default;
-        private VoxelRenderer.VoxelBuffers _buffers = null;
+        private VoxelRenderer.AnimatedMeshData _buffers = null;
         private VoxelRenderParams _renderParams = null;
 
         private bool _hasOpaqueFaces = false;
@@ -180,7 +180,7 @@ namespace FoxEdit
             if (_buffers != null)
                 return;
 
-            _buffers = new VoxelBuffers();
+            _buffers = new AnimatedMeshData();
             if (_hasOpaqueFaces)
             {
                 _buffers.OpaqueVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _opaquePreview.Vertices.Length, sizeof(float) * 3);

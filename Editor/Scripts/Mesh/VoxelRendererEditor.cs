@@ -12,7 +12,7 @@ namespace FoxEdit
 
         private bool _staticRender = false;
         private bool _areBuffersBatched = false;
-        private SerializedProperty _frameDurationProperty = null;
+        private SerializedProperty _eventsProperty = null;
 
         private string[] _paletteNames = null;
         private int _paletteIndexOverride = 0;
@@ -23,6 +23,7 @@ namespace FoxEdit
 
             _staticRender = serializedObject.FindProperty("_staticRender").boolValue;
             _areBuffersBatched = serializedObject.FindProperty("_areBuffersBatched").boolValue;
+            _eventsProperty = serializedObject.FindProperty("_animationEvents");
 
             PaletteSetup();
         }
@@ -46,12 +47,14 @@ namespace FoxEdit
             if (_voxelRenderer.VoxelObject == null)
                 return;
 
+            EventDisplay();
             PaletteIndexOverrideDisplay();
             StaticRenderDisplay();
 
             if (!Application.isPlaying)
             {
-                SwitchBatchMode();
+                if (!_staticRender)
+                    SwitchBatchMode();
                 if (GUILayout.Button("Edit Voxel"))
                     FoxEditManager.StartEditVoxelObject(_voxelRenderer);
             }
@@ -62,6 +65,14 @@ namespace FoxEdit
             VoxelObject voxelObject = EditorGUILayout.ObjectField("Voxel Object", _voxelRenderer.VoxelObject, typeof(VoxelObject), false) as VoxelObject;
             if (voxelObject != _voxelRenderer.VoxelObject)
                 _voxelRenderer.VoxelObject = voxelObject;
+        }
+
+        private void EventDisplay()
+        {
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(_eventsProperty);
+            if (EditorGUI.EndChangeCheck())
+                Save();
         }
 
         private void PaletteIndexOverrideDisplay()
