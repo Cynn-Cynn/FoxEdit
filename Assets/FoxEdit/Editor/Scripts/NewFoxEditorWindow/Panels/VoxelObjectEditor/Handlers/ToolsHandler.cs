@@ -21,6 +21,7 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
 
         protected override void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer, VoxelEditor voxelEditor)
         {
+            voxelEditor.OnCurrentFrameChanged += OnCurrentFrameChanged;
         }
 
         public override void GetElements()
@@ -42,35 +43,43 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
         {
             VoxelEditor.OnChangeAction += OnChangeAction;
             VoxelEditor.OnChangeTool += OnChangeTool;
-            VoxelEditor.CanRedoChanged += OnCanRedoChanged;
-            VoxelEditor.CanUndoChanged += OnCanUndoChanged;
             _toolToolbar.OnToolSelected += OnToolSelected;
             _actionToolbar.OnToolSelected += OnActionSelected;
             _undoButton.clickable.clicked += Undo;
             _redoButton.clickable.clicked += Redo;
         }
 
+        private void OnCurrentFrameChanged(VoxelEditorFrame oldFrame, VoxelEditorFrame newFrame)
+        {
+            if (oldFrame != null)
+            {
+                oldFrame.CommandHandler.OnCanRedoChanged -= OnCanRedoChanged;
+                oldFrame.CommandHandler.OnCanUndoChanged -= OnCanUndoChanged;
+            }
+            if (newFrame != null)
+            {
+                newFrame.CommandHandler.OnCanRedoChanged += OnCanRedoChanged;
+                newFrame.CommandHandler.OnCanUndoChanged += OnCanUndoChanged;
+            }
+        }
 
         public override void UnregisterCallbacks()
         {
             VoxelEditor.OnChangeAction -= OnChangeAction;
-            VoxelEditor.CanUndoChanged -= OnCanUndoChanged;
-            VoxelEditor.CanRedoChanged -= OnCanRedoChanged;
             VoxelEditor.OnChangeTool -= OnChangeTool;
             _toolToolbar.OnToolSelected -= OnToolSelected;
             _actionToolbar.OnToolSelected -= OnActionSelected;
             _undoButton.clickable.clicked -= Undo;
             _redoButton.clickable.clicked -= Redo;
         }
+
         private void OnCanUndoChanged(bool canUndo)
         {
-            UnityEngine.Debug.Log("Undo: " + canUndo);
             _undoButton.SetEnabled(canUndo);
         }
 
         private void OnCanRedoChanged(bool canRedo)
         {
-            UnityEngine.Debug.Log("Redo: " + canRedo);
             _redoButton.SetEnabled(canRedo);
         }
 

@@ -18,8 +18,6 @@ namespace FoxEdit
         public static event Action<vxAction> OnChangeAction;
         public static event Action<int> OnChangeColor;
         public static event Action<int> OnChangePalette;
-        public static event Action<bool> CanRedoChanged;
-        public static event Action<bool> CanUndoChanged;
 
         private static vxAction _action = vxAction.Paint;
         public static vxAction Action
@@ -93,6 +91,7 @@ namespace FoxEdit
         private bool _canStopAnimationPreview = false;
 
         public event Action<int> OnFrameIndexChanged;
+        public event Action<VoxelEditorFrame, VoxelEditorFrame> OnCurrentFrameChanged;
         private VoxelEditorFrame lastVisibleEditorFrame = null;
         private int _selectedFrameIndex = 0;
         public int SelectedFrameIndex
@@ -100,13 +99,13 @@ namespace FoxEdit
             get => _selectedFrameIndex;
             set
             {
+                VoxelEditorFrame oldFrame = CurrentFrame;
                 _selectedFrameIndex = value;
                 OnFrameIndexChanged?.Invoke(_selectedFrameIndex);
+                OnCurrentFrameChanged?.Invoke(oldFrame, CurrentFrame);
                 if (CurrentFrame != null)
                 {
                     _preview.ChangeFrame(CurrentFrame);
-                    CanRedoChanged = CurrentFrame.OnCanRedoChanged;
-                    CanUndoChanged = CurrentFrame.OnCanUndoChanged;
                     CurrentFrame.ForceSendUndoRedoEvents();
                 }
             }

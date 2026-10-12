@@ -30,7 +30,6 @@ namespace FoxEdit.Commands
                 if (!_grid.IsEmpty(editedVoxel))
                 {
                     _grid[editedVoxel].SetColor(_newColor);
-                    Debug.LogFormat("Set color {0}", _newColor);
                 }
             }
         }
@@ -47,7 +46,6 @@ namespace FoxEdit.Commands
                 if (!_grid.IsEmpty(position))
                 {
                     _grid[position].SetColor(color);
-                    Debug.LogFormat("Set color {0}", color);
                 }
                 i++;
             }
