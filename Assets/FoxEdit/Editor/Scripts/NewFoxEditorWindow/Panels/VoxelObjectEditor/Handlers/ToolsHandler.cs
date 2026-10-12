@@ -1,7 +1,5 @@
 
 
-using System;
-using System.Diagnostics;
 using FoxEdit.VoxelTools;
 using FoxEdit.WindowComponents;
 using UnityEngine.UIElements;

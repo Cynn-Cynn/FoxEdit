@@ -22,6 +22,16 @@
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
+            <ui:VisualElement name="helpers" class="window-segment">
+                <ui:Label tabindex="-1" text="Helpers" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title"/>
+                <ui:VisualElement name="grid-settings" class="helpers-group">
+                    <ui:Label text="Grid" class="subtitle"/>
+                    <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
+                        <ui:Toggle label="Show grid" name="show-grid"/>
+                        <uie:ColorField label="" value="rgb(0, 255, 255)" name="grid-color" style="flex-grow: 1; max-width: 200px;"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
             <ui:VisualElement name="color-palette" class="window-segment">
                 <ui:Label tabindex="-1" text="Color Palette" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" class="title"/>
                 <ui:VisualElement name="palette-selection" style="flex-direction: row; display: flex;">
