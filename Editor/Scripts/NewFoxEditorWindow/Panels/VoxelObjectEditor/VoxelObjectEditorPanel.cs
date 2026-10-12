@@ -39,6 +39,7 @@ namespace FoxEdit.WindowPanels
             AddHandler<SaveHandler>();
             AddHandler<ColorsHandler>();
             AddHandler<AnimationsHandler>();
+            AddHandler<HelpersHandler>();
         }
 
         private void AddHandler<T>() where T : baseVoxelObjectEditorPanelHandler
