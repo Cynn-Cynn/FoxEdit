@@ -16,7 +16,7 @@ namespace FoxEdit.WindowPanels
         private Button stopButton;
         private VoxelRenderer _voxelRenderer;
 
-        private List<baseVoxelObjectEditorPanelHandler> handlers = new List<baseVoxelObjectEditorPanelHandler>();
+        private Dictionary<Type, baseVoxelObjectEditorPanelHandler> handlers = new Dictionary<Type, baseVoxelObjectEditorPanelHandler>();
 
         public VoxelObjectEditorPanel(VisualElement root)
         {
@@ -43,18 +43,32 @@ namespace FoxEdit.WindowPanels
 
         private void AddHandler<T>() where T : baseVoxelObjectEditorPanelHandler
         {
-            handlers.Add(Activator.CreateInstance(typeof(T), root) as baseVoxelObjectEditorPanelHandler);
+            handlers.Add(typeof(T), Activator.CreateInstance(typeof(T), root) as baseVoxelObjectEditorPanelHandler);
+        }
+
+        private bool TryGetHandler<T>(out T handler) where T : baseVoxelObjectEditorPanelHandler
+        {
+            if (handlers.TryGetValue(typeof(T), out var h))
+            {
+                handler = h as T;
+                return true;
+            }
+
+            handler = null;
+            return false;
         }
 #endregion
 
         private void SetupFields()
         {
-            handlers.ForEach(h => h.SetupFields());
+            foreach (var h in handlers)
+                h.Value.SetupFields();
         }
 
         private void GetElements()
         {
-            handlers.ForEach(h => h.GetElements());
+            foreach (var h in handlers)
+                h.Value.GetElements();
 
             stopButton = root.Q<Button>("stop-edit-button");
         }
@@ -62,7 +76,8 @@ namespace FoxEdit.WindowPanels
         #region Callbacks
         private void RegisterCallbacks()
         {
-            handlers.ForEach(h => h.RegisterCallbacks());
+            foreach (var h in handlers)
+                h.Value.RegisterCallbacks();
             stopButton.clicked += OnClickStopEdit;
 
             root.RegisterCallback<ClickEvent>(FocusVoxelRendererIfNotSelected);
@@ -74,7 +89,8 @@ namespace FoxEdit.WindowPanels
 
         private void UnregisterCallbacks()
         {
-            handlers.ForEach(h => h.UnregisterCallbacks());
+            foreach (var h in handlers)
+                h.Value.UnregisterCallbacks();
             stopButton.clicked -= OnClickStopEdit;
             root.UnregisterCallback<ClickEvent>(FocusVoxelRendererIfNotSelected);
 
@@ -84,13 +100,16 @@ namespace FoxEdit.WindowPanels
 
         private void OnStopEditVoxelObject()
         {
-            handlers.ForEach(h => h.StopEditVoxelObject());
+            foreach (var h in handlers)
+                h.Value.StopEditVoxelObject();
+
             _voxelRenderer = null;
         }
 
         private void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer, VoxelEditor voxelEditor)
         {
-            handlers.ForEach(h => h.StartEditVoxelObject(voxelObject, voxelRenderer, voxelEditor));
+            foreach (var h in handlers)
+                h.Value.StartEditVoxelObject(voxelObject, voxelRenderer, voxelEditor);
             _voxelRenderer = voxelRenderer;
             FocusVoxelRenderer();
 
@@ -122,6 +141,18 @@ namespace FoxEdit.WindowPanels
         public void SetVisibility(bool visible)
         {
             root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        public void Undo()
+        {
+            if (TryGetHandler<ToolsHandler>(out ToolsHandler handler))
+                handler.Undo();
+        }
+
+        public void Redo()
+        {
+            if (TryGetHandler<ToolsHandler>(out ToolsHandler handler))
+                handler.Redo();
         }
 
     }
