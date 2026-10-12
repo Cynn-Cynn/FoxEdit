@@ -1,5 +1,7 @@
 
 
+using System;
+using System.Diagnostics;
 using FoxEdit.VoxelTools;
 using FoxEdit.WindowComponents;
 using UnityEngine.UIElements;
@@ -10,6 +12,8 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
     {
         private ToolbarElement _toolToolbar;
         private ToolbarElement _actionToolbar;
+        private Button _undoButton;
+        private Button _redoButton;
 
         public ToolsHandler(VisualElement root) : base(root)
         {
@@ -17,12 +21,15 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
 
         protected override void OnStartEditVoxelObject(VoxelObject voxelObject, VoxelRenderer voxelRenderer, VoxelEditor voxelEditor)
         {
+            voxelEditor.OnCurrentFrameChanged += OnCurrentFrameChanged;
         }
 
         public override void GetElements()
         {
             _toolToolbar = _root.Q<ToolbarElement>("tools");
             _actionToolbar = _root.Q<ToolbarElement>("actions");
+            _undoButton = _root.Q<Button>("undo-button");
+            _redoButton = _root.Q<Button>("redo-button");
         }
 
 
@@ -38,6 +45,22 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             VoxelEditor.OnChangeTool += OnChangeTool;
             _toolToolbar.OnToolSelected += OnToolSelected;
             _actionToolbar.OnToolSelected += OnActionSelected;
+            _undoButton.clickable.clicked += Undo;
+            _redoButton.clickable.clicked += Redo;
+        }
+
+        private void OnCurrentFrameChanged(VoxelEditorFrame oldFrame, VoxelEditorFrame newFrame)
+        {
+            if (oldFrame != null)
+            {
+                oldFrame.CommandHandler.OnCanRedoChanged -= OnCanRedoChanged;
+                oldFrame.CommandHandler.OnCanUndoChanged -= OnCanUndoChanged;
+            }
+            if (newFrame != null)
+            {
+                newFrame.CommandHandler.OnCanRedoChanged += OnCanRedoChanged;
+                newFrame.CommandHandler.OnCanUndoChanged += OnCanUndoChanged;
+            }
         }
 
         public override void UnregisterCallbacks()
@@ -46,6 +69,28 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             VoxelEditor.OnChangeTool -= OnChangeTool;
             _toolToolbar.OnToolSelected -= OnToolSelected;
             _actionToolbar.OnToolSelected -= OnActionSelected;
+            _undoButton.clickable.clicked -= Undo;
+            _redoButton.clickable.clicked -= Redo;
+        }
+
+        private void OnCanUndoChanged(bool canUndo)
+        {
+            _undoButton.SetEnabled(canUndo);
+        }
+
+        private void OnCanRedoChanged(bool canRedo)
+        {
+            _redoButton.SetEnabled(canRedo);
+        }
+
+        private void Undo()
+        {
+            _voxelEditor.Undo();
+        }
+
+        private void Redo()
+        {
+            _voxelEditor.Redo();
         }
 
         private void OnChangeTool(vxTool tool)
