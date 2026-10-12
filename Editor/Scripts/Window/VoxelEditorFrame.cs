@@ -17,7 +17,7 @@ namespace FoxEdit
         private VoxelPreview _preview;
         public Texture2D _thumbnail = null;
 
-        private VoxelEditorCommandHandler _commandHandler = new VoxelEditorCommandHandler();
+        public VoxelEditorCommandHandler CommandHandler {get; private set;} = new VoxelEditorCommandHandler();
 
         public bool VoxelRaycast(Ray ray, out VoxelEditorObject voxel, out Vector3 faceNormal)
         {
@@ -45,7 +45,7 @@ namespace FoxEdit
         {
             VoxelTransform = voxelTransform;
             _editWindow = editWindow;
-            _commandHandler.OnUndoRedo = OnUndoRedo;
+            CommandHandler.OnUndoRedo = OnUndoRedo;
             _grid = new Grid3D();
         }
 
@@ -66,7 +66,7 @@ namespace FoxEdit
 
         internal VoxelEditorFrame GetCopy(int newFrameIndex, int paletteIndex)
         {
-            VoxelEditorFrame newFrame = new VoxelEditorFrame(VoxelTransform, newFrameIndex, _editWindow, _commandHandler.OnUndoRedo);
+            VoxelEditorFrame newFrame = new VoxelEditorFrame(VoxelTransform, newFrameIndex, _editWindow, CommandHandler.OnUndoRedo);
             Grid3D otherGrid = new Grid3D();
 
             foreach (Vector3Int gridPosition in _grid.Keys)
@@ -99,7 +99,7 @@ namespace FoxEdit
         {
             if (CanAddVoxel(out Vector3Int newGridPosition, gridPosition, direction))
             {
-                _commandHandler.ExecuteCommand(new AddVoxelsCommand(_grid, gridPosition, colorIndex, VoxelTransform));
+                CommandHandler.ExecuteCommand(new AddVoxelsCommand(_grid, newGridPosition, colorIndex, VoxelTransform));
                 return true;
             }
 
@@ -134,7 +134,7 @@ namespace FoxEdit
                 foreach (Vector3Int newGridPosition in layerVoxels)
                     offsetedVoxels.Add(newGridPosition + direction);
 
-                _commandHandler.ExecuteCommand(new AddVoxelsCommand(_grid, offsetedVoxels, VoxelTransform));
+                CommandHandler.ExecuteCommand(new AddVoxelsCommand(_grid, offsetedVoxels, colorIndex, VoxelTransform));
                 return true;
             }
 
@@ -189,7 +189,7 @@ namespace FoxEdit
             if (_grid.IsEmpty(gridPosition) || _grid.Count == 1)
                 return false;
 
-            _commandHandler.ExecuteCommand(new RemoveVoxelsCommand(_grid, gridPosition, VoxelTransform));
+            CommandHandler.ExecuteCommand(new RemoveVoxelsCommand(_grid, gridPosition, VoxelTransform));
             return true;
         }
 
@@ -203,7 +203,7 @@ namespace FoxEdit
 
             if (RemoveLayer(ref voxelsToRemove, gridPosition, direction, colorIndex))
             {
-                _commandHandler.ExecuteCommand(new RemoveVoxelsCommand(_grid, voxelsToRemove, VoxelTransform));
+                CommandHandler.ExecuteCommand(new RemoveVoxelsCommand(_grid, voxelsToRemove, VoxelTransform));
                 return true;
             }
             return false;
@@ -249,7 +249,7 @@ namespace FoxEdit
             if (_grid.IsEmpty(gridPosition) || _grid[gridPosition].ColorIndex == colorIndex)
                 return false;
 
-            _commandHandler.ExecuteCommand(new ColorVoxelsCommand(_grid, gridPosition, colorIndex, VoxelTransform));
+            CommandHandler.ExecuteCommand(new ColorVoxelsCommand(_grid, gridPosition, colorIndex, VoxelTransform));
             return true;
         }
 
@@ -263,7 +263,7 @@ namespace FoxEdit
 
             if (FillColor(ref voxelsToColor, gridPosition, colorIndex, baseColorIndex))
             {
-                _commandHandler.ExecuteCommand(new ColorVoxelsCommand(_grid, voxelsToColor, colorIndex, VoxelTransform));
+                CommandHandler.ExecuteCommand(new ColorVoxelsCommand(_grid, voxelsToColor, colorIndex, VoxelTransform));
                 return true;
             }
 
@@ -613,13 +613,13 @@ namespace FoxEdit
         #endregion SaveSystem
 
         #region Undo/Redo
-        public Action<bool> OnCanUndoChanged => _commandHandler.OnCanUndoChanged;
-        public Action<bool> OnCanRedoChanged => _commandHandler.OnCanUndoChanged;
-        public bool CanUndo() => _commandHandler.CanUndo();
-        public bool CanRedo() => _commandHandler.CanRedo();
-        public void Undo() => _commandHandler.Undo();
-        public void Redo() => _commandHandler.Redo();
-        public void ForceSendUndoRedoEvents() => _commandHandler.SendCanEvents();
+        public Action<bool> OnCanUndoChanged => CommandHandler.OnCanUndoChanged;
+        public Action<bool> OnCanRedoChanged => CommandHandler.OnCanUndoChanged;
+        public bool CanUndo() => CommandHandler.CanUndo();
+        public bool CanRedo() => CommandHandler.CanRedo();
+        public void Undo() => CommandHandler.Undo();
+        public void Redo() => CommandHandler.Redo();
+        public void ForceSendUndoRedoEvents() => CommandHandler.SendCanEvents();
         #endregion
 
 #if UNITY_EDITOR

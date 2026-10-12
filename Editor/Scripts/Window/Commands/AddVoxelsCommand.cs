@@ -12,8 +12,9 @@ namespace FoxEdit.Commands
             _color = color;
         }
 
-        public AddVoxelsCommand(Grid3D grid, HashSet<Vector3Int> editedVoxels, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
+        public AddVoxelsCommand(Grid3D grid, HashSet<Vector3Int> editedVoxels, int color, Transform voxelTransform) : base(grid, editedVoxels, voxelTransform)
         {
+            _color = color;
         }
 
         public override void Execute()
