@@ -83,12 +83,12 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
             _redoButton.SetEnabled(canRedo);
         }
 
-        private void Undo()
+        public void Undo()
         {
             _voxelEditor.Undo();
         }
 
-        private void Redo()
+        public void Redo()
         {
             _voxelEditor.Redo();
         }
