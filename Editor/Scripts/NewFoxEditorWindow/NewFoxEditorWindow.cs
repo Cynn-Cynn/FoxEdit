@@ -4,6 +4,7 @@ using System.Linq;
 using FoxEdit;
 using FoxEdit.WindowPanels;
 using UnityEditor;
+using UnityEditor.ShortcutManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -105,7 +106,26 @@ internal class NewFoxEditorWindow : EditorWindow
     {
         if (newPanel == currentPanel)
             return;
+        currentPanel = newPanel;
         voxelRendererSelectorContainer.style.display = newPanel == EPanel.Selector ? DisplayStyle.Flex : DisplayStyle.None;
         objectEditor.SetVisibility(newPanel == EPanel.Editor);
+    }
+
+    [Shortcut("FoxEdit/Undo", KeyCode.Z, ShortcutModifiers.Action)]
+    public static void CustomUndo()
+    {
+        if (currentWindow != null && currentWindow.currentPanel == EPanel.Editor)
+            currentWindow.objectEditor.Undo();
+        else
+            Undo.PerformUndo();
+    }
+
+    [Shortcut("FoxEdit/Redo", KeyCode.Y, ShortcutModifiers.Action)]
+    public static void Redo()
+    {
+        if (currentWindow != null && currentWindow.currentPanel == EPanel.Editor)
+            currentWindow.objectEditor.Redo();
+        else
+            Undo.PerformRedo();
     }
 }
