@@ -494,6 +494,16 @@ namespace FoxEdit
             EditorApplication.update -= AnimationPreview;
         }
 
+        public void SetEdgesVisibility(bool visibility)
+        {
+            _preview.SetDrawEdges(visibility);
+        }
+
+        public void SetEdgesColor(Color color)
+        {
+            _preview.SetEdgeColor(color);
+        }
+
         public void Save(string savePath)
         {
             string directory = Path.GetDirectoryName(savePath);
