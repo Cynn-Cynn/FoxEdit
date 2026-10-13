@@ -496,12 +496,12 @@ namespace FoxEdit
 
         public void SetEdgesVisibility(bool visibility)
         {
-            _preview.SetDrawEdges(visibility);
+            _preview.SetDrawGrid(visibility);
         }
 
         public void SetEdgesColor(Color color)
         {
-            _preview.SetEdgeColor(color);
+            _preview.SetGridColor(color);
         }
 
         public void Save(string savePath)
