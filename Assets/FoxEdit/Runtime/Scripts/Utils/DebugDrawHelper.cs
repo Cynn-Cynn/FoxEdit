@@ -61,4 +61,34 @@ public static class DebugDrawHelper
             }
         }
     }
+
+    public static void DebugDrawBounds(Bounds bounds, Color color, float duration = 1.0f)
+    {
+        Vector3 bottomLeftFront = bounds.min;
+        Vector3 topLeftFront = bounds.min + new Vector3(0.0f, bounds.size.y, 0.0f);
+
+        Vector3 bottomRightFront = bounds.min + new Vector3(bounds.size.x, 0.0f, 0.0f);
+        Vector3 topRightFront = bounds.min + new Vector3(bounds.size.x, bounds.size.y, 0.0f);
+
+        Vector3 bottomLeftBack = bounds.min + new Vector3(0.0f, 0.0f, bounds.size.z);
+        Vector3 topLeftBack = bounds.min + new Vector3(0.0f, bounds.size.y, bounds.size.z);
+
+        Vector3 bottomRightBack = bounds.min + new Vector3(bounds.size.x, 0.0f, bounds.size.z);
+        Vector3 topRightBack = bounds.min + new Vector3(bounds.size.x, bounds.size.y, bounds.size.z);
+
+        Debug.DrawLine(bottomLeftFront, topLeftFront, color, duration);
+        Debug.DrawLine(bottomRightFront, topRightFront, color, duration);
+        Debug.DrawLine(bottomLeftBack, topLeftBack, color, duration);
+        Debug.DrawLine(bottomRightBack, topRightBack, color, duration);
+
+        Debug.DrawLine(bottomLeftFront, bottomRightFront, color, duration);
+        Debug.DrawLine(topLeftFront, topRightFront, color, duration);
+        Debug.DrawLine(bottomLeftBack, bottomRightBack, color, duration);
+        Debug.DrawLine(topLeftBack, topRightBack, color, duration);
+
+        Debug.DrawLine(bottomLeftFront, bottomLeftBack, color, duration);
+        Debug.DrawLine(topLeftFront, topLeftBack, color, duration);
+        Debug.DrawLine(bottomRightFront, bottomRightBack, color, duration);
+        Debug.DrawLine(topRightFront, topRightBack, color, duration);
+    }
 }

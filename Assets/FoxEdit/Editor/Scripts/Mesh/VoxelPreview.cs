@@ -125,7 +125,6 @@ namespace FoxEdit
 
         internal void SetPaletteIndex(int index)
         {
-            Debug.Log(index);
             _paletteIndex = index;
             SetColorBuffer();
         }
@@ -243,7 +242,7 @@ namespace FoxEdit
 
             bounds.extents = new Vector3((float)size.x / 2.0f, (float)size.y / 2.0f, (float)size.z / 2.0f) * 0.1f;
             bounds.center += _frameToPreview.VoxelTransform.position;
-            _renderParams.SetWorldBounds(bounds);
+            _renderParams.SetWorldBounds(new Bounds[1] { bounds });
         }
 
         #endregion Buffers
