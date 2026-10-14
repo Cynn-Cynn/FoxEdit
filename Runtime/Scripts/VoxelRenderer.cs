@@ -27,6 +27,8 @@ namespace FoxEdit
             public GraphicsBuffer Matrices = null;
             public Dictionary<VoxelRenderer, Matrix4x4> ObjectToWorldMatrices = null;
             public bool UpdateMatricesBuffer = false;
+            public Dictionary<VoxelRenderer, Bounds> Bounds = null;
+            public bool UpdateBounds = false;
             public VoxelRenderer Drawer = null;
             public int UseCount = 0;
             public float AnimationTimer = 0.0f;
@@ -65,12 +67,6 @@ namespace FoxEdit
         private VoxelRenderParams _renderParams = null;
 
         #region Initialization
-
-        private void InitializeAnimatedRenderer()
-        {
-            _renderParams.CreateAnimatedParams();
-            SetWorldBounds();
-        }
 
         internal void GetUsedComponents()
         {
@@ -124,7 +120,7 @@ namespace FoxEdit
 #if UNITY_EDITOR
             if (Application.isPlaying)
 #endif
-                InitializeAnimatedRenderer();
+                _renderParams.CreateAnimatedParams();
             Setup();
             StaticRender();
         }
@@ -262,7 +258,8 @@ namespace FoxEdit
             DisposeBuffers(out _);
 
             _animationIndex = animationIndex;
-            SetWorldBounds();
+            RemoveWorldBoundsFromBatch();
+            AddWorldBoundsToBatch();
 
             SetBufferData();
         }
@@ -290,7 +287,6 @@ namespace FoxEdit
 #else
             _meshRenderer.enabled = _staticRender;
 #endif
-            SetWorldBounds();
             SetupMaterials();
 #if UNITY_EDITOR
             if (Application.isPlaying)
@@ -306,18 +302,28 @@ namespace FoxEdit
 #endif
         }
 
+        private void AddWorldBoundsToBatch()
+        {
+            Bounds bounds = _voxelObject.Animations[_animationIndex].Bounds;
+            bounds.center += transform.position;
+
+            _animatedMeshData.Bounds.Add(this, bounds);
+            _animatedMeshData.UpdateBounds = true;
+        }
+
+        private void RemoveWorldBoundsFromBatch()
+        {
+            _animatedMeshData.Bounds.Remove(this);
+            _animatedMeshData.UpdateBounds = true;
+        }
+
         private void SetWorldBounds()
         {
-#if UNITY_EDITOR
-            if (Application.isPlaying)
-            {
-#endif
-                Bounds bounds = _voxelObject.Animations[_animationIndex].Bounds;
-                bounds.center += transform.position;
-                _renderParams.SetWorldBounds(bounds);
-#if UNITY_EDITOR
-            }
-#endif
+            if (!_animatedMeshData.UpdateBounds)
+                return;
+
+            _animatedMeshData.UpdateBounds = false;
+            _renderParams.SetWorldBounds(_animatedMeshData.Bounds.Values.ToArray());
         }
 
         private void OnDisable()
@@ -332,6 +338,7 @@ namespace FoxEdit
         {
             _animatedMeshData = new AnimatedMeshData();
             _animatedMeshData.ObjectToWorldMatrices = new Dictionary<VoxelRenderer, Matrix4x4>();
+            _animatedMeshData.Bounds = new Dictionary<VoxelRenderer, Bounds>();
             _animatedMeshData.Drawer = this;
 
             if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)
@@ -351,16 +358,16 @@ namespace FoxEdit
 
         private void SetMatricesBuffer()
         {
-            if (_animatedMeshData.UpdateMatricesBuffer)
+            if (!_animatedMeshData.UpdateMatricesBuffer)
+                return;
+
+            if (_animatedMeshData.Matrices == null || _animatedMeshData.Matrices.count != _animatedMeshData.ObjectToWorldMatrices.Count)
             {
-                if (_animatedMeshData.Matrices == null || _animatedMeshData.Matrices.count != _animatedMeshData.ObjectToWorldMatrices.Count)
-                {
-                    _animatedMeshData.Matrices?.Dispose();
-                    _animatedMeshData.Matrices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _animatedMeshData.ObjectToWorldMatrices.Count, sizeof(float) * 16);
-                }
-                _animatedMeshData.Matrices.SetData(_animatedMeshData.ObjectToWorldMatrices.Values.ToArray());
-                _animatedMeshData.UpdateMatricesBuffer = false;
+                _animatedMeshData.Matrices?.Dispose();
+                _animatedMeshData.Matrices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _animatedMeshData.ObjectToWorldMatrices.Count, sizeof(float) * 16);
             }
+            _animatedMeshData.Matrices.SetData(_animatedMeshData.ObjectToWorldMatrices.Values.ToArray());
+            _animatedMeshData.UpdateMatricesBuffer = false;
         }
 
         private void AddMatrixToBatch()
@@ -408,6 +415,7 @@ namespace FoxEdit
 
             _animatedMeshData.UseCount += 1;
             AddMatrixToBatch();
+            AddWorldBoundsToBatch();
 
             _renderParams.SetBuffers(_voxelObject.Animations[_animationIndex], _animatedMeshData);
             _renderParams.SetInstancesData(_voxelObject.Animations[_animationIndex], _animatedMeshData.FrameIndex);
@@ -431,6 +439,7 @@ namespace FoxEdit
                 {
                     _animatedMeshData.UseCount -= 1;
                     RemoveMatrixFromBatch();
+                    RemoveWorldBoundsFromBatch();
                     if (_animatedMeshData.Drawer == this)
                         _animatedMeshData.Drawer = null;
 
@@ -520,7 +529,8 @@ namespace FoxEdit
             if (transform.hasChanged)
             {
                 transform.hasChanged = false;
-                SetWorldBounds();
+                RemoveWorldBoundsFromBatch();
+                AddWorldBoundsToBatch();
 
                 if (_animatedMeshData != null)
                 {
@@ -553,6 +563,7 @@ namespace FoxEdit
                 return;
 #endif
             SetMatricesBuffer();
+            SetWorldBounds();
             _renderParams.SetBuffers(_voxelObject.Animations[_animationIndex], _animatedMeshData);
 
             if (_voxelObject.Animations[_animationIndex].HasOpaqueFaces)

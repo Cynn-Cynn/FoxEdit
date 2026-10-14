@@ -1,3 +1,4 @@
+using Codice.Client.BaseCommands;
 using FoxEdit;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -108,7 +109,7 @@ internal class VoxelRenderParams
         _staticTransparentMaterial?.SetInteger("_ZWrite", 0);
 
         _staticOpaqueMaterial?.SetBuffer("_Colors", colorsBuffer);
-        _staticOpaqueMaterial?.SetInt("_ColorCount", colorsBuffer.count);
+        _staticOpaqueMaterial?.SetInteger("_ColorCount", colorsBuffer.count);
         _staticTransparentMaterial?.SetBuffer("_Colors", colorsBuffer);
         _staticTransparentMaterial?.SetInteger("_ColorCount", colorsBuffer.count);
     }
@@ -166,13 +167,45 @@ internal class VoxelRenderParams
         }
     }
 
-    internal void SetWorldBounds(Bounds bounds)
+    internal void SetWorldBounds(Bounds[] bounds)
     {
-        if (!_hasAnimatedParams)
+        if (!_hasAnimatedParams || bounds.Length == 0)
             return;
 
-        _opaqueRenderParams.worldBounds = bounds;
-        _transparentRenderParams.worldBounds = bounds;
+        if (bounds.Length == 1)
+        {
+            _opaqueRenderParams.worldBounds = bounds[0];
+            _transparentRenderParams.worldBounds = bounds[0];
+            return;
+        }
+
+        Vector3 mergedMinBounds = Vector3.one * float.MaxValue;
+        Vector3 mergedMaxBounds = Vector3.one * float.MinValue;
+
+        for (int i = 1; i < bounds.Length; i++)
+        {
+            mergedMinBounds.x = Mathf.Min(mergedMinBounds.x, bounds[i].min.x);
+            mergedMinBounds.y = Mathf.Min(mergedMinBounds.y, bounds[i].min.y);
+            mergedMinBounds.z = Mathf.Min(mergedMinBounds.z, bounds[i].min.z);
+
+            mergedMaxBounds.x = Mathf.Max(mergedMaxBounds.x, bounds[i].max.x);
+            mergedMaxBounds.y = Mathf.Max(mergedMaxBounds.y, bounds[i].max.y);
+            mergedMaxBounds.z = Mathf.Max(mergedMaxBounds.z, bounds[i].max.z);
+        }
+
+        Bounds mergedBounds = new Bounds();
+        Vector3 center = new Vector3(mergedMinBounds.x + mergedMaxBounds.x, mergedMinBounds.y + mergedMaxBounds.y, mergedMinBounds.z + mergedMaxBounds.z) / 2.0f;
+        mergedBounds.center = center;
+
+        Vector3 size = mergedMaxBounds - mergedMinBounds;
+        size.x = Mathf.Abs(size.x);
+        size.y = Mathf.Abs(size.y);
+        size.z = Mathf.Abs(size.z);
+
+        mergedBounds.extents = new Vector3(size.x / 2.0f, size.y / 2.0f, size.z / 2.0f);
+
+        _opaqueRenderParams.worldBounds = mergedBounds;
+        _transparentRenderParams.worldBounds = mergedBounds;
     }
 
     internal void SetBuffers(VoxelObject.AnimationFrames animation, VoxelRenderer.AnimatedMeshData buffers)
