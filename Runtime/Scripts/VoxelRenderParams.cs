@@ -110,7 +110,7 @@ internal class VoxelRenderParams
         _staticOpaqueMaterial?.SetBuffer("_Colors", colorsBuffer);
         _staticOpaqueMaterial?.SetInt("_ColorCount", colorsBuffer.count);
         _staticTransparentMaterial?.SetBuffer("_Colors", colorsBuffer);
-        _staticTransparentMaterial?.SetInt("_ColorCount", colorsBuffer.count);
+        _staticTransparentMaterial?.SetInteger("_ColorCount", colorsBuffer.count);
     }
 
     internal void SetInstancesData(VoxelObject.AnimationFrames animation, int frameIndex)
@@ -121,12 +121,29 @@ internal class VoxelRenderParams
         if (animation.HasOpaqueFaces)
         {
             _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", animation.OpaqueMesh.InstanceStartIndices[frameIndex]);
-            _opaqueRenderParams.matProps.SetInt("_FacesCount", animation.OpaqueMesh.InstanceCount[frameIndex]);
+            _opaqueRenderParams.matProps.SetInteger("_FacesCount", animation.OpaqueMesh.InstanceCount[frameIndex]);
         }
         if (animation.HasTransparentFaces)
         {
             _transparentRenderParams.matProps.SetInteger("_InstanceStartIndex", animation.TransparentMesh.InstanceStartIndices[frameIndex]);
-            _transparentRenderParams.matProps.SetInt("_FacesCount", animation.TransparentMesh.InstanceCount[frameIndex]);
+            _transparentRenderParams.matProps.SetInteger("_FacesCount", animation.TransparentMesh.InstanceCount[frameIndex]);
+        }
+    }
+
+    internal void SetInstancesData(bool hasOpaqueFaces, bool hasTransparentFaces, int startIndex, int opaqueFacesCount, int transparentFacesCount)
+    {
+        if (!_hasAnimatedParams)
+            return;
+
+        if (hasOpaqueFaces)
+        {
+            _opaqueRenderParams.matProps.SetInteger("_InstanceStartIndex", startIndex);
+            _opaqueRenderParams.matProps.SetInteger("_FacesCount", opaqueFacesCount);
+        }
+        if (hasTransparentFaces)
+        {
+            _transparentRenderParams.matProps.SetInteger("_InstanceStartIndex", startIndex);
+            _transparentRenderParams.matProps.SetInteger("_FacesCount", transparentFacesCount);
         }
     }
 
@@ -135,17 +152,17 @@ internal class VoxelRenderParams
         if (_hasAnimatedParams)
         {
             _opaqueRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-            _opaqueRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
+            _opaqueRenderParams.matProps.SetInteger("_ColorCount", colorsBuffer.count);
             _transparentRenderParams.matProps.SetBuffer("_Colors", colorsBuffer);
-            _transparentRenderParams.matProps.SetInt("_ColorCount", colorsBuffer.count);
+            _transparentRenderParams.matProps.SetInteger("_ColorCount", colorsBuffer.count);
         }
 
         if (_hasStaticMaterials)
         {
             _staticOpaqueMaterial?.SetBuffer("_Colors", colorsBuffer);
-            _staticOpaqueMaterial?.SetInt("_ColorCount", colorsBuffer.count);
+            _staticOpaqueMaterial?.SetInteger("_ColorCount", colorsBuffer.count);
             _staticTransparentMaterial?.SetBuffer("_Colors", colorsBuffer);
-            _staticTransparentMaterial?.SetInt("_ColorCount", colorsBuffer.count);
+            _staticTransparentMaterial?.SetInteger("_ColorCount", colorsBuffer.count);
         }
     }
 
@@ -177,7 +194,7 @@ internal class VoxelRenderParams
         }
     }
 
-    internal void SetVerticesAndQuads(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.AnimatedMeshData buffers)
+    internal void SetBuffers(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.AnimatedMeshData buffers)
     {
         if (!_hasAnimatedParams)
             return;
@@ -186,20 +203,39 @@ internal class VoxelRenderParams
         {
             _opaqueRenderParams.matProps.SetBuffer("_Vertices", buffers.OpaqueVertices);
             _opaqueRenderParams.matProps.SetBuffer("_Quads", buffers.OpaqueQuads);
+            _opaqueRenderParams.matProps.SetBuffer("_ObjectToWorldMatrices", buffers.Matrices);
         }
         if (hasTransparentFaces)
         {
             _transparentRenderParams.matProps.SetBuffer("_Vertices", buffers.TransparentVertices);
             _transparentRenderParams.matProps.SetBuffer("_Quads", buffers.TransparentQuads);
+            _transparentRenderParams.matProps.SetBuffer("_ObjectToWorldMatrices", buffers.Matrices);
         }
     }
 
-    internal void SetObjectToWorldMatrix(Matrix4x4 objectToWorld)
-    {
-        if (!_hasAnimatedParams)
-            return;
+    //internal void SetVerticesAndQuads(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.AnimatedMeshData buffers)
+    //{
+    //    if (!_hasAnimatedParams)
+    //        return;
 
-        _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", objectToWorld);
-        _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", objectToWorld);
-    }
+    //    if (hasOpaqueFaces)
+    //    {
+    //        _opaqueRenderParams.matProps.SetBuffer("_Vertices", buffers.OpaqueVertices);
+    //        _opaqueRenderParams.matProps.SetBuffer("_Quads", buffers.OpaqueQuads);
+    //    }
+    //    if (hasTransparentFaces)
+    //    {
+    //        _transparentRenderParams.matProps.SetBuffer("_Vertices", buffers.TransparentVertices);
+    //        _transparentRenderParams.matProps.SetBuffer("_Quads", buffers.TransparentQuads);
+    //    }
+    //}
+
+    //internal void SetObjectToWorldMatrix(Matrix4x4 objectToWorld)
+    //{
+    //    if (!_hasAnimatedParams)
+    //        return;
+
+    //    _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", objectToWorld);
+    //    _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", objectToWorld);
+    //}
 }

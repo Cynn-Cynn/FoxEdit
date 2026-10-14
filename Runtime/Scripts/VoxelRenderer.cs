@@ -527,7 +527,6 @@ namespace FoxEdit
                     RemoveMatrixFromBatch();
                     AddMatrixToBatch();
                 }
-                _renderParams.SetObjectToWorldMatrix(transform.localToWorldMatrix);
             }
         }
 
