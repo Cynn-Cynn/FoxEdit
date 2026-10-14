@@ -40,6 +40,7 @@ namespace FoxEdit
             _gridVertices = new List<Vector3>();
             _gridQuads = new List<int>();
             _renderParams = new VoxelRenderParams();
+            _renderParams.CreateAnimatedParams();
 
             Initialize();
         }
@@ -124,6 +125,7 @@ namespace FoxEdit
 
         internal void SetPaletteIndex(int index)
         {
+            Debug.Log(index);
             _paletteIndex = index;
             SetColorBuffer();
         }
@@ -181,6 +183,7 @@ namespace FoxEdit
                 return;
 
             _buffers = new AnimatedMeshData();
+
             if (_hasOpaqueFaces)
             {
                 _buffers.OpaqueVertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _opaquePreview.Vertices.Length, sizeof(float) * 3);
@@ -195,8 +198,11 @@ namespace FoxEdit
                 _buffers.TransparentVertices.SetData(_transparentPreview.Vertices);
                 _buffers.TransparentQuads.SetData(_transparentPreview.Quads);
             }
+            _buffers.Matrices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 1, sizeof(float) * 16);
+            _buffers.Matrices.SetData(new Matrix4x4[1] { _frameToPreview.VoxelTransform.localToWorldMatrix });
 
-            _renderParams.SetVerticesAndQuads(_hasOpaqueFaces, _hasTransparentFaces, _buffers);
+            _renderParams.SetBuffers(_hasOpaqueFaces, _hasTransparentFaces, _buffers);
+            _renderParams.SetInstancesData(_hasOpaqueFaces, _hasTransparentFaces, 0, _opaquePreview.InstanceCount[0], _transparentPreview.InstanceCount[0]);
         }
 
         private void DisposeBuffers()
@@ -208,6 +214,7 @@ namespace FoxEdit
             _buffers.OpaqueQuads?.Dispose();
             _buffers.TransparentVertices?.Dispose();
             _buffers.TransparentQuads?.Dispose();
+            _buffers.Matrices?.Dispose();
 
             _buffers = null;
         }
@@ -237,7 +244,6 @@ namespace FoxEdit
             bounds.extents = new Vector3((float)size.x / 2.0f, (float)size.y / 2.0f, (float)size.z / 2.0f) * 0.1f;
             bounds.center += _frameToPreview.VoxelTransform.position;
             _renderParams.SetWorldBounds(bounds);
-            _renderParams.SetObjectToWorldMatrix(_frameToPreview.VoxelTransform.localToWorldMatrix);
         }
 
         #endregion Buffers
