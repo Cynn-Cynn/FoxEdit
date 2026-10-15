@@ -74,12 +74,14 @@ namespace FoxEdit.WindowPanels.VoxelObjectEditorPanelHandlers
         private void OnShowGridChanged(ChangeEvent<bool> evt)
         {
             _voxelEditor.SetEdgesVisibility(evt.newValue);
+            SceneView.RepaintAll();
             GridVisibility = evt.newValue;
         }
 
         private void OnColorChanged(ChangeEvent<Color> evt)
         {
             _voxelEditor.SetEdgesColor(evt.newValue);
+            SceneView.RepaintAll();
             GridColor = evt.newValue;
         }
 
