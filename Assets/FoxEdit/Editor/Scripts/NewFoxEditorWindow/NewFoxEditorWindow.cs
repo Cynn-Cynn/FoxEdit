@@ -111,7 +111,7 @@ internal class NewFoxEditorWindow : EditorWindow
         objectEditor.SetVisibility(newPanel == EPanel.Editor);
     }
 
-    [Shortcut("FoxEdit/Undo", KeyCode.Z, ShortcutModifiers.Action)]
+    [Shortcut("FoxEdit/Undo", KeyCode.Z, ShortcutModifiers.Alt)]
     public static void CustomUndo()
     {
         if (currentWindow != null && currentWindow.currentPanel == EPanel.Editor)
@@ -120,7 +120,7 @@ internal class NewFoxEditorWindow : EditorWindow
             Undo.PerformUndo();
     }
 
-    [Shortcut("FoxEdit/Redo", KeyCode.Y, ShortcutModifiers.Action)]
+    [Shortcut("FoxEdit/Redo", KeyCode.Y, ShortcutModifiers.Alt)]
     public static void Redo()
     {
         if (currentWindow != null && currentWindow.currentPanel == EPanel.Editor)
