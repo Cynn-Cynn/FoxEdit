@@ -11,7 +11,6 @@ using System.Reflection;
 using UnityEditor;
 #endif
 
-//TODO: fix light dans shader
 namespace FoxEdit
 {
     [ExecuteAlways]
