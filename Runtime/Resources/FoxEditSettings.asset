@@ -12,12 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53f3955cb9a6c65449f9a06db5510088, type: 3}
   m_Name: FoxEditSettings
   m_EditorClassIdentifier: 
+  _cullingShader: {fileID: 7200000, guid: 7b2dc3ab4a9c892498fc8964c4cc4cd6, type: 3}
   _palettes:
   - {fileID: 11400000, guid: 2018349bc5077014daddb8178c4c004f, type: 2}
   - {fileID: 11400000, guid: 413abcab50e67f84e815dd0e271eef34, type: 2}
   Materials:
     voxelLitMaterial: {fileID: 2100000, guid: 0eb7b18364552904f8ddb03a685946de, type: 2}
-    animatedOpaqueMaterial: {fileID: 2100000, guid: 3f0281ad1cf83de4795cd67224e84cb6, type: 2}
-    animatedTransparentMaterial: {fileID: 2100000, guid: ae95496115f95704689ae2cf81997c4f, type: 2}
-    staticOpaqueMaterial: {fileID: 2100000, guid: 90c432c76eaa99648809ebe571f57d1e, type: 2}
-    staticTransparentMaterial: {fileID: 2100000, guid: 2a4dd8b65935b6844ac1a9ea2ef147d9, type: 2}

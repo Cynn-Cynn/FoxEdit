@@ -20,11 +20,18 @@ internal class VoxelRenderParams
     private bool _hasAnimatedParams = false;
     private bool _hasStaticMaterials = false;
 
+    //private ComputeShader _cullingShader = null;
+    //private int _cullingKernel = 0;
+
     internal VoxelRenderParams()
     {
         _hasStaticMaterials = false;
         _staticOpaqueMaterial = null;
         _staticTransparentMaterial = null;
+
+        //_cullingShader = FoxEditSettings.GetSettings().CullingShader;
+        //_cullingKernel = _cullingShader.FindKernel("CSMain");
+
     }
 
     internal void CreateStaticMaterial(bool opaque, bool transparent)
@@ -225,6 +232,9 @@ internal class VoxelRenderParams
             _transparentRenderParams.matProps.SetBuffer("_Quads", buffers.TransparentQuads);
             _transparentRenderParams.matProps.SetBuffer("_ObjectToWorldMatrices", buffers.Matrices);
         }
+
+        //_cullingShader.SetBuffer(_cullingKernel, "ObjectToWorldMatrices", buffers.Matrices);
+        //_cullingShader.SetBuffer(_cullingKernel, "CulledMatrices", buffers.CulledMatrices);
     }
 
     internal void SetBuffers(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.AnimatedMeshData buffers)
@@ -246,29 +256,8 @@ internal class VoxelRenderParams
         }
     }
 
-    //internal void SetVerticesAndQuads(bool hasOpaqueFaces, bool hasTransparentFaces, VoxelRenderer.AnimatedMeshData buffers)
+    //internal void Cull()
     //{
-    //    if (!_hasAnimatedParams)
-    //        return;
-
-    //    if (hasOpaqueFaces)
-    //    {
-    //        _opaqueRenderParams.matProps.SetBuffer("_Vertices", buffers.OpaqueVertices);
-    //        _opaqueRenderParams.matProps.SetBuffer("_Quads", buffers.OpaqueQuads);
-    //    }
-    //    if (hasTransparentFaces)
-    //    {
-    //        _transparentRenderParams.matProps.SetBuffer("_Vertices", buffers.TransparentVertices);
-    //        _transparentRenderParams.matProps.SetBuffer("_Quads", buffers.TransparentQuads);
-    //    }
-    //}
-
-    //internal void SetObjectToWorldMatrix(Matrix4x4 objectToWorld)
-    //{
-    //    if (!_hasAnimatedParams)
-    //        return;
-
-    //    _opaqueRenderParams.matProps.SetMatrix("_ObjectToWorld", objectToWorld);
-    //    _transparentRenderParams.matProps.SetMatrix("_ObjectToWorld", objectToWorld);
+    //    _cullingShader.Dispatch(_cullingKernel, 10000, 1, 1);
     //}
 }

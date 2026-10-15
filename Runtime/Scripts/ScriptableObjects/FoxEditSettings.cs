@@ -13,7 +13,11 @@ namespace FoxEdit
             public Material voxelLitMaterial;
         }
 
+        [SerializeField] private ComputeShader _cullingShader = null;
+        public ComputeShader CullingShader { get { return _cullingShader; } }
+
         [SerializeField] private List<VoxelPalette> _palettes;
+
 
         public VoxelPalette[] Palettes { get { return _palettes.ToArray(); } }
         public MaterialsSettings Materials;
