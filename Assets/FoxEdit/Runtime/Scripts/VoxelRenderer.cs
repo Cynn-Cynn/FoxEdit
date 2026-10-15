@@ -25,6 +25,7 @@ namespace FoxEdit
             public GraphicsBuffer OpaqueQuads = null;
             public GraphicsBuffer TransparentQuads = null;
             public GraphicsBuffer Matrices = null;
+            //public GraphicsBuffer CulledMatrices = null;
             public Dictionary<VoxelRenderer, Matrix4x4> ObjectToWorldMatrices = null;
             public bool UpdateMatricesBuffer = false;
             public Dictionary<VoxelRenderer, Bounds> Bounds = null;
@@ -365,6 +366,9 @@ namespace FoxEdit
             {
                 _animatedMeshData.Matrices?.Dispose();
                 _animatedMeshData.Matrices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, _animatedMeshData.ObjectToWorldMatrices.Count, sizeof(float) * 16);
+
+                //_animatedMeshData.CulledMatrices?.Dispose();
+                //_animatedMeshData.CulledMatrices = new GraphicsBuffer(GraphicsBuffer.Target.Structured | GraphicsBuffer.Target.Append, _animatedMeshData.ObjectToWorldMatrices.Count, sizeof(float) * 16);
             }
             _animatedMeshData.Matrices.SetData(_animatedMeshData.ObjectToWorldMatrices.Values.ToArray());
             _animatedMeshData.UpdateMatricesBuffer = false;
@@ -417,7 +421,7 @@ namespace FoxEdit
             AddMatrixToBatch();
             AddWorldBoundsToBatch();
 
-            _renderParams.SetBuffers(_voxelObject.Animations[_animationIndex], _animatedMeshData);
+            //_renderParams.SetBuffers(_voxelObject.Animations[_animationIndex], _animatedMeshData);
             _renderParams.SetInstancesData(_voxelObject.Animations[_animationIndex], _animatedMeshData.FrameIndex);
 
             CheckForFrameEvents(_animationIndex, _animatedMeshData.FrameIndex);
@@ -454,6 +458,7 @@ namespace FoxEdit
             _animatedMeshData.TransparentVertices?.Dispose();
             _animatedMeshData.TransparentQuads?.Dispose();
             _animatedMeshData.Matrices?.Dispose();
+            //_animatedMeshData.CulledMatrices?.Dispose();
             _animatedMeshData = null;
         }
 

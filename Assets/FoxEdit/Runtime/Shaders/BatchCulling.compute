@@ -1,0 +1,10 @@
+#pragma kernel CSMain
+
+StructuredBuffer<float4x4> ObjectToWorldMatrices;
+AppendStructuredBuffer<float4x4> CulledMatrices;
+
+[numthreads(1,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    CulledMatrices.Append(ObjectToWorldMatrices[id.x]);
+}
