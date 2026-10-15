@@ -9,8 +9,14 @@ using UnityEngine.VFX;
 #endif
 namespace FoxEdit
 {
+    [InitializeOnLoad]
     public static class VoxelSharedData
     {
+        static VoxelSharedData()
+        {
+            Initialize();
+        }
+
 #if HAS_VFX_GRAPH
         [VFXType(VFXTypeAttribute.Usage.GraphicsBuffer)]
 #endif

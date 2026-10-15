@@ -255,12 +255,9 @@ namespace FoxEdit
         private IEnumerator SetAnimationBuffered(int animationIndex)
         {
             yield return new WaitForEndOfFrame();
+
             DisposeBuffers(out _);
-
             _animationIndex = animationIndex;
-            RemoveWorldBoundsFromBatch();
-            AddWorldBoundsToBatch();
-
             SetBufferData();
         }
 
@@ -420,7 +417,6 @@ namespace FoxEdit
             AddMatrixToBatch();
             AddWorldBoundsToBatch();
 
-            //_renderParams.SetBuffers(_voxelObject.Animations[_animationIndex], _animatedMeshData);
             _renderParams.SetInstancesData(_voxelObject.Animations[_animationIndex], _animatedMeshData.FrameIndex);
 
             CheckForFrameEvents(_animationIndex, _animatedMeshData.FrameIndex);
